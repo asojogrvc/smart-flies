@@ -1,5 +1,5 @@
 ### Start Compute
-GET http://localhost:8004/mission_request/?computeQ=True
+GET http://localhost:8004/mission_request
 
 ### See status
 GET http://localhost:8004/status
