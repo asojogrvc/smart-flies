@@ -2,6 +2,7 @@
 /build
 /dist
 /__pycache__
+/server/__pycache__
 /modules/__pycache__
 /.VSCodeCounter
 /.venv

@@ -1,0 +1,24 @@
+### Get devices 
+GET http://localhost:8002/mission_request/?computeQ=True
+
+### Get positions 
+GET http://localhost:8002/status
+
+### Get position
+GET http://localhost:4000/api/positions?id=1
+
+### Add Devices
+POST http://localhost:4000/api/devices
+Content-Type: application/json
+
+{
+    "name": "uav_757",
+    "category": "dji_M300",
+    "ip": "10.42.0.44",
+    "camera":[
+        {
+            "type": "WebRTC",
+            "source": "main"
+        }
+    ]
+}

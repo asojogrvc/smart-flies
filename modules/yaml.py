@@ -70,3 +70,40 @@ def save_Mission(file_path, uavs: UAVS.UAV_Team, utmZone: tuple):
     print("File Saved!")
 
     return None
+
+def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
+
+        wps = {}
+
+        wps["version"] = 3
+        wps["frame_id"] = "/gps"
+
+        wps["description"] = ""
+
+        route_list = []
+
+        for uav in uavs:
+
+            route_dict = {}
+
+            route_dict["name"] = "Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]
+            route_dict["uav"] = uav.get_ID()
+
+            wp_list = []
+
+            for wp in uav.waypoints:
+                wp_list.append({"pos": wp[0], "action": wp[1]})
+
+            route_dict["wp"] = wp_list
+
+            route_dict["attributes"] = {
+                "mode_landing": 2,
+                "mode_yaw":2,
+                "mode_gimbal:":0,
+                "idle_vel": 5.0}
+            
+            route_list.append(route_dict)
+
+        wps["route"] = route_list
+
+        return wps

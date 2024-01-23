@@ -479,7 +479,7 @@ class UAV_Team():
         """
         return self.__list[which]
     
-    def compute_Team_Waypoints(self, mode: str):
+    def compute_Team_Waypoints(self, mode: str, towers: TW.Towers, bases: BA.Bases):
         """
         Computes the corresponding waypoints and actions of the entire team depending on the use case (mode) and
         mission settings
@@ -490,9 +490,18 @@ class UAV_Team():
         """
 
         for uav in self:
-            uav.compute_Waypoints(mode)
+            uav.compute_Waypoints(mode, towers, bases)
 
         return None
+    
+    def get_Waypoints(self):
+        """
+        Output the waypoints YAML as an object using the PyYAML package
+        """
+
+        return None
+
+
 
     # -------------------------------- Plotting functions -------------------------------------
     
