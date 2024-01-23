@@ -1,0 +1,17 @@
+/old
+/build
+/dist
+/__pycache__
+/modules/__pycache__
+/.VSCodeCounter
+/.venv
+kml_Tower_Testing.ipynb
+graphs_test.py
+xml_test.py
+solver_testing.py
+maps_image.py
+test.png
+scip_testing.py
+scip_model.cip
+sim_test.py
+yaml_old.py
