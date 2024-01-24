@@ -102,6 +102,47 @@ class Towers():
 
         self.__graph = delete_Common_Towers(paths)
         return None
+    
+    def load_from_Arrays(self, list_arrays:list, onlineQ: bool):
+        """
+        Method that updates a tower graph using a list of arrays, one for each path. As paths cannot represent several branches, the will be represented
+        as path with at much at least one common tower per branch pair.
+        If the boolean "onlineQ" is True, height coordinates will be updated online
+        """
+
+        # Reset first to avoid any data overlap
+        self.reset()
+
+        # Parse data to extract paths
+        paths = [] # Contains all paths within the file a graph or Towers
+        tower_number = 1
+        for path_latlon in list_arrays:
+            
+            # temp graph to store each path / branch
+            Tg = nx.empty_graph(0)
+
+            n_t = len(path_latlon)
+
+            # Update height from online API
+            if onlineQ:
+                CO.update_Height_Online(path_latlon)
+
+            # Conversion to UTM. All towers and bases are assumed to be within the same zone
+            path_utm, self.__UTM_Zone = CO.latlon2utm(path_latlon)
+
+            # Add each of the towers of the branch in the actual graph 
+            # and connect it to the previously added tower.
+            Tg.add_node(f'T{tower_number}', UTM=path_utm[0,:])
+            tower_number += 1
+            for k in range(1, n_t):
+                Tg.add_node(f'T{tower_number}', UTM = path_utm[k,:])
+                Tg.add_edge(f'T{tower_number-1}', f'T{tower_number}')
+                tower_number += 1
+
+            paths.append(copy.deepcopy(Tg))
+
+        self.__graph = delete_Common_Towers(paths)
+        return None
 
     def reset(self):
         """

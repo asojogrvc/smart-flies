@@ -1,8 +1,8 @@
 # Mission yaml ouput code
 
-import numpy as np, os
+import numpy as np, os, yaml, copy 
 
-from modules import uav as UAVS, coordinates as CO
+from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, coordinates as CO, solver as SO
 
 def landing_Mode_to_Int(mode: str):
     match mode:
@@ -44,7 +44,6 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     file.write("      mode_yaw: "+str(mode_yaw)+ "\n\n")
     file.write("      mode_gimbal: "+str(mode_gimbal)+ "\n\n")
     file.write("      idle_vel: "+str(idle_vel)+ "\n\n")
-
 
 def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
 
@@ -107,3 +106,89 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
         wps["route"] = route_list
 
         return wps
+
+def load_problem_from_YAML(file_path: str) -> SO.Problem:
+
+    # Initialize data
+    bases = BA.Bases()
+    towers = TW.Towers()
+    uavs = UAVS.UAV_Team()
+    weather = WT.Weather()
+
+    # Open YAML stream from the file path and load it as a Python object
+    f = open(file_path, "r")
+    mission_init = yaml.load(f, Loader = yaml.Loader)
+    f.close()
+
+    print(mission_init)
+
+    tower_height = mission_init["settings"]["mission"][0]["tower"]
+
+    # Load the UAVs
+    k = 0
+    for uav_dict in mission_init["settings"]["devices"]:
+
+        uav = UAVS.UAV()
+        uav.load_from_Model(uav_dict["device_category"], str(uav_dict["device_id"]))
+        uav.missionSettings["Base"] = "B"+str(k)
+        uav.missionSettings["Nav. speed"] = uav_dict["speed_navegation"]
+        uav.missionSettings["Insp. speed"] = uav_dict["speed_mission"]
+        uav.missionSettings["Landing Mode"] = uav_dict["landing_mode"]
+        geom = mission_init["settings"]["mission"][k]
+        uav.missionSettings["Insp. height"] = geom["height"]
+        uav.missionSettings["Insp. horizontal offset"] = geom["offset"]
+
+        # Update from the other pair
+        uav.missionSettings['Tower distance'] = float(np.sqrt(
+            uav.missionSettings['Insp. height']**2 + uav.missionSettings['Insp. horizontal offset']**2))
+        
+        temp = uav.missionSettings['Insp. horizontal offset']
+        if temp == 0:
+            uav.missionSettings['Cam. angle'] = 90
+        else:
+            uav.missionSettings['Cam. angle'] = float(np.rad2deg(np.arctan(
+                uav.missionSettings['Insp. height'] / temp)))
+
+        uavs.add_UAV(copy.deepcopy(uav))
+
+        coords = np.array([mission_init["bases"][k]["latitude"], mission_init["bases"][k]["longitude"], 0])
+        CO.update_Height_Online(coords)
+        coords = CO.latlon2utm(coords)
+
+        bases.add_Base(BA.Base(
+            "B"+str(k),
+            coords[0],
+            coords[1]
+        ))
+
+        k += 1
+    
+    base0 = bases.get_Base("B0")
+    weather.update_Online(CO.utm2latlon(base0.get_Coordinates(), base0.get_UTM_Zone()))
+
+
+    paths = []
+
+    for loc in mission_init["settings"]["loc"]:
+        firstQ = True
+        for point in loc["items"]:
+
+            if True == firstQ:
+                path = np.array([[point["latitude"], point["longitude"], 0.0]])
+                firstQ = False
+            else: path = np.concatenate((path, np.array([[point["latitude"], point["longitude"], 0.0]])))
+
+        paths.append(path)
+
+    print(paths)
+
+    towers.load_from_Arrays(paths, True)
+
+    problem = SO.Problem(
+        towers,
+        bases,
+        uavs,
+        weather
+    )
+
+    return problem

@@ -77,7 +77,7 @@ class UAV():
 
     # ------------------------ Setting parameter functions ---------------------------
         
-    def load_from_Model(self, model: str):
+    def load_from_Model(self, model: str, id:str):
 
         # It might be a good not load the entire database each time
         f = open("./files/devices.yaml", "r")
@@ -86,7 +86,7 @@ class UAV():
 
         
         self.__name             = model
-        self.__id               = "U1"
+        self.__id               = id
         self.__mass             = data['mass']
         self.__number_of_Rotors = data['number_of_rotors']
         self.__rotor_Blades     = data['rotor_of_rotors_blades']
