@@ -7,9 +7,8 @@ GET http://localhost:8004/status
 ### Get output
 GET http://localhost:8004/output
 
-
-### Add Devices
-POST http://localhost:4000/api/devices
+### Send bases as JSON
+POST http://localhost:8004/input_bases
 Content-Type: application/json
 
 {
@@ -23,3 +22,22 @@ Content-Type: application/json
         }
     ]
 }
+
+### Send towers as JSON
+POST http://localhost:8004/input_towers
+Content-Type: application/json
+
+{
+    "name": "uav_757",
+    "category": "dji_M300",
+    "ip": "10.42.0.44",
+    "camera":[
+        {
+            "type": "WebRTC",
+            "source": "main"
+        }
+    ]
+}
+
+### Send towers empty
+POST http://localhost:8004/input_towers

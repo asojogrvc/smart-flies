@@ -1,0 +1,6 @@
+
+# Send bases to server as a file
+curl -X POST -F "file=@./files/bases.kml" http://localhost:8004/input_bases
+
+# Send towers to server as a file
+curl -X POST -F "file=@./files/towers.kml" http://localhost:8004/input_towers
