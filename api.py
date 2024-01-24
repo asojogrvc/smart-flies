@@ -1,6 +1,6 @@
 # General imports
 
-from flask import Flask, request, jsonify, send_from_directory, flash, redirect
+from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
 import os
 
 # Projects internal modules imports
@@ -65,7 +65,8 @@ class Server(Flask):
             case _:
                 raise Exception("Not a valid input parameter")
 
-app = Server(__name__)
+template_dir = os.path.abspath('./server/static/')
+app = Server(__name__, template_folder=template_dir, static_url_path="", static_folder="./server/static/")
 
 # --------------------------------------------------------------------
 #
@@ -167,7 +168,7 @@ def main_page():
     """
     Main Page. Put some logos, copyright and stuff here.
     """
-    return "</p>If you can see this, the server is online</p>"
+    return render_template("main.html", server_status = app.get_Status())
 
 @app.route("/status", methods = ["GET"])
 def status():
