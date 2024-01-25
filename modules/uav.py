@@ -104,8 +104,6 @@ class UAV():
                                                 data['battery']['number_of_cells'],
                                                 data['battery']['Voltage_per_cell'],
                                                 )
-                    
-        self.print()
 
         return None
         
@@ -389,6 +387,23 @@ class UAV_Team():
         """
         return self.__list
     
+    def print(self):
+        """
+        Prints the entire team data
+        """
+
+        print("----------------------------UAV Team------------------------------")
+        for uav in self:
+            print("  ", end = "")
+            uav.print()
+        print("------------------------------------------------------------------")
+
+    def print_Mission_Settings(self):
+        
+        for uav in self:
+            print("id: " + uav.get_ID() + "->", end = "")
+            print(uav.missionSettings)
+    
     # ------------------------ Adding UAVs functions ---------------------------
 
     def add_UAV(self, uav: UAV):
@@ -444,7 +459,7 @@ class UAV_Team():
         return None
 
 
-    # ------------------------ Removing bases functions ---------------------------
+    # ------------------------ Removing UAVs functions ---------------------------
         
     def empty(self):
         """

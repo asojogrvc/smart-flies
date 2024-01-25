@@ -10,6 +10,14 @@ def landing_Mode_to_Int(mode: str):
             return str(0)
         case "Auto":
             return str(2)
+        
+def int_to_Landing_Mode(mode_int: str):
+    match mode_int:
+        case 0:
+            return "None"
+        case 2:
+            return "Auto"
+
 
 yaml_version = 3
 f_id = "/gps"
@@ -133,7 +141,7 @@ def load_problem_from_YAML(file_path: str) -> SO.Problem:
         uav.missionSettings["Base"] = "B"+str(k)
         uav.missionSettings["Nav. speed"] = uav_dict["speed_navegation"]
         uav.missionSettings["Insp. speed"] = uav_dict["speed_mission"]
-        uav.missionSettings["Landing Mode"] = uav_dict["landing_mode"]
+        uav.missionSettings["Landing Mode"] = int_to_Landing_Mode(uav_dict["landing_mode"])
         geom = mission_init["settings"]["mission"][k]
         uav.missionSettings["Insp. height"] = geom["height"]
         uav.missionSettings["Insp. horizontal offset"] = geom["offset"]
