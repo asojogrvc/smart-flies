@@ -2,14 +2,12 @@
 # The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name PLI --noconfirm"
 
 # TO DO (CRITICAL)
-#   - If data is loaded normally and then with the yaml, it crashes.
 #   - Finish both solvers by adding the subroute elimination
 #   - For both solvers, if Nav. speed ~ Insp. speed, routes might no longer be connected. If  Nav.speed >> Insp. speed, no problem
 #       seems to arise. This indicates that an adequate subroute elimination IS needed for both.
 #   - If waypoints are computed twice with or without different settings, some are duplicated wps are duplicated or bugged
 #
 # TO DO (MUST)
-#   - For the UI Status, use binary instead and use each bit for a different thing
 #   - Fix Bugs for disjoint power lines. For both solvers, this happens if the network has at least two disjoint branches
 #       and are distant. For regular, it might have even more bugs.
 #   - In regularSolver: Add subroute elimination constrains loop

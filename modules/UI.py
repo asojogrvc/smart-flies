@@ -1356,12 +1356,13 @@ def updateMissionSettings(ui: MainWindow, item: QtWidgets.QTableWidgetItem):
     if ui.avoid_loop == True:
         ui.avoid_loop = False
         return None
+    
+    uav = ui.uavs.select_UAV_by_Order(row)
 
-    match item.column():
+    match item.column():     
             
         case 4 | 5:
 
-            uav = ui.uavs.select_UAV_by_Order(row)
 
             uav.missionSettings['Insp. height'] = float(ui.tableModel.data(ui.tableModel.index(row, 4)))
             uav.missionSettings['Insp. horizontal offset'] = float(ui.tableModel.data(ui.tableModel.index(row, 5)))
