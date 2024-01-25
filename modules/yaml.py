@@ -115,7 +115,7 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
 
         return wps
 
-def load_problem_from_YAML(file_path: str) -> SO.Problem:
+def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather]:
 
     # Initialize data
     bases = BA.Bases()
@@ -192,11 +192,4 @@ def load_problem_from_YAML(file_path: str) -> SO.Problem:
 
     towers.load_from_Arrays(paths, True)
 
-    problem = SO.Problem(
-        towers,
-        bases,
-        uavs,
-        weather
-    )
-
-    return problem
+    return bases, towers, uavs, weather

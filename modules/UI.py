@@ -11,6 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.pyplot as plt
+import yaml
 
 import modules.towers as TW
 import modules.bases as BA
@@ -33,6 +34,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        self.current_directory  = os.getcwd()
+
         # Some permanent parameters and data -------------
 
         # Use binary instead and use each bit for a different thing
@@ -51,9 +54,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Window settings --------------------------------
 
-        self.setWindowTitle("Line Inspection Planner v"+ str(version))
+        self.setWindowTitle("Smart Flies Planner Alpha v"+ str(version))
         self.resize(1260, 900)
-        self.setWindowIcon(QtGui.QIcon("./ico.png"))
+        self.icon = os.path.join( self.current_directory, 'ico.svg' )
+        self.setWindowIcon(QtGui.QIcon(self.icon))
 
         # Menu Bar ---------------------------------------
 
@@ -64,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menu0 = menubar.addMenu('File')
         db_action01 = menu0.addAction("Load Mission Initialization")
         db_action01.setStatusTip("Load a YAML file for the problem definition")
-        #db_action01.triggered.connect()
+        db_action01.triggered.connect(lambda: load_data_from_YAML(self))
 
         db_action02 = menu0.addAction("Load Bases KML")
         db_action02.setStatusTip("Not implemented yet")
@@ -614,6 +618,86 @@ def fileDialog(ui: MainWindow, fileLine: QtWidgets.QLineEdit, dialog: str, filet
 
     return None
 
+def load_data_from_YAML(ui: MainWindow):
+    """
+    Auxiliary UI function to load everything needed to define a GTSP-MUAV problem (Towers, Bases & UAV Team) except from weather.
+    It uses the menubar item to do so.
+    """
+
+    filename = QtWidgets.QFileDialog.getOpenFileName(
+        ui,
+        "Open Mission Initialization YAML",
+        '',
+        "Mission Initialization (*.yaml)", 
+    )
+
+    ui.bases, ui.towers, ui.uavs, _ = YAML.load_data_from_YAML(filename[0])
+
+    # Update with new data
+    updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())
+
+    # Set general location as the first base. This could be better done
+    base1 = ui.bases.get_Base("B1")
+    ui.location_LatLon = CO.utm2latlon(base1.get_Coordinates(), base1.get_UTM_Zone()) # [Latitude, Longitud]
+
+
+    # UAVs Model Info Update to treeview
+    updateUAVsModelData(ui.treeView)
+
+    # Update TableView with models
+
+    UAVs_IDs = []
+
+    for uav in ui.uavs:
+        UAVs_IDs.append(uav.get_ID())
+
+    ui.tableModel.setVerticalHeaderLabels(UAVs_IDs)
+
+
+    ui.combo_modes = []
+    ui.combo_bases = []
+
+        
+    keys = list(uav.missionSettings.keys())
+
+    bases_list = [uav.missionSettings["Base"] for uav in ui.uavs]
+    landing_list = ["None", "Auto"]
+
+    for i in range(len(UAVs_IDs)):
+
+        b_index = bases_list.index(ui.uavs.select_UAV_by_Order(i).missionSettings["Base"])
+        lm_index = landing_list.index(ui.uavs.select_UAV_by_Order(i).missionSettings["Landing Mode"])
+
+        for k in range(ui.tableModel.columnCount()):
+            ui.tableModel.setData(ui.tableModel.index(i, k), ui.uavs.select_UAV_by_Order(i).missionSettings[keys[k]],
+                                    QtCore.Qt.ItemDataRole.EditRole)
+
+        ui.combo_bases.append(QtWidgets.QComboBox())
+        ui.combo_bases[i].addItems(bases_list)
+        ui.combo_bases[i].setCurrentIndex(b_index)
+
+        ui.combo_modes.append(QtWidgets.QComboBox())
+        ui.combo_modes[i].addItems(landing_list)
+        ui.combo_modes[i].setCurrentIndex(lm_index)
+    
+        ui.tableView.setIndexWidget(ui.tableModel.index(i, 0), ui.combo_bases[i])
+        ui.tableView.setIndexWidget(ui.tableModel.index(i, 3), ui.combo_modes[i])
+        
+        ui.combo_bases[i].currentTextChanged.connect(lambda: getBaseMissionSettings(ui))
+        ui.combo_modes[i].currentTextChanged.connect(lambda: getLandingModeMissionSettings(ui))
+
+    # data changed or itemchanged do not detect combo changes
+    ui.tableModel.itemChanged.connect(lambda item: updateMissionSettings(ui, item))
+    ui.tableView.resizeColumnsToContents()
+        
+    # Set Flag Status
+    if ui.status_flag == 0x0 or ui.status_flag == 0x1: ui.status_flag = 0x1
+    else: ui.status_flag = 0x3
+
+    print("Bases, Towers and UAV files loaded and drawn")
+
+    return None
+
 def loadInputdata(ui: MainWindow):
     """
     Auxiliary UI function to load everything needed to define a GTSP-MUAV problem (Towers, Bases & UAV Team) except from weather.
@@ -1128,6 +1212,64 @@ def updateUAVsData(treeView: QtWidgets.QTreeView, uavs:UAVS.UAV_Team):
     rootNode.appendColumn(model)
     treeView.setModel(treeModel)
 
+def updateUAVsModelData(treeView: QtWidgets.QTreeView):
+    """
+    Prints the available UAV Models data to the TreeView on the UI
+    """
+
+    # Creates a new model for the tree view
+    treeModel = QtGui.QStandardItemModel()
+
+    # root node to which we append all the UAVs as columns
+    rootNode = treeModel.invisibleRootItem()
+
+    # Loads models database
+    f = open("./files/devices.yaml", "r")
+    database = yaml.load(f, Loader = yaml.Loader)
+    f.close()
+
+    
+
+    model = []
+    
+    k = 0
+    for model_name in database:
+        # Append UAV to the list
+        model.append(noneditableItem(model_name, 16, set_bold = True))
+
+        model_data = database[model_name]
+
+        # Add as column of the newly added UAV each of the parameters using items
+
+        bat = noneditableItem('Battery', 12, set_bold = False)
+        bat.appendColumn([
+            noneditableItem('Type: '+"Cellular", 12, set_bold = False),
+            noneditableItem(f'Capacity: {model_data["battery"]["capacity"]}', 12, set_bold = False),
+            noneditableItem(f'Number of cells: {model_data["battery"]["number_of_cells"]}', 12, set_bold = False),
+            noneditableItem(f'Volts per cell: {model_data["battery"]["Voltage_per_cell"]}', 12, set_bold = False),
+        ])
+
+        model[k].appendColumn([noneditableItem(f'Mass: {model_data["mass"]}', 12, set_bold = False),
+                               noneditableItem(f'Number of rotors: {model_data["number_of_rotors"]}', 12, set_bold = False),
+                               noneditableItem(f'Blades per rotor: {model_data["rotor_of_rotors_blades"]}', 12, set_bold = False),
+                               noneditableItem(f'Rotor radius: {model_data["rotor_radious"]}', 12, set_bold = False),
+                               noneditableItem(f'Blade chord: {model_data["blade_chord"]}', 12, set_bold = False),
+                               noneditableItem(f'Lift Coefficient: {model_data["section_lift_coefficient"]}', 12, set_bold = False),
+                               noneditableItem(f'Drag Coefficient: {model_data["section_draft_coefificient"]}', 12, set_bold = False),
+                               noneditableItem(f'kappa: {model_data["introduced_power_factor"]}', 12, set_bold = False),
+                               noneditableItem(f'eta: {model_data["energy_efficiency"]}', 12, set_bold = False),
+                               noneditableItem(f'K_mu: {model_data["P0_numerical_constrant"]}', 12, set_bold = False),
+                               noneditableItem(f'Effective flat area: {model_data["equivalent_flat_platearea"]}', 12, set_bold = False),
+                               noneditableItem(f'CameraQ: {True}', 12, set_bold = False),
+                               bat
+                               ])
+        
+        k += 1
+    
+    # Append list to root and set model
+    rootNode.appendColumn(model)
+    treeView.setModel(treeModel)
+
 def getMissionSettings(ui: MainWindow):
     """
     It updates the UI varibles that stores the settings from the UI.
@@ -1310,13 +1452,6 @@ def updatePlot(canvas: MplCanvas, bases: BA.Bases, towers: TW.Towers, satellital
     return None
 
 # ------------------------------ Planner / Solver specific --------------------------------
-
-def load_problem_from_YAML(ui: MainWindow, file: str):
-
-    problem = YAML.load_problem_from_YAML(file)
-
-    return None
-
 
 
 def exec_Planner(ui: MainWindow):

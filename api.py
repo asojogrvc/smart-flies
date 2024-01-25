@@ -228,7 +228,7 @@ def planner():
     # --- Placeholder data -------------------------
 
     if "yaml" == app.get_Input_type("Bases"):
-        problem = iYAML.load_problem_from_YAML("./server/dynamic/mission_init.yaml")
+        bases, towers, uavs, weather = iYAML.load_data_from_YAML("./server/dynamic/mission_init.yaml")
 
     else:
 
@@ -248,9 +248,10 @@ def planner():
         base1 = bases.get_Base("B1")
         weather.update_Online(CO.utm2latlon(base1.get_Coordinates(), base1.get_UTM_Zone()))
     
-
-        problem = SO.Problem(towers, bases, uavs, weather)
+        
         # ----------------------------------------------
+
+    problem = SO.Problem(towers, bases, uavs, weather)
 
     problem.solve("abstract")
 

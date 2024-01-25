@@ -142,9 +142,3 @@ catec:
 
   speed_mission: 7
   speed_navegation: 15
-
-Camera:
-  fpv_M210: [509, 480]
-  fpv_M300: [509, 480]
-  flir_duo: [509, 480]
-  laptop: [509, 480]
