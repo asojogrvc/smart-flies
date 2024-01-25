@@ -61,6 +61,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.solverType = 'abstract'
 
+        menu0 = menubar.addMenu('File')
+        db_action01 = menu0.addAction("Load Mission Initialization")
+        db_action01.setStatusTip("Load a YAML file for the problem definition")
+        #db_action01.triggered.connect()
+
+        db_action02 = menu0.addAction("Load Bases KML")
+        db_action02.setStatusTip("Not implemented yet")
+        db_action03 = menu0.addAction("Load Towers KML")
+        db_action03.setStatusTip("Not implemented yet")
+
         menu = menubar.addMenu('Theme')
         db_action11 = menu.addAction("Light Theme")
         db_action12 = menu.addAction("Dark Theme")
@@ -1300,6 +1310,14 @@ def updatePlot(canvas: MplCanvas, bases: BA.Bases, towers: TW.Towers, satellital
     return None
 
 # ------------------------------ Planner / Solver specific --------------------------------
+
+def load_problem_from_YAML(ui: MainWindow, file: str):
+
+    problem = YAML.load_problem_from_YAML(file)
+
+    return None
+
+
 
 def exec_Planner(ui: MainWindow):
     """
