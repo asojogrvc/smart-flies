@@ -22,6 +22,20 @@ import modules.solver as SO
 import modules.simulation as SIM
 import modules.yaml as YAML
 
+def set_bit(v: int, index:int, x:int) -> int:
+  """
+  Set the index:th bit of v to 1 if x is truthy, else to 0, and return the new value.
+  """
+  mask = 1 << index-1 # Compute mask, an integer with just bit 'index' set.
+  v &= ~mask          # Clear the bit indicated by the mask (if x is False)
+  if x:
+    v |= mask         # If x was True, set the bit indicated by the mask.
+
+  return v            # Return the result, we're done
+
+def is_set(v:int, n:int) -> bool:
+    return v & 1 << n-1 != 0
+
 global version
 version = 0.2
 
@@ -38,13 +52,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Some permanent parameters and data -------------
 
-        # Use binary instead and use each bit for a different thing
-        self.status_flag = 0x0
-        # 0x0 = Initial Status
-        # 0x1 = Input Data loaded
-        # 0x2 = Weather Loaded
-        # 0x3 = Both Input Data and Weather loaded. Ready for planner
-        # 0x4 = Solution found
+        self.status_flag =             0b0000
+        #                                |||\-- Input data? 
+        #                                ||\--- Weather?
+        #                                |\---- Problem Solved?
+        #                                \----- Sim Trajectories?
+        #
+        #
 
         self.towers = TW.Towers()
         self.bases = BA.Bases()
@@ -691,8 +705,8 @@ def load_data_from_YAML(ui: MainWindow):
     ui.tableView.resizeColumnsToContents()
         
     # Set Flag Status
-    if ui.status_flag == 0x0 or ui.status_flag == 0x1: ui.status_flag = 0x1
-    else: ui.status_flag = 0x3
+    ui.status_flag = set_bit(ui.status_flag, 1, 1)
+    print(bin(ui.status_flag))
 
     print("Bases, Towers and UAV files loaded and drawn")
 
@@ -761,8 +775,8 @@ def loadInputdata(ui: MainWindow):
         ui.tableView.resizeColumnsToContents()
         
         # Set Flag Status
-        if ui.status_flag == 0x0 or ui.status_flag == 0x1: ui.status_flag = 0x1
-        else: ui.status_flag = 0x3
+        ui.status_flag = set_bit(ui.status_flag, 1, True)
+        print(bin(ui.status_flag))
 
         print("Bases, Towers and UAV files loaded and drawn")
         #ui.wloaded.show()
@@ -783,7 +797,7 @@ def compute_sim_trajectories(ui: MainWindow):
 
     # Add some condition to not compute the trajectories if they already exits
 
-    if not(ui.status_flag == 0x4 or ui.status_flag == 0x5) or ui.problem_graph == None:
+    if not(is_set(ui.status_flag, 3)):
         print('No Solution found yet.')
         return None
     
@@ -846,7 +860,8 @@ def compute_sim_trajectories(ui: MainWindow):
         """
 
     ui.sim_iter = 0
-    ui.status_flag = 0x5
+    ui.status_flag = set_bit(ui.status_flag, 4, 1)
+    print(bin(ui.status_flag))
 
     print('Trajectories simulated')
     return None
@@ -856,7 +871,7 @@ def startstopSim(ui: MainWindow):
     Each this function is called, it triggers a stop or a start of the simulation animation.
     """
 
-    if ui.status_flag != 0x5:
+    if not is_set(ui.status_flag, 4):
         return None
     
     ui.simQ = not ui.simQ
@@ -1078,8 +1093,8 @@ class WeatherWindow(QtWidgets.QWidget):
         ui.sc.draw()
 
         # Set Flag Status
-        if ui.status_flag == 0x0 or ui.status_flag == 0x2: ui.status_flag = 0x2
-        else: ui.status_flag = 0x3
+        ui.status_flag = set_bit(ui.status_flag, 2, 1)
+        print(bin(ui.status_flag))
 
         # this WILL BE CHAMGED AS IT IS REDUDANT
         ui.windDirInput.setText(self.windDirInput.text())
@@ -1121,8 +1136,8 @@ def manualWeatherUpdate(ui: MainWindow):
     ui.sc.draw()
 
     # Set Flag Status
-    if ui.status_flag == 0x0 or ui.status_flag == 0x2: ui.status_flag = 0x2
-    else: ui.status_flag = 0x3
+    ui.status_flag = set_bit(ui.status_flag, 2, 1)
+    print(bin(ui.status_flag))
 
 def onlineWeatherUpdate(ui: MainWindow):
     """
@@ -1156,8 +1171,8 @@ def onlineWeatherUpdate(ui: MainWindow):
         ui.sc.draw()
 
         # Set Flag Status
-        if ui.status_flag == 0x0 or ui.status_flag == 0x2: ui.status_flag = 0x2
-        else: ui.status_flag = 0x3
+        ui.status_flag = set_bit(ui.status_flag, 2, 1)
+        print(bin(ui.status_flag))
 
 # ------------------------------ UAV specific --------------------------------------------
 
@@ -1459,7 +1474,7 @@ def exec_Planner(ui: MainWindow):
     Runs the planner solver and updates the UAV Team with their optimal paths.
     """
 
-    if not(ui.status_flag == 0x3 or ui.status_flag == 0x4):
+    if not(is_set(ui.status_flag, 1)) or not(is_set(ui.status_flag, 2)):
         print('Either Input Data or Weather not loaded')
         return None
     
@@ -1485,6 +1500,7 @@ def exec_Planner(ui: MainWindow):
     problem.get_UAV_Team().plot_Routes(ui.sc.axes)
     ui.sc.draw()
     
-    ui.status_flag = 0x4
+    ui.status_flag = set_bit(ui.status_flag, 3, 1)
+    print(bin(ui.status_flag))
 
     return None
