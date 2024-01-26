@@ -52,12 +52,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Some permanent parameters and data -------------
 
-        self.status_flag =             0b0000
-        #                                |||\-- Input data? 
-        #                                ||\--- Weather?
-        #                                |\---- Problem Solved?
-        #                                \----- Sim Trajectories?
-        #
+        self.status_flag =            0b00000
+        #                               ||||\-- Input data? 
+        #                               |||\--- Weather?
+        #                               ||\---- Problem Solved?
+        #                               |\----- Sim Trajectories?
+        #                               \------ Waypoints?
         #
 
         self.towers = TW.Towers()
@@ -801,6 +801,11 @@ def compute_sim_trajectories(ui: MainWindow):
         print('No Solution found yet.')
         return None
     
+    if not(is_set(ui.status_flag, 5)):
+        print('Waypoints need to be computed')
+        ui.uavs.compute_Team_Waypoints("PaV", ui.towers, ui.bases)
+
+    
     ui.continueQ = []
 
     sim_speed = float(ui.simSpeedInput.text())
@@ -1348,6 +1353,10 @@ def getLandingModeMissionSettings(ui: MainWindow):
     return None
 
 def updateMissionSettings(ui: MainWindow, item: QtWidgets.QTableWidgetItem):
+
+    
+    ui.uavs.compute_Team_Waypoints("PaV", ui.towers, ui.bases)
+
     print(item.column())
 
     row = item.row()
@@ -1417,6 +1426,9 @@ def updateMissionSettings(ui: MainWindow, item: QtWidgets.QTableWidgetItem):
 
     for uav in ui.uavs:
         print(uav.missionSettings)
+
+    ui.status_flag = set_bit(ui.status_flag, 5, 1)
+    print("Mission Settings changed. Waypoints might need to be recomputed")
 
 # ------------------------------ Plotting specific ----------------------------------------
 
@@ -1490,8 +1502,10 @@ def exec_Planner(ui: MainWindow):
 
     mode = "PaV"
 
-    for uav in ui.uavs:
-        uav.compute_Waypoints(mode, ui.towers, ui.bases)
+    ui.uavs.compute_Team_Waypoints(mode, ui.towers, ui.bases)
+    ui.status_flag = set_bit(ui.status_flag, 5, 1)
+    print(bin(ui.status_flag))
+
 
     ui.problem_graph = problem.get_Graph()
 
