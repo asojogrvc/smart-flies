@@ -4,19 +4,29 @@ import numpy as np, os, yaml, copy
 
 from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, coordinates as CO, solver as SO
 
-def landing_Mode_to_Int(mode: str):
+def landing_Mode_to_Int(mode: str) -> int:
+    """
+    Takes a landing mode as a str and converts it to its int equivalent
+    """
     match mode:
         case "None":
             return str(0)
         case "Auto":
             return str(2)
+        case _: 
+            return str(0)
         
-def int_to_Landing_Mode(mode_int: str):
+def int_to_Landing_Mode(mode_int: int) -> str:
+    """
+    Takes a landing mode as a int and converts it to its str equivalent
+    """
     match mode_int:
         case 0:
             return "None"
         case 2:
             return "Auto"
+        case _:
+            return "None"
 
 
 yaml_version = 3
@@ -26,13 +36,26 @@ mode_gimbal = 0
 idle_vel = 5.0
 
 def print_Header(file):
+    """
+    Writes the YAML header to a file using the internal parameters
+    """
     file.write("version: "+str(yaml_version)+"\n")
     file.write("frame_id: "+f_id+"\n\n\n")
 
+    return None
+
 def print_Description(file, text: str):
+    """
+    Writes the mission description "text" to a file.
+    """
     file.write("description: \""+text+"\"\n")
 
+    return None
+
 def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
+    """
+    Writes the route of one UAV to a file
+    """
     
     file.write("  - name: \"Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]+"\"\n")
     file.write("    uav: \""+uav.get_ID()+"\"\n")
@@ -53,7 +76,12 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     file.write("      mode_gimbal: "+str(mode_gimbal)+ "\n\n")
     file.write("      idle_vel: "+str(idle_vel)+ "\n\n")
 
+    return None
+
 def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
+    """
+    Writes each of the UAV Team routes to a file
+    """
 
     file.write("route:\n")
 
@@ -61,7 +89,12 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
         print_Route(file, uav, utmZone)
         file.write("\n\n")
 
+    return None
+
 def save_Mission(file_path, uavs: UAVS.UAV_Team, utmZone: tuple):
+    """
+    Save the mission to a YAML file in the specified file path
+    """
 
     if os.path.isfile(file_path):
         print("File already exists. Overwritting")
@@ -79,43 +112,49 @@ def save_Mission(file_path, uavs: UAVS.UAV_Team, utmZone: tuple):
     return None
 
 def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
+    """
+    Outputs a dict object that contains the YAML output of the mission
+    """
 
-        wps = {}
+    wps = {}
 
-        wps["version"] = 3
-        wps["frame_id"] = "/gps"
+    wps["version"] = 3
+    wps["frame_id"] = "/gps"
 
-        wps["description"] = ""
+    wps["description"] = ""
 
-        route_list = []
+    route_list = []
 
-        for uav in uavs:
+    for uav in uavs:
 
-            route_dict = {}
+        route_dict = {}
 
-            route_dict["name"] = "Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]
-            route_dict["uav"] = uav.get_ID()
+        route_dict["name"] = "Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]
+        route_dict["uav"] = uav.get_ID()
 
-            wp_list = []
+        wp_list = []
 
-            for wp in uav.waypoints:
-                wp_list.append({"pos": wp[0], "action": wp[1]})
+        for wp in uav.waypoints:
+            wp_list.append({"pos": wp[0], "action": wp[1]})
 
-            route_dict["wp"] = wp_list
+        route_dict["wp"] = wp_list
 
-            route_dict["attributes"] = {
+        route_dict["attributes"] = {
                 "mode_landing": 2,
                 "mode_yaw":2,
                 "mode_gimbal:":0,
                 "idle_vel": 5.0}
             
-            route_list.append(route_dict)
+        route_list.append(route_dict)
 
-        wps["route"] = route_list
+    wps["route"] = route_list
 
-        return wps
+    return wps
 
 def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather]:
+    """
+    Loads the bases, towers, uavs and weather from a YAML input file.
+    """
 
     # Initialize data
     bases = BA.Bases()

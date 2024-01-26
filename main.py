@@ -1,5 +1,5 @@
-# Line Inspection Planner (Python Edition)
-# The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name PLI --noconfirm"
+# Smart Flies Planner
+# The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name SFP --noconfirm"
 
 # TO DO (CRITICAL)
 #   - Finish both solvers by adding the subroute elimination
