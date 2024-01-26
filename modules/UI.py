@@ -1206,17 +1206,17 @@ def updateUAVsData(treeView: QtWidgets.QTreeView, uavs:UAVS.UAV_Team):
 
         data = uav.get_UAV_Parameters()
 
-        model[k].appendColumn([noneditableItem(f'Mass: {data["mass"]}', 12, set_bold = False),
+        model[k].appendColumn([noneditableItem(f'Mass [kg]: {data["mass"]}', 12, set_bold = False),
                                noneditableItem(f'Number of rotors: {data["number_of_Rotors"]}', 12, set_bold = False),
                                noneditableItem(f'Blades per rotor: {data["rotor_Blades"]}', 12, set_bold = False),
-                               noneditableItem(f'Rotor radius: {data["rotor_Radius"]}', 12, set_bold = False),
-                               noneditableItem(f'Blade chord: {data["blade_Chord"]}', 12, set_bold = False),
+                               noneditableItem(f'Rotor radius [m]: {data["rotor_Radius"]}', 12, set_bold = False),
+                               noneditableItem(f'Blade chord [m]: {data["blade_Chord"]}', 12, set_bold = False),
                                noneditableItem(f'Lift Coefficient: {data["lift_Coefficient"]}', 12, set_bold = False),
                                noneditableItem(f'Drag Coefficient: {data["drag_Coefficient"]}', 12, set_bold = False),
                                noneditableItem(f'kappa: {data["kappa"]}', 12, set_bold = False),
                                noneditableItem(f'eta: {data["eta"]}', 12, set_bold = False),
                                noneditableItem(f'K_mu: {data["K_mu"]}', 12, set_bold = False),
-                               noneditableItem(f'Effective flat area: {data["flat_Area"]}', 12, set_bold = False),
+                               noneditableItem(f'Effective flat area [m²]: {data["flat_Area"]}', 12, set_bold = False),
                                noneditableItem(f'CameraQ: {data["camera"]}', 12, set_bold = False),
                                bat
                                ])
@@ -1261,20 +1261,20 @@ def updateUAVsModelData(treeView: QtWidgets.QTreeView):
             noneditableItem('Type: '+"Cellular", 12, set_bold = False),
             noneditableItem(f'Capacity: {model_data["battery"]["capacity"]}', 12, set_bold = False),
             noneditableItem(f'Number of cells: {model_data["battery"]["number_of_cells"]}', 12, set_bold = False),
-            noneditableItem(f'Volts per cell: {model_data["battery"]["Voltage_per_cell"]}', 12, set_bold = False),
+            noneditableItem(f'Volts per cell: {model_data["battery"]["voltage_per_cell"]}', 12, set_bold = False),
         ])
 
-        model[k].appendColumn([noneditableItem(f'Mass: {model_data["mass"]}', 12, set_bold = False),
+        model[k].appendColumn([noneditableItem(f'Mass [kg]: {model_data["mass"]}', 12, set_bold = False),
                                noneditableItem(f'Number of rotors: {model_data["number_of_rotors"]}', 12, set_bold = False),
-                               noneditableItem(f'Blades per rotor: {model_data["rotor_of_rotors_blades"]}', 12, set_bold = False),
-                               noneditableItem(f'Rotor radius: {model_data["rotor_radious"]}', 12, set_bold = False),
-                               noneditableItem(f'Blade chord: {model_data["blade_chord"]}', 12, set_bold = False),
-                               noneditableItem(f'Lift Coefficient: {model_data["section_lift_coefficient"]}', 12, set_bold = False),
-                               noneditableItem(f'Drag Coefficient: {model_data["section_draft_coefificient"]}', 12, set_bold = False),
-                               noneditableItem(f'kappa: {model_data["introduced_power_factor"]}', 12, set_bold = False),
+                               noneditableItem(f'Blades per rotor: {model_data["rotor_blades"]}', 12, set_bold = False),
+                               noneditableItem(f'Rotor radius [m]: {model_data["rotor_radius"]}', 12, set_bold = False),
+                               noneditableItem(f'Blade chord [m]: {model_data["blade_chord"]}', 12, set_bold = False),
+                               noneditableItem(f'Lift Coefficient: {model_data["lift_coefficient"]}', 12, set_bold = False),
+                               noneditableItem(f'Drag Coefficient: {model_data["draft_coefficient"]}', 12, set_bold = False),
+                               noneditableItem(f'kappa: {model_data["induced_power_factor"]}', 12, set_bold = False),
                                noneditableItem(f'eta: {model_data["energy_efficiency"]}', 12, set_bold = False),
-                               noneditableItem(f'K_mu: {model_data["P0_numerical_constrant"]}', 12, set_bold = False),
-                               noneditableItem(f'Effective flat area: {model_data["equivalent_flat_platearea"]}', 12, set_bold = False),
+                               noneditableItem(f'K_mu: {model_data["P0_numerical_constant"]}', 12, set_bold = False),
+                               noneditableItem(f'Effective flat area [m²]: {model_data["equivalent_flat_plate_area"]}', 12, set_bold = False),
                                noneditableItem(f'CameraQ: {True}', 12, set_bold = False),
                                bat
                                ])

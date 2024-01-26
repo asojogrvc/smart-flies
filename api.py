@@ -1,7 +1,7 @@
 # General imports
 
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
-import os
+import os, yaml
 
 # Projects internal modules imports
 from modules import bases as BA, towers as TW, uav as UAVS, solver as SO, weather as WT, coordinates as CO, yaml as iYAML
@@ -183,6 +183,81 @@ def receive_towers() -> dict | None:
 
             app.set_Input_type("file", "Towers")
             return {"output": "KML Received"}
+
+@app.route('/uav_database', methods = ["GET"])
+def uav_database() -> str:
+
+    f = open("./files/devices.yaml", "r")
+    database = yaml.load(f, Loader = yaml.Loader)
+    f.close()
+
+    html_data = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Smart Flies Project</title>
+        </head>
+        <link rel="icon" href="
+        """+url_for('static', filename='favicon.ico')+"""" />
+        <style>
+            table, th, td {
+                border:1px solid black;
+            }
+        </style>
+        <body>
+            <center><img src="
+        """ + url_for('static', filename='ico.png') + """
+                " alt="Project logo" width="50" height="50">
+            <h1>Smart Flies Project</h1></center>
+   
+            <table style="width:100%">
+                <tr>
+                    <th>Model</th>
+                    <th>Mass [kg]</th>
+                    <th>Number of rotors</th>
+                    <th>Blades per rotor</th>
+                    <th>Rotor radius [m]</th>
+                    <th>Blade chord [m]</th>
+                    <th>Lift Coefficient</th>
+                    <th>Drag Coefficient</th>
+                    <th>Induced Power Factor</th>
+                    <th>Energy Efficiency</th>
+                    <th>Equivalent Flat Plate Area</th>
+                    <th>Battery</th>
+                </tr>
+        """
+    
+    for model in database:
+            
+            data = database[model]
+            model_column = f"""
+            <tr>
+                <th>{model}</th>
+                <th>{data['mass']}</th>
+                <th>{data['number_of_rotors']}</th>
+                <th>{data['rotor_blades']}</th>
+                <th>{data['rotor_radius']}</th>
+                <th>{data['blade_chord']}</th>
+                <th>{data['lift_coefficient']}</th>
+                <th>{data['draft_coefficient']}</th>
+                <th>{data['induced_power_factor']}</th>
+                <th>{data['energy_efficiency']}</th>
+                <th>{data['P0_numerical_constant']}</th>
+                <th>{data['equivalent_flat_plate_area']}</th>
+            <tr>
+            """
+            html_data = html_data + model_column
+
+    html_data = html_data + """
+            </table> 
+
+            <center><p align = bottom>&copy; Antonio Sojo@GRVC</p></center>
+        </body>
+        </html>
+        """
+
+    return html_data
 
 @app.route('/favicon.ico', methods = ["GET"])
 def favicon():

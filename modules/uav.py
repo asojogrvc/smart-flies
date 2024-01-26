@@ -89,20 +89,20 @@ class UAV():
         self.__id               = id
         self.__mass             = data['mass']
         self.__number_of_Rotors = data['number_of_rotors']
-        self.__rotor_Blades     = data['rotor_of_rotors_blades']
-        self.__rotor_Radius     = data['rotor_radious']
+        self.__rotor_Blades     = data['rotor_blades']
+        self.__rotor_Radius     = data['rotor_radius']
         self.__blade_Chord      = data['blade_chord']
-        self.__lift_Coefficient = data['section_lift_coefficient']
-        self.__drag_Coefficient = data['section_draft_coefificient']
-        self.__kappa            = data['introduced_power_factor']
+        self.__lift_Coefficient = data['lift_coefficient']
+        self.__drag_Coefficient = data['draft_coefficient']
+        self.__kappa            = data['induced_power_factor']
         self.__eta              = data['energy_efficiency']
-        self.__K_mu             = data['P0_numerical_constrant']
-        self.__flat_Area        = data['equivalent_flat_platearea']
+        self.__K_mu             = data['P0_numerical_constant']
+        self.__flat_Area        = data['equivalent_flat_plate_area']
         self.__camera           = True
         self.__battery          = UAV_Battery("Cellular",
                                                 data['battery']['capacity'],
                                                 data['battery']['number_of_cells'],
-                                                data['battery']['Voltage_per_cell'],
+                                                data['battery']['voltage_per_cell'],
                                                 )
 
         return None

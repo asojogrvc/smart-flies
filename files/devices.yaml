@@ -1,15 +1,15 @@
 dji_M210_noetic:
   mass: 7.2 #kg
   number_of_rotors: 4
-  rotor_of_rotors_blades: 2
-  rotor_radious: 0.226 #m
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
   blade_chord: 0.0247 #x=0.7R
-  section_lift_coefficient: 1.01
-  section_draft_coefificient: 0.01
-  introduced_power_factor: 1.15
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
   energy_efficiency: 0.72
-  P0_numerical_constrant: 4.65
-  equivalent_flat_platearea: 0.32 #m2
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
   obstacle_sensor:
     down: [0 15]
     front: [0 30]
@@ -19,7 +19,7 @@ dji_M210_noetic:
     number: 2
     capacity: 80000 #mAh
     number_of_cells: 4
-    Voltage_per_cell: 3.9 # v/cell
+    voltage_per_cell: 3.9 # v/cell
 
   speed_mission: 7
   speed_navegation: 15
@@ -27,15 +27,15 @@ dji_M210_noetic:
 dji_M210_melodic:
   mass: 7.2 #kg
   number_of_rotors: 4
-  rotor_of_rotors_blades: 2
-  rotor_radious: 0.226 #m
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
   blade_chord: 0.0247 #x=0.7R
-  section_lift_coefficient: 1.01
-  section_draft_coefificient: 0.01
-  introduced_power_factor: 1.15
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
   energy_efficiency: 0.72
-  P0_numerical_constrant: 4.65
-  equivalent_flat_platearea: 0.32 #m2
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
   obstacle_sensor:
     down: [0 15]
     front: [0 30]
@@ -45,21 +45,21 @@ dji_M210_melodic:
     number: 2
     capacity: 80000 #mAh
     number_of_cells: 4
-    Voltage_per_cell: 3.9 # v/cell
+    voltage_per_cell: 3.9 # v/cell
   speed_mission: 7
   speed_navegation: 15
 dji_M300:
   mass: 7.2 #kg
   number_of_rotors: 4
-  rotor_of_rotors_blades: 2
-  rotor_radious: 0.226 #m
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
   blade_chord: 0.0247 #x=0.7R
-  section_lift_coefficient: 1.01
-  section_draft_coefificient: 0.01
-  introduced_power_factor: 1.15
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
   energy_efficiency: 0.72
-  P0_numerical_constrant: 4.65
-  equivalent_flat_platearea: 0.32 #m2
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
   obstacle_sensor: #m[min max]
     down: [0 15]
     front: [0 30]
@@ -72,7 +72,7 @@ dji_M300:
     number: 2
     capacity: 80000 #mAh
     number_of_cells: 4
-    Voltage_per_cell: 3.9 # v/cell
+    voltage_per_cell: 3.9 # v/cell
 
   speed_mission: 7
   speed_navegation: 15
@@ -80,21 +80,21 @@ dji_M300:
 px4:
   mass: 7.2 #kg
   number_of_rotors: 4
-  rotor_of_rotors_blades: 2
-  rotor_radious: 0.226 #m
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
   blade_chord: 0.0247 #x=0.7R
-  section_lift_coefficient: 1.01
-  section_draft_coefificient: 0.01
-  introduced_power_factor: 1.15
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
   energy_efficiency: 0.72
-  P0_numerical_constrant: 4.65
-  equivalent_flat_platearea: 0.32 #m2
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
   obstacle_sensor: {} #m[min max]
   battery:
     number: 2
     capacity: 80000 #mAh
     number_of_cells: 4
-    Voltage_per_cell: 3.9 # v/cell
+    voltage_per_cell: 3.9 # v/cell
 
   speed_mission: 7
   speed_navegation: 15
@@ -102,21 +102,21 @@ px4:
 fuvex:
   mass: 7.2 #kg
   number_of_rotors: 4
-  rotor_of_rotors_blades: 2
-  rotor_radious: 0.226 #m
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
   blade_chord: 0.0247 #x=0.7R
-  section_lift_coefficient: 1.01
-  section_draft_coefificient: 0.01
-  introduced_power_factor: 1.15
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
   energy_efficiency: 0.72
-  P0_numerical_constrant: 4.65
-  equivalent_flat_platearea: 0.32 #m2
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
   obstacle_sensor: {} #m[min max]
   battery:
     number: 2
     capacity: 80000 #mAh
     number_of_cells: 4
-    Voltage_per_cell: 3.9 # v/cell
+    voltage_per_cell: 3.9 # v/cell
 
   speed_mission: 7
   speed_navegation: 15
@@ -124,21 +124,21 @@ fuvex:
 catec:
   mass: 7.2 #kg
   number_of_rotors: 4
-  rotor_of_rotors_blades: 2
-  rotor_radious: 0.226 #m
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
   blade_chord: 0.0247 #x=0.7R
-  section_lift_coefficient: 1.01
-  section_draft_coefificient: 0.01
-  introduced_power_factor: 1.15
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
   energy_efficiency: 0.72
-  P0_numerical_constrant: 4.65
-  equivalent_flat_platearea: 0.32 #m2
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
   obstacle_sensor: {} #m[min max]
   battery:
     number: 2
     capacity: 80000 #mAh
     number_of_cells: 4
-    Voltage_per_cell: 3.9 # v/cell
+    voltage_per_cell: 3.9 # v/cell
 
   speed_mission: 7
   speed_navegation: 15
