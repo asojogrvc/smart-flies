@@ -28,8 +28,6 @@
 #   - Use the yaml package to output the yaml instead of raw text editing
 #   - Put weather group in a subwindow or in a schematic way (SEMIDONE). Careful with the secondary window colors
 
-
-
 import modules.UI as UI
 from PyQt6 import QtWidgets, QtGui
 import os
