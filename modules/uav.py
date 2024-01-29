@@ -278,6 +278,8 @@ class UAV():
                 k = 0
                 for pmove in preMoves:
 
+                    print("k:", k)
+
                     btH1 = coords_dict[self.route[1:-1][k][0]][2] - bH # base of tower 1 with respect to the uav base
                     btH2 = coords_dict[self.route[1:-1][k][1]][2] - bH # base of tower 2 with respect to the uav base
 
@@ -293,7 +295,8 @@ class UAV():
                         actions1 = {"gimbal": gimbal, "yaw": yaw}
 
                         # Point towards movement, which is a point in the next pmove
-                        n_dir = preMoves[k+1][0]-pmove[1]
+                        
+                        n_dir = preMoves[k][0]-pmove[1]
                         n_dir = n_dir / np.linalg.norm(n_dir)
                         yaw = np.rad2deg(np.arccos(n_dir[1]))
                         if n_dir[0] < 0: yaw = -yaw
