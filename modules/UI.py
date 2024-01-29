@@ -77,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         menubar = self.menuBar()
 
-        self.solverType = 'abstract'
+        self.solverType = 'abstract_DFJ'
 
         menu0 = menubar.addMenu('File')
         db_action01 = menu0.addAction("Load Mission Initialization")
@@ -105,6 +105,10 @@ class MainWindow(QtWidgets.QMainWindow):
         db_action22 = menu2.addAction("Abstract Solver")
         db_action22.setStatusTip("Use the Abstract Solver for the planner")
         db_action22.triggered.connect(lambda: self.changeSolverType('abstract'))
+
+        db_action22 = menu2.addAction("Abstract DFJ Solver")
+        db_action22.setStatusTip("Use the Abstract DFJ Solver for the planner")
+        db_action22.triggered.connect(lambda: self.changeSolverType('abstract_DFJ'))
 
         db_action23 = menu2.addAction("GRASP Solver")
         db_action23.setStatusTip("Work in Progress")

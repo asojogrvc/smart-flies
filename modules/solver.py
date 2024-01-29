@@ -103,6 +103,8 @@ class Problem():
                 regular_Solver(self)
             case "abstract": # Alvaro's
                 abstract_Solver(self)
+            case "abstract_DFJ":
+                abstract_DFJ_Solver(self)
             case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
                 GRASP_Solver()
 
@@ -1044,10 +1046,9 @@ def abstract_Solver(problem: Problem):
 
     return None
 
-def abstract_Solver_with_ordering(problem: Problem):
+def abstract_DFJ_Solver(problem: Problem):
     """
-    It is the same as the abstract solver excepts that it implements some extra variables to assign order within a UAV Route. 
-    This allows for a basic but general implementation for subroute elimination.
+    It is the same as the abstract solver excepts that it implements the DFJ Subtour elimination constrains.
     """
 
     ptowers = problem.get_Towers() # This does not duplicate in memory, just "reference" it.
@@ -1436,68 +1437,34 @@ def abstract_Solver_with_ordering(problem: Problem):
             )
 
     # THIS THING ONLY WORKS FOR SOME CASES. IT STILL PRESENTS SUBROUTES FOR MANY OTHERS
-    # --------------------- Subroute S.T.U.P.I.D. Solution ----------------------------
+    # --------------------- Subroute DFJ Solution ----------------------------
             
-    # First see if the towers are connected or not.
-            
-    tgraph = ptowers.get_Graph()
-    
-    if not nx.is_connected(tgraph):
+    # We first need to compute all subsets Q of the list of nodes with cardinality >= 2.
+    pnodes = list(pgraph.nodes)
+    Qlist = itertools.chain.from_iterable(itertools.combinations(list(pgraph.nodes), r) for r in range(2, len(pnodes)+1))
 
-        # If the towers are not connected, then compute a list with the list of towers of each component
-        SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
-        S = [list(tgraph.subgraph(c).nodes()) for c in nx.connected_components(tgraph)]
-        print(S)
+    # For each Q subset, a constrain is added:
+    for Q in Qlist:
 
-        # Connectivity for a pair of subcomponents. First, we need all the different pairs of towers
-        # from each subcomponent
+        # Compute all pair of Q nodes:
+        pairs = list(itertools.combinations(Q, 2))
 
-        towers_pairs = list(itertools.product(*S))
+        # ADD CONDITION TO DELETE INVALID PAIRS WHILE NOT DESTROYING THE LIST
 
-        # Lets create SUP and SDOWN for each subcomponent
+        print("PAIRS: ", pairs)
 
-        SC_Nodes = []
+        # Each constrain is added for each UAV
+        for uav in puavs:
 
-        for subcomponent in SC:
-
-            sup = []
-            sdown = []
-            
-            for line_segment in subcomponent.edges():
-
-
-                # Tower ordering might differ. This ensures it is the same
-                if pgraph.has_node('SUP_{'+line_segment[0]+','+line_segment[1]+'}'):
-                    sup.append('SUP_{'+line_segment[0]+','+line_segment[1]+'}')
-                    sdown.append('SDOWN_{'+line_segment[0]+','+line_segment[1]+'}')
-                else: 
-                    sup.append('SUP_{'+line_segment[1]+','+line_segment[0]+'}')
-                    sdown.append('SDOWN_{'+line_segment[1]+','+line_segment[0]+'}')
-
-            SC_Nodes.append(sup+sdown)
-
-
-        print(SC_Nodes)
-
-
-        # Lets force the entry of at least one UAV in the subcomponent. Bases are still needed to be added
-        pmodel.addCons(
-            SCIP.quicksum(
+            pmodel.addCons(
                 SCIP.quicksum(
-                    SCIP.quicksum(
+                    Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] + Z[edge[1]+'->'+edge[0]+'|'+uav.get_ID()] 
+                for edge in pairs)
+                <= 
+                len(Q) - 1.0
+            )
 
-                            Z[node0+'->'+node1+'|'+uav.get_ID()]
-
-                    for node1 in SC_Nodes[1])
-                for node0 in SC_Nodes[0])
-            for uav in problem.get_UAV_Team())
-            >= 
-            1.0
-        )
-        
-            
-
-    # --------------------- Subroute S.T.U.P.I.D. Solution ----------------------------
+    # --------------------- Subroute DFJ Solution ----------------------------
     
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
