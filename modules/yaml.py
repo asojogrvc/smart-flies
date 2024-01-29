@@ -135,19 +135,21 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
         wp_list = []
 
         for wp in uav.waypoints:
-            wp_list.append({"pos": str(wp[0]), "action": wp[1]})
+            wp_list.append({"pos": wp[0].tolist(), "action": str(wp[1])} )
 
         route_dict["wp"] = wp_list
 
         route_dict["attributes"] = {
                 "mode_landing": 2,
                 "mode_yaw":2,
-                "mode_gimbal:":0,
+                "mode_gimbal":0,
                 "idle_vel": 5.0}
             
         route_list.append(route_dict)
 
     wps["route"] = route_list
+
+    print(wps)
 
     return wps
 
