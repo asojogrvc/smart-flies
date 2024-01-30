@@ -649,6 +649,14 @@ def load_data_from_YAML(ui: MainWindow):
         "Mission Initialization (*.yaml)", 
     )
 
+    ui.status_flag = set_bit(ui.status_flag, 1, 0)
+    print(bin(ui.status_flag))
+
+    # Reset. This is redundant
+    ui.towers.reset()
+    ui.bases.reset()
+    ui.uavs.empty()
+
     ui.bases, ui.towers, ui.uavs, _ = YAML.load_data_from_YAML(filename[0])
 
     # Update with new data
@@ -721,6 +729,10 @@ def loadInputdata(ui: MainWindow):
     Auxiliary UI function to load everything needed to define a GTSP-MUAV problem (Towers, Bases & UAV Team) except from weather.
     It uses the file dialogs from the UI to locate the right files and show their information to the user
     """
+
+    ui.status_flag = set_bit(ui.status_flag, 1, 0)
+    print(bin(ui.status_flag))
+
     try:
 
         # Load each file using the corresponding method to the UI-stored instance
@@ -1358,8 +1370,8 @@ def getLandingModeMissionSettings(ui: MainWindow):
 
 def updateMissionSettings(ui: MainWindow, item: QtWidgets.QTableWidgetItem):
 
-    
-    ui.uavs.compute_Team_Waypoints("PaV", ui.towers, ui.bases)
+    if is_set(ui.status_flag, 1):
+        ui.uavs.compute_Team_Waypoints("PaV", ui.towers, ui.bases)
 
     print(item.column())
 

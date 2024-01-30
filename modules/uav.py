@@ -25,7 +25,7 @@ class UAV_Battery():
 
 class UAV():
     def __init__(self, Name: str = "M300", 
-                 ID: str = "0", 
+                 ID: str = "U", 
                  Mass: float = 7.2, 
                  rotors_number: int = 4, 
                  rotor_blades:int = 2, 
