@@ -685,6 +685,9 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
     #pmodel.disablePropagation()                 # Disable solution Propagation
 
     notsolvedmodel = SCIP.Model(sourceModel=pmodel)
+
+    # Write Scipi Problem externally into a human-readable file
+    pmodel.writeProblem('scip_model.cip')
             
     pmodel.optimize()
     sol = pmodel.getBestSol()
@@ -695,29 +698,30 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
     parse_Abstract_Routes(sol, Z, puavs)
 
-    k = 1
-
     subtoursQ = False
 
     print("")
-    print("Dynamic DFJ Subtour elimination iter: ", k)
+    print("Initial iter")
     print("----------------------------------------")
     
     for uav in puavs:
         loops = list_Loops(uav.routeAbstract)
 
         print("Route: ", uav.routeAbstract)
+        print("Loops: ", loops)
 
         if len(loops) > 1:
 
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
 
-            #add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
+            add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
 
             del pmodel
             pmodel = SCIP.Model(sourceModel=notsolvedmodel)
-            pmodel.hideOutput()
+
+            # Write Scipi Problem externally into a human-readable file
+            pmodel.writeProblem('scip_model_DFJ.cip')
 
             pmodel.optimize()
             sol = pmodel.getBestSol()
@@ -726,11 +730,17 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
             parse_Abstract_Routes(sol, Z, puavs)
 
             subtoursQ = True
-            k += 1
             break
-        
 
-    
+    for edge in Z:
+        if np.abs(sol[Z[edge]] - 1.0) < 1e-6:
+            print("HEY")
+            print(edge) # To avoid floating point errors
+        else: print(edge, sol[Z[edge]])
+        
+    quit()
+
+    k = 1
     while subtoursQ:
 
         subtoursQ = False
@@ -744,17 +754,21 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
             print("Route: ", uav.routeAbstract)
 
             loops = list_Loops(uav.routeAbstract)
+            print("Loops: ", loops)
+
             if len(loops) > 1:
                 
                 print("Q: ", Q)
 
                 Q = get_Q_from_loops(loops)
 
-                #add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
+                add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
 
                 del pmodel
                 pmodel = SCIP.Model(sourceModel=notsolvedmodel)
-                pmodel.hideOutput()
+
+                # Write Scipi Problem externally into a human-readable file
+                pmodel.writeProblem('scip_model_DFJ.cip')
 
                 pmodel.optimize()
                 sol = pmodel.getBestSol()
@@ -765,9 +779,6 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                 break
 
         k += 1
-
-    # Write Scipi Problem externally into a human-readable file
-    pmodel.writeProblem('scip_model.cip')
 
 
     for uav_pair in sigmas:
@@ -1422,6 +1433,7 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SC
                 
         pairs.append(pair)
 
+    print("Pairs:", pairs)
 
     # Each constrain is added for each UAV
     for uav in puavs:
@@ -1486,12 +1498,13 @@ def get_Q_from_loops(loops: list) -> list:
         # Check if the current loop contains the base.
         baseQ = False
         for move in loop:
-            if "B" == move[0]: baseQ = True
+            if "B" == move[0] or "B" == move[1]: baseQ = True
         
         if baseQ: continue
+        else:
+            Q.append(loop[0][0])
 
-        Q.append(loop[0][0])
+            for move in loop[:-1]:
+                Q.append(move[1])
 
-        for move in loop:
-            Q.append(move[1])
-    return Q
+            return Q
