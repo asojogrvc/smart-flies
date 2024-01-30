@@ -688,7 +688,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
     # Write Scipi Problem externally into a human-readable file
     pmodel.writeProblem('scip_model.cip')
-            
+
     pmodel.optimize()
     sol = pmodel.getBestSol()
 
@@ -738,7 +738,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
             print(edge) # To avoid floating point errors
         else: print(edge, sol[Z[edge]])
         
-    quit()
+    
 
     k = 1
     while subtoursQ:
@@ -1291,11 +1291,11 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
             edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge|UAV Tag
 
-            Z[edge_uav] = pmodel.addVar(vtype = 'B',
-                                                  name = 'Z_{'+edge_uav+'}')
+            Z[edge_uav] = pmodel.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"Z"+edge[0]+edge[1])
             
             t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
             e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
+
 
     # Only one inspection constrain
     for line_segment in ptowers.get_Graph().edges():
@@ -1327,8 +1327,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
         # Continuity. The UAV that inspects must be the one that exits the segment
         for uav in puavs:
 
-            Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
-              name = 'Y_{SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
+            Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
 
             pmodel.addCons(
                 SCIP.quicksum(Z[node+'->'+'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
@@ -1338,8 +1337,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 2 * Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
             )
 
-            Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
-              name = 'Y_{SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
+            Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
 
             pmodel.addCons(
                 SCIP.quicksum(Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
@@ -1390,8 +1388,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     # Create the sigma variables on SCIP. Also add the sigma definition constrains
     for pair in uav_pairs:
             pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
-            sigmas[pair_tag] = pmodel.addVar(vtype = 'C',
-                                                        name='sigma_{'+pair_tag+'}')
+            sigmas[pair_tag] = pmodel.addVar(vtype = 'C', name = "Sigma"+pair[0].get_ID()+pair[1].get_ID())
 
             # Sigma constrains
             # Linearized version. It is way less problematic
