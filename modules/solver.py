@@ -105,6 +105,8 @@ class Problem():
                 abstract_Solver(self)
             case "abstract_DFJ":
                 abstract_DFJ_Solver(self)
+            case "abstract_dynamic_DFJ":
+                abstract_Dynamic_DFJ_Solver(self)
             case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
                 GRASP_Solver()
 
@@ -444,148 +446,7 @@ def abstract_Solver(problem: Problem):
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
     
-    # Dictionaries to store SCIP variables
-    Z = {}
-    sigmas = {}
-    Y = {}
-
-    # Dictionaries to store weights for easy access
-    t = {}
-    e = {}
-
-    Wt = nx.get_edge_attributes(pgraph, 'Wt')
-    We = nx.get_edge_attributes(pgraph, 'We')
-
-    # For each edge in the graph assign a Z variable and assign the corresponding weights
-    # to its key in the weights dictionaries
-    for edge in pgraph.edges():
-
-        for uav in puavs:
-
-            edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge|UAV Tag
-
-            Z[edge_uav] = pmodel.addVar(vtype = 'B',
-                                                  name = 'Z_{'+edge_uav+'}')
-            
-            t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
-            e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
-
-    # Only one inspection constrain
-    for line_segment in ptowers.get_Graph().edges():
-
-        nodelist = copy.deepcopy(list(pgraph.nodes()))
-        nodelist.remove('SUP_{'+line_segment[0]+','+line_segment[1]+'}')
-        nodelist.remove('SDOWN_{'+line_segment[0]+','+line_segment[1]+'}')
-
-        pmodel.addCons(
-            SCIP.quicksum(
-                SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                for uav in puavs)
-            for node in nodelist)
-                == 
-            1.0
-        )
-
-        pmodel.addCons(
-            SCIP.quicksum(
-                SCIP.quicksum(Z[  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for uav in puavs)
-            for node in nodelist)
-                == 
-            1.0
-        )
-
-        # Continuity. The UAV that inspects must be the one that exits the segment
-        for uav in puavs:
-
-            Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
-              name = 'Y_{SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
-
-            pmodel.addCons(
-                SCIP.quicksum(Z[node+'->'+'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                2 * Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-            )
-
-            Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
-              name = 'Y_{SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
-
-            pmodel.addCons(
-                SCIP.quicksum(Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                2 * Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-            )
-
-    
-    for uav in puavs:
-
-        nodelist = copy.deepcopy(list(pgraph.nodes()))
-
-        for base in pbases:
-            nodelist.remove(base.get_Name())
-
-        # Base exit constrain
-        pmodel.addCons(
-                SCIP.quicksum(
-                    Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                1
-        )
-
-        # Base entering constrain
-        pmodel.addCons(
-                SCIP.quicksum(
-                    Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                1
-        )
-
-        # Energy constrain
-        pmodel.addCons(
-            SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
-                     for edge in pgraph.edges()) 
-                <= 
-            1.0
-        )
-
-
-    # The N(N-1)/2 UAVs pairs. No repetitions and no order.
-    uav_pairs = list(itertools.combinations(puavs, 2))
-
-    # Create the sigma variables on SCIP. Also add the sigma definition constrains
-    for pair in uav_pairs:
-            pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
-            sigmas[pair_tag] = pmodel.addVar(vtype = 'C',
-                                                        name='sigma_{'+pair_tag+'}')
-
-            # Sigma constrains
-            # Linearized version. It is way less problematic
-            
-            pmodel.addCons(
-                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
-                       - t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
-                            for edge in pgraph.edges())
-                - sigmas[pair_tag] 
-                            <= 
-                0.0
-            )
-
-            pmodel.addCons(
-                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
-                       - t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
-                            for edge in pgraph.edges())
-                - sigmas[pair_tag] 
-                            <= 
-                0.0
-            )
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
 
     # THIS THING ONLY WORKS FOR SOME CASES. IT STILL PRESENTS SUBROUTES FOR MANY OTHERS
     # --------------------- Subroute S.T.U.P.I.D. Solution ----------------------------
@@ -708,149 +569,8 @@ def abstract_DFJ_Solver(problem: Problem):
         
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
-    
-    # Dictionaries to store SCIP variables
-    Z = {}
-    sigmas = {}
-    Y = {}
-
-    # Dictionaries to store weights for easy access
-    t = {}
-    e = {}
-
-    Wt = nx.get_edge_attributes(pgraph, 'Wt')
-    We = nx.get_edge_attributes(pgraph, 'We')
-
-    # For each edge in the graph assign a Z variable and assign the corresponding weights
-    # to its key in the weights dictionaries
-    for edge in pgraph.edges():
-
-        for uav in puavs:
-
-            edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge|UAV Tag
-
-            Z[edge_uav] = pmodel.addVar(vtype = 'B',
-                                                  name = 'Z_{'+edge_uav+'}')
-            
-            t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
-            e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
-
-    # Only one inspection constrain
-    for line_segment in ptowers.get_Graph().edges():
-
-        nodelist = copy.deepcopy(list(pgraph.nodes()))
-        nodelist.remove('SUP_{'+line_segment[0]+','+line_segment[1]+'}')
-        nodelist.remove('SDOWN_{'+line_segment[0]+','+line_segment[1]+'}')
-
-        pmodel.addCons(
-            SCIP.quicksum(
-                SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                for uav in puavs)
-            for node in nodelist)
-                == 
-            1.0
-        )
-
-        pmodel.addCons(
-            SCIP.quicksum(
-                SCIP.quicksum(Z[  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for uav in puavs)
-            for node in nodelist)
-                == 
-            1.0
-        )
-
-        # Continuity. The UAV that inspects must be the one that exits the segment
-        for uav in puavs:
-
-            Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
-              name = 'Y_{SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
-
-            pmodel.addCons(
-                SCIP.quicksum(Z[node+'->'+'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                2 * Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-            )
-
-            Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
-              name = 'Y_{SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
-
-            pmodel.addCons(
-                SCIP.quicksum(Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                2 * Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-            )
-
-    
-    for uav in puavs:
-
-        nodelist = copy.deepcopy(list(pgraph.nodes()))
-
-        for base in pbases:
-            nodelist.remove(base.get_Name())
-
-        # Base exit constrain
-        pmodel.addCons(
-                SCIP.quicksum(
-                    Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                1
-        )
-
-        # Base entering constrain
-        pmodel.addCons(
-                SCIP.quicksum(
-                    Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                1
-        )
-
-        # Energy constrain
-        pmodel.addCons(
-            SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
-                     for edge in pgraph.edges()) 
-                <= 
-            1.0
-        )
-
-
-    # The N(N-1)/2 UAVs pairs. No repetitions and no order.
-    uav_pairs = list(itertools.combinations(puavs, 2))
-
-    # Create the sigma variables on SCIP. Also add the sigma definition constrains
-    for pair in uav_pairs:
-            pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
-            sigmas[pair_tag] = pmodel.addVar(vtype = 'C',
-                                                        name='sigma_{'+pair_tag+'}')
-
-            # Sigma constrains
-            # Linearized version. It is way less problematic
-            
-            pmodel.addCons(
-                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
-                       - t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
-                            for edge in pgraph.edges())
-                - sigmas[pair_tag] 
-                            <= 
-                0.0
-            )
-
-            pmodel.addCons(
-                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
-                       - t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
-                            for edge in pgraph.edges())
-                - sigmas[pair_tag] 
-                            <= 
-                0.0
-            )
+ 
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
 
     # --------------------- Subroute DFJ Solution ----------------------------
             
@@ -921,6 +641,144 @@ def abstract_DFJ_Solver(problem: Problem):
         print('sigma_', uav_pair, ' = ' ,sol[sigmas[uav_pair]])
 
     for uav in puavs:
+        print('NO = ', uav.route)
+        uav.route, uav.routeModes = order_Route(uav.missionSettings['Base'], uav.route, uav.routeModes)
+        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
+        print('O = ', uav.route)
+        print(uav.routeModes)
+
+    return None
+
+def abstract_Dynamic_DFJ_Solver(problem: Problem):
+    """
+    It is the same as the abstract solver excepts that it implements a dynamic DFJ Subtour elimination constraint.
+    """
+
+    ptowers = problem.get_Towers() # This does not duplicate in memory, just "reference" it.
+                                   # This is just default python. Just for faster coding and less referencing
+    pbases = problem.get_Bases()
+    puavs = problem.get_UAV_Team()
+    pweather = problem.get_Weather()
+    pgraph = problem.get_Graph()
+    pmodel =  problem.get_SCIP_Model() 
+
+    #--------------------------------- Graph ---------------------------------------------------------
+
+    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph)
+
+    # With this, the abstract graph is fully constructed.     
+        
+    # ------------------------------ SCIP ------------------------------------
+    # Let's define the SCIP problem, compute the solution and update the UAVs routes
+    
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
+
+    f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
+
+    pmodel.setObjective(SCIP.quicksum(t[key]*Z[key] for key in Z.keys()) 
+                                     + 
+                                f_k * SCIP.quicksum(sigmas[key] for key in sigmas.keys()))
+
+    #print(pmodel.getObjective())
+
+    #pmodel.setHeuristics(SCIP_PARAMSETTING.OFF) # Disable HEURISTICS
+    #pmodel.disablePropagation()                 # Disable solution Propagation
+
+    notsolvedmodel = SCIP.Model(sourceModel=pmodel)
+            
+    pmodel.optimize()
+    sol = pmodel.getBestSol()
+
+    #print(problem.scipi_model.checkSol(sol))
+
+    # -------------------- Route parsing -----------------------------
+
+    parse_Abstract_Routes(sol, Z, puavs)
+
+    k = 1
+
+    subtoursQ = False
+
+    print("")
+    print("Dynamic DFJ Subtour elimination iter: ", k)
+    print("----------------------------------------")
+    
+    for uav in puavs:
+        loops = list_Loops(uav.routeAbstract)
+
+        print("Route: ", uav.routeAbstract)
+
+        if len(loops) > 1:
+
+            Q = get_Q_from_loops(loops)
+            print("Q: ", Q)
+
+            #add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
+
+            del pmodel
+            pmodel = SCIP.Model(sourceModel=notsolvedmodel)
+            pmodel.hideOutput()
+
+            pmodel.optimize()
+            sol = pmodel.getBestSol()
+
+
+            parse_Abstract_Routes(sol, Z, puavs)
+
+            subtoursQ = True
+            k += 1
+            break
+        
+
+    
+    while subtoursQ:
+
+        subtoursQ = False
+
+        print("")
+        print("Dynamic DFJ Subtour elimination iter: ", k)
+        print("----------------------------------------")
+
+        for uav in puavs:
+
+            print("Route: ", uav.routeAbstract)
+
+            loops = list_Loops(uav.routeAbstract)
+            if len(loops) > 1:
+                
+                print("Q: ", Q)
+
+                Q = get_Q_from_loops(loops)
+
+                #add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
+
+                del pmodel
+                pmodel = SCIP.Model(sourceModel=notsolvedmodel)
+                pmodel.hideOutput()
+
+                pmodel.optimize()
+                sol = pmodel.getBestSol()
+                parse_Abstract_Routes(sol, Z, puavs)
+
+                #subtoursQ = True
+
+                break
+
+        k += 1
+
+    # Write Scipi Problem externally into a human-readable file
+    pmodel.writeProblem('scip_model.cip')
+
+
+    for uav_pair in sigmas:
+        print('sigma_', uav_pair, ' = ' ,sol[sigmas[uav_pair]])
+
+    for uav in puavs:
+
+        loops = list_Loops(uav.routeAbstract)
+
+        print("Loops List: ", loops)
+
         print('NO = ', uav.route)
         uav.route, uav.routeModes = order_Route(uav.missionSettings['Base'], uav.route, uav.routeModes)
         uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
@@ -1276,15 +1134,15 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team):
 
             nodes = temp[0].split('->')
 
-            puavs.select_UAV(temp[1]).routeAbstract.append(temp[0])
+            puavs.select_UAV(temp[1]).routeAbstract.append((nodes[0], nodes[1]))
 
             
-            print(nodes, temp[1])
+            #print(nodes, temp[1])
 
             # B to S
             if nodes[0][0] == 'B':
 
-                print('B to S')
+                #print('B to S')
                 
                 mode_segment = nodes[1].split('_')
                 towers = mode_segment[1][1:-1].split(',')
@@ -1308,7 +1166,7 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team):
             # S to B
             elif nodes[1][0] == 'B':
 
-                print('S to B')
+                #print('S to B')
 
                 mode_segment = nodes[0].split('_')
                 towers = mode_segment[1][1:-1].split(',')
@@ -1332,7 +1190,7 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team):
             # S to S
             else:
 
-                print('S to S')
+                #print('S to S')
 
                 mode_segment1 = nodes[0].split('_')
                 towers1 = mode_segment1[1][1:-1].split(',')
@@ -1397,4 +1255,243 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team):
                     puavs.select_UAV(temp[1]).route.append(towers2[1]+'->'+towers2[0])
                     puavs.select_UAV(temp[1]).routeModes.append('Inspection')
             
-            print('t = ', puavs.get_List()[0].route)
+            #print('t = ', puavs.get_List()[0].route)
+
+def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.UAV_Team,
+                                   pgraph: nx.MultiDiGraph, pmodel: SCIP.Model) -> tuple[dict, dict, dict, dict, dict]:
+    
+    # Dictionaries to store SCIP variables
+    Z = {}
+    sigmas = {}
+    Y = {}
+
+    # Dictionaries to store weights for easy access
+    t = {}
+    e = {}
+
+    Wt = nx.get_edge_attributes(pgraph, 'Wt')
+    We = nx.get_edge_attributes(pgraph, 'We')
+
+    # For each edge in the graph assign a Z variable and assign the corresponding weights
+    # to its key in the weights dictionaries
+    for edge in pgraph.edges():
+
+        for uav in puavs:
+
+            edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge|UAV Tag
+
+            Z[edge_uav] = pmodel.addVar(vtype = 'B',
+                                                  name = 'Z_{'+edge_uav+'}')
+            
+            t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
+            e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
+
+    # Only one inspection constrain
+    for line_segment in ptowers.get_Graph().edges():
+
+        nodelist = copy.deepcopy(list(pgraph.nodes()))
+        nodelist.remove('SUP_{'+line_segment[0]+','+line_segment[1]+'}')
+        nodelist.remove('SDOWN_{'+line_segment[0]+','+line_segment[1]+'}')
+
+        pmodel.addCons(
+            SCIP.quicksum(
+                SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                       + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                for uav in puavs)
+            for node in nodelist)
+                == 
+            1.0
+        )
+
+        pmodel.addCons(
+            SCIP.quicksum(
+                SCIP.quicksum(Z[  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                for uav in puavs)
+            for node in nodelist)
+                == 
+            1.0
+        )
+
+        # Continuity. The UAV that inspects must be the one that exits the segment
+        for uav in puavs:
+
+            Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
+              name = 'Y_{SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
+
+            pmodel.addCons(
+                SCIP.quicksum(Z[node+'->'+'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                       + Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                for node in nodelist)
+                    == 
+                2 * Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+            )
+
+            Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B',
+              name = 'Y_{SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()+'}')
+
+            pmodel.addCons(
+                SCIP.quicksum(Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                for node in nodelist)
+                    == 
+                2 * Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+            )
+
+    
+    for uav in puavs:
+
+        nodelist = copy.deepcopy(list(pgraph.nodes()))
+
+        for base in pbases:
+            nodelist.remove(base.get_Name())
+
+        # Base exit constrain
+        pmodel.addCons(
+                SCIP.quicksum(
+                    Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                for node in nodelist)
+                    == 
+                1
+        )
+
+        # Base entering constrain
+        pmodel.addCons(
+                SCIP.quicksum(
+                    Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                for node in nodelist)
+                    == 
+                1
+        )
+
+        # Energy constrain
+        pmodel.addCons(
+            SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
+                     for edge in pgraph.edges()) 
+                <= 
+            1.0
+        )
+
+
+    # The N(N-1)/2 UAVs pairs. No repetitions and no order.
+    uav_pairs = list(itertools.combinations(puavs, 2))
+
+    # Create the sigma variables on SCIP. Also add the sigma definition constrains
+    for pair in uav_pairs:
+            pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
+            sigmas[pair_tag] = pmodel.addVar(vtype = 'C',
+                                                        name='sigma_{'+pair_tag+'}')
+
+            # Sigma constrains
+            # Linearized version. It is way less problematic
+            
+            pmodel.addCons(
+                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
+                       - t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
+                            for edge in pgraph.edges())
+                - sigmas[pair_tag] 
+                            <= 
+                0.0
+            )
+
+            pmodel.addCons(
+                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
+                       - t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
+                            for edge in pgraph.edges())
+                - sigmas[pair_tag] 
+                            <= 
+                0.0
+            )
+
+    return Z, Y, sigmas, t, e
+
+def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SCIP.Model):
+    """
+    Adds one of the DFJ subtour elimination constraints for the subset Q. This is used to dynamically add
+    subtour constrains if after one unconstrained run, subtours appear.
+    """
+
+    # Compute all pair of Q nodes:
+    pairs_t = list(itertools.combinations(Q, 2))
+    pairs = []
+    for pair in pairs_t:
+
+        if pair[0][0] == "S" and pair[1][0] == "S" and pair[0].split("_")[1] == pair[1].split("_")[1]:
+            continue
+        elif pair[0][0] == "B" and pair[1][0] == "B":   continue
+                
+        pairs.append(pair)
+
+
+    # Each constrain is added for each UAV
+    for uav in puavs:
+
+        pmodel.addCons(
+            SCIP.quicksum(
+                Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] + Z[edge[1]+'->'+edge[0]+'|'+uav.get_ID()] 
+            for edge in pairs)
+                <= 
+            len(Q) - 1.0
+        )
+
+def find_Loop(abstract_Route: list):
+
+    starting_move = abstract_Route[0]
+
+    loop = [starting_move, ]
+
+    unlisted_moves = abstract_Route.copy()
+    del unlisted_moves[abstract_Route.index(starting_move)]
+    checklist = unlisted_moves.copy()
+
+    foundQ = True
+
+    while foundQ:
+
+        foundQ = False
+
+        for move in checklist:
+            if starting_move[1] == move[0]: #The next point of the loop is found
+                loop.append(move)
+                starting_move = move
+                del unlisted_moves[checklist.index(move)]
+                foundQ = True
+                break
+
+        if foundQ:
+            checklist = unlisted_moves.copy()
+    
+    return loop, unlisted_moves
+
+def list_Loops(abstract_Route: list) -> list:
+
+    loop_list = []
+    loop, left = find_Loop(abstract_Route)
+    loop_list.append(loop)
+
+    while left:
+
+        loop, left = find_Loop(left)
+
+        if not left:
+            loop_list.append(loop)
+
+    return loop_list
+
+def get_Q_from_loops(loops: list) -> list:
+
+    Q = []
+    
+    for loop in loops:
+        # Check if the current loop contains the base.
+        baseQ = False
+        for move in loop:
+            if "B" == move[0]: baseQ = True
+        
+        if baseQ: continue
+
+        Q.append(loop[0][0])
+
+        for move in loop:
+            Q.append(move[1])
+    return Q

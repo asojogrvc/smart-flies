@@ -77,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         menubar = self.menuBar()
 
-        self.solverType = 'abstract_DFJ'
+        self.solverType = "abstract_dynamic_DFJ"
 
         menu0 = menubar.addMenu('File')
         db_action01 = menu0.addAction("Load Mission Initialization")
