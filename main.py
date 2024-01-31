@@ -5,7 +5,11 @@
 #  
 #
 # TO DO (MUST)
-#   
+#   - Delete SUP and SDOWN names. Instead, use T1->T2 and T2->T1 or similar.
+#   - Fix Simulator and probably waypoints for cases where a tower is entered and exited twice. This create joint loops 
+#       and the orderRoute could just close the base loop without entering the other one first.
+#   - In abstract_dynamic_DFJ: Allow user to change the max size for the initial subtour elimination constrains (the one
+#        that are added before solving the problem for the first time)
 #
 # TO DO (OPTIONAL)
 #   - In regularSolver: All tower to tower are treated as inspection.

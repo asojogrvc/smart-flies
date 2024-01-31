@@ -677,6 +677,41 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
     
     Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
 
+    tgraph = ptowers.get_Graph()
+    
+    if not nx.is_connected(tgraph):
+
+        # If the towers are not connected, then compute a list with the list of towers of each component
+        SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
+
+
+
+        subsets = []
+        for subcomponent in SC:
+
+            subset = []
+            for line_segment in subcomponent.edges():
+                edge_str = line_segment[0]+','+line_segment[1]
+                if 'SUP_{'+edge_str+'}' in pgraph.nodes():
+                    subset.append('SUP_{'+edge_str+'}')
+                    subset.append('SDOWN_{'+edge_str+'}')
+                else:
+                    subset.append('SUP_{'+line_segment[1]+','+line_segment[0]+'}')
+                    subset.append('SDOWN_{'+line_segment[1]+','+line_segment[0]+'}')
+
+
+            subsets.append(subset)
+
+        for W in subsets:
+
+            if len(W) < 10: # This might be adjusted by the user.
+
+                Qlist = itertools.chain.from_iterable(itertools.combinations(W, r) for r in range(2, len(W)+1))
+
+                for Q in Qlist:
+                    add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
+
+
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
 
     pmodel.setObjective(SCIP.quicksum(t[key]*Z[key] for key in Z.keys()) 
@@ -699,6 +734,13 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
     pmodel.optimize()
     sol = pmodel.getBestSol()
+
+    """
+    sol_num = {}
+    for var in pmodel.getVars():
+        sol_num[var.name] = sol[var]
+    """
+        
 
     #print(problem.scipi_model.checkSol(sol))
 
@@ -731,9 +773,21 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
             # Write Scipi Problem externally into a human-readable file
             pmodel.writeProblem('scip_model_DFJ.cip')
 
+            """
+            init_sol = pmodel.createSol()
+            for var in pmodel.getVars():
+                pmodel.setSolVal(init_sol, var, sol_num[var.name])
+            """
+
+
             pmodel.optimize()
             sol = pmodel.getBestSol()
 
+            """
+            sol_num = {}
+            for key in Z:
+                sol_num[key] = sol[Z[key]]
+            """
 
             parse_Abstract_Routes(sol, Z, puavs)
 
@@ -770,8 +824,21 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                 # Write Scipi Problem externally into a human-readable file
                 pmodel.writeProblem('scip_model_DFJ.cip')
 
+                """
+                init_sol = pmodel.createSol()
+                for var in pmodel.getVars():
+                    pmodel.setSolVal(init_sol, var, 1)
+                """
+
                 pmodel.optimize()
                 sol = pmodel.getBestSol()
+
+                """
+                sol_num = {}
+                for key in Z:
+                    sol_num[key] = sol[Z[key]]
+                """
+
                 parse_Abstract_Routes(sol, Z, puavs)
 
                 subtoursQ = True
