@@ -99,19 +99,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         menu2 = menubar.addMenu('Solver')
         db_action21 = menu2.addAction("Regular Solver")
-        db_action21.setStatusTip("Use the Regular Solver for the planner. Currently broken and will probably be deprecated")
+        db_action21.setStatusTip("Currently broken and will probably be deprecated in the future")
         db_action21.triggered.connect(lambda: self.changeSolverType('regular'))
 
-        db_action22 = menu2.addAction("Abstract Solver. Faster than the others abstract solvers. However, it breaks for not completely connected maps")
-        db_action22.setStatusTip("Use the Abstract Solver for the planner")
+        db_action22 = menu2.addAction("Abstract Solver")
+        db_action22.setStatusTip("Faster than the others abstract solvers. However, it breaks for not completely connected maps")
         db_action22.triggered.connect(lambda: self.changeSolverType('abstract'))
 
-        db_action22 = menu2.addAction("Abstract DFJ Solver. It enforces the elimination of all subroutes from the start. It is too slow")
-        db_action22.setStatusTip("Use the Abstract DFJ Solver for the planner")
+        db_action22 = menu2.addAction("Abstract DFJ Solver")
+        db_action22.setStatusTip(". It enforces the elimination of all subroutes from the start. It is too slow")
         db_action22.triggered.connect(lambda: self.changeSolverType('abstract_DFJ'))
 
-        db_action23 = menu2.addAction("Abstract Dynamic DFJ Solver. It enforces each of the DFJ Subtour elimination constraints one at a time and when needed")
-        db_action23.setStatusTip("Use the Abstract Dynamic DFJ Solver for the planner")
+        db_action23 = menu2.addAction("Abstract Dynamic DFJ Solver")
+        db_action23.setStatusTip("It enforces each of the DFJ Subtour elimination constraints one at a time and when needed")
         db_action23.triggered.connect(lambda: self.changeSolverType('abstract_DFJ'))
 
         db_action24 = menu2.addAction("GRASP Solver")
