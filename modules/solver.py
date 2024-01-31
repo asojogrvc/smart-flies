@@ -684,10 +684,14 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
     #pmodel.setHeuristics(SCIP_PARAMSETTING.OFF) # Disable HEURISTICS
     #pmodel.disablePropagation()                 # Disable solution Propagation
 
-    notsolvedmodel = SCIP.Model(sourceModel=pmodel)
+    #notsolvedmodel = SCIP.Model(sourceModel=pmodel)
 
     # Write Scipi Problem externally into a human-readable file
     pmodel.writeProblem('scip_model.cip')
+
+    print("")
+    print("Initial iter")
+    print("----------------------------------------")
 
     pmodel.optimize()
     sol = pmodel.getBestSol()
@@ -699,9 +703,10 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
     parse_Abstract_Routes(sol, Z, puavs)
 
     subtoursQ = False
-
+    
+    k = 1
     print("")
-    print("Initial iter")
+    print("Dynamic DFJ Subtour elimination iter: ", k)
     print("----------------------------------------")
     
     for uav in puavs:
@@ -715,10 +720,9 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
 
-            add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
+            pmodel.freeTransform()
 
-            del pmodel
-            pmodel = SCIP.Model(sourceModel=notsolvedmodel)
+            add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
 
             # Write Scipi Problem externally into a human-readable file
             pmodel.writeProblem('scip_model_DFJ.cip')
@@ -731,23 +735,16 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
             subtoursQ = True
             break
-
-    for edge in Z:
-        if np.abs(sol[Z[edge]] - 1.0) < 1e-6:
-            print("HEY")
-            print(edge) # To avoid floating point errors
-        else: print(edge, sol[Z[edge]])
-        
     
 
-    k = 1
+    k += 1
     while subtoursQ:
-
-        subtoursQ = False
 
         print("")
         print("Dynamic DFJ Subtour elimination iter: ", k)
         print("----------------------------------------")
+
+        subtoursQ = False
 
         for uav in puavs:
 
@@ -762,10 +759,9 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
                 Q = get_Q_from_loops(loops)
 
-                add_DFJ_Subtour_Constraint(Q, Z, puavs, notsolvedmodel)
+                pmodel.freeTransform()
 
-                del pmodel
-                pmodel = SCIP.Model(sourceModel=notsolvedmodel)
+                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
 
                 # Write Scipi Problem externally into a human-readable file
                 pmodel.writeProblem('scip_model_DFJ.cip')
@@ -774,7 +770,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                 sol = pmodel.getBestSol()
                 parse_Abstract_Routes(sol, Z, puavs)
 
-                #subtoursQ = True
+                subtoursQ = True
 
                 break
 
