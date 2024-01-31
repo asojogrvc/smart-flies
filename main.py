@@ -2,21 +2,22 @@
 # The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name SFP --noconfirm"
 
 # TO DO (CRITICAL)
-#   - SUBROUTE ELIMINATION
+#  
+#
+# TO DO (MUST)
+#   
+#
+# TO DO (OPTIONAL)
+#   - In regularSolver: All tower to tower are treated as inspection.
+#   - In regularSolver: What about tower to tower but just a move not inspection?
+#   - In regularSolver: It might be faster to not duplicate edges to indicate direction and compute
+#       both weights matrices directly from just one double edge.
+#   - SUBROUTE ELIMINATION for Regular Solver
 #       - Finish both solvers by adding the subroute elimination
 #       - For both solvers, if Nav. speed ~ Insp. speed, routes might no longer be connected. If  Nav.speed >> Insp. speed, no problem
 #       seems to arise. This indicates that an adequate subroute elimination IS needed for both.
 #       - Fix Bugs for disjoint power lines. For both solvers, this happens if the network has at least two disjoint branches
 #       and are distant. For regular, it might have even more bugs.
-#       - In regularSolver: Add subroute elimination constrains loop
-#
-# TO DO (MUST)
-#   - In regularSolver: All tower to tower are treated as inspection.
-#   - In regularSolver: What about tower to tower but just a move not inspection?
-#   - In regularSolver: It might be faster to not duplicate edges to indicate direction and compute
-#       both weights matrices directly from just one double edge.
-#
-# TO DO (OPTIONAL)
 #   - Add correct UI scaling for smaller than 1080p displays. This might be done using a global parameter
 #   - Start using any usable API for the Satellital Map plot
 #   - Allow GUI to run while loading a file. This might be done be manually updating the GUI within the function

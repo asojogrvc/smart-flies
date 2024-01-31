@@ -110,6 +110,10 @@ class Problem():
             case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
                 GRASP_Solver()
 
+            # Default case
+            case "":
+                abstract_Dynamic_DFJ_Solver(self)
+
             # In case that the given solver name is not found.
             case _:
                 raise Exception("No such solver is implemented")

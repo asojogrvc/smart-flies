@@ -328,7 +328,7 @@ def planner():
 
     problem = SO.Problem(towers, bases, uavs, weather)
 
-    problem.solve("abstract")
+    problem.solve("")
 
     problem.get_UAV_Team().compute_Team_Waypoints("PaV", problem.get_Towers(), problem.get_Bases())
     base0 = problem.get_Bases().get_Base("B0")
