@@ -1,0 +1,109 @@
+\doxysection{modules.\+bases.\+Base Class Reference}
+\hypertarget{classmodules_1_1bases_1_1Base}{}\label{classmodules_1_1bases_1_1Base}\index{modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmodules_1_1bases_1_1Base_a30fda9fe6e27882aa2bbb95723f36cf8}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, str name=\textquotesingle{}B0\textquotesingle{}, np.\+ndarray coordinates\+UTM=np.\+array(\mbox{[}0.\+0, 0.\+0, 0.\+0\mbox{]}), tuple utm\+Zone=(0, "{}A"{}))
+\item 
+\mbox{\hyperlink{classmodules_1_1bases_1_1Base_abbbac475539e9afd21b3559b37ed1c2b}{set\+\_\+\+Coordinates}} (self, np.\+ndarray coordinates\+UTM)
+\item 
+\mbox{\hyperlink{classmodules_1_1bases_1_1Base_a0860cfb6731507e584aa7647d129fac8}{set\+\_\+\+Name}} (self, str name)
+\item 
+\mbox{\hyperlink{classmodules_1_1bases_1_1Base_ae96d909d45e894e15998fc182b255948}{set\+\_\+\+UTM\+\_\+\+Zone}} (self, tuple zone)
+\item 
+np.\+ndarray \mbox{\hyperlink{classmodules_1_1bases_1_1Base_af2430758894426523b787f014b88bfad}{get\+\_\+\+Coordinates}} (self)
+\item 
+str \mbox{\hyperlink{classmodules_1_1bases_1_1Base_a59d039e076bfafe8e39aabdebad855ca}{get\+\_\+\+Name}} (self)
+\item 
+tuple \mbox{\hyperlink{classmodules_1_1bases_1_1Base_affe4b106916005ae6b039f91eb50ce8a}{get\+\_\+\+UTM\+\_\+\+Zone}} (self)
+\item 
+\mbox{\hyperlink{classmodules_1_1bases_1_1Base_a1751c1e7e45127d2ef5d8cfde4288752}{print}} (self)
+\item 
+\mbox{\hyperlink{classmodules_1_1bases_1_1Base_afd03a3374d242db3b852e6e2740a5965}{plot}} (self, plt.\+Axes axes)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classmodules_1_1bases_1_1Base_a30fda9fe6e27882aa2bbb95723f36cf8}\label{classmodules_1_1bases_1_1Base_a30fda9fe6e27882aa2bbb95723f36cf8} 
+\index{modules.bases.Base@{modules.bases.Base}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily modules.\+bases.\+Base.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str }]{name = {\ttfamily \textquotesingle{}B0\textquotesingle{}},  }\item[{np.\+ndarray }]{coordinates\+UTM = {\ttfamily np.array(\mbox{[}0.0,~0.0,~0.0\mbox{]})},  }\item[{tuple }]{utm\+Zone = {\ttfamily (0,~"{}A"{})} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Base class definition to represent UAV bases. A base is described by its name and UTM coordinates (with altitud and zone).
+UTM Zone is given as a tuple (Z_Number, Z_letter)
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classmodules_1_1bases_1_1Base_af2430758894426523b787f014b88bfad}\label{classmodules_1_1bases_1_1Base_af2430758894426523b787f014b88bfad} 
+\index{modules.bases.Base@{modules.bases.Base}!get\_Coordinates@{get\_Coordinates}}
+\index{get\_Coordinates@{get\_Coordinates}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{get\_Coordinates()}{get\_Coordinates()}}
+{\footnotesize\ttfamily  np.\+ndarray modules.\+bases.\+Base.\+get\+\_\+\+Coordinates (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Outputs the 2D or 3D vector with the UTM coordinates within the corresponding UTM Zone of the base.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_a59d039e076bfafe8e39aabdebad855ca}\label{classmodules_1_1bases_1_1Base_a59d039e076bfafe8e39aabdebad855ca} 
+\index{modules.bases.Base@{modules.bases.Base}!get\_Name@{get\_Name}}
+\index{get\_Name@{get\_Name}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{get\_Name()}{get\_Name()}}
+{\footnotesize\ttfamily  str modules.\+bases.\+Base.\+get\+\_\+\+Name (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Outputs the name of the base as str.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_affe4b106916005ae6b039f91eb50ce8a}\label{classmodules_1_1bases_1_1Base_affe4b106916005ae6b039f91eb50ce8a} 
+\index{modules.bases.Base@{modules.bases.Base}!get\_UTM\_Zone@{get\_UTM\_Zone}}
+\index{get\_UTM\_Zone@{get\_UTM\_Zone}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{get\_UTM\_Zone()}{get\_UTM\_Zone()}}
+{\footnotesize\ttfamily  tuple modules.\+bases.\+Base.\+get\+\_\+\+UTM\+\_\+\+Zone (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Outputs the UTM zone of the base as a tuple (Z_Number, Z_letter)
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_afd03a3374d242db3b852e6e2740a5965}\label{classmodules_1_1bases_1_1Base_afd03a3374d242db3b852e6e2740a5965} 
+\index{modules.bases.Base@{modules.bases.Base}!plot@{plot}}
+\index{plot@{plot}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{plot()}{plot()}}
+{\footnotesize\ttfamily modules.\+bases.\+Base.\+plot (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{plt.\+Axes}]{axes }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Auxiliary method that connects with an already existing matplotlib figure via axes to plot
+the tower as point with its name at its physical location
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_a1751c1e7e45127d2ef5d8cfde4288752}\label{classmodules_1_1bases_1_1Base_a1751c1e7e45127d2ef5d8cfde4288752} 
+\index{modules.bases.Base@{modules.bases.Base}!print@{print}}
+\index{print@{print}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily modules.\+bases.\+Base.\+print (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints the base data
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_abbbac475539e9afd21b3559b37ed1c2b}\label{classmodules_1_1bases_1_1Base_abbbac475539e9afd21b3559b37ed1c2b} 
+\index{modules.bases.Base@{modules.bases.Base}!set\_Coordinates@{set\_Coordinates}}
+\index{set\_Coordinates@{set\_Coordinates}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{set\_Coordinates()}{set\_Coordinates()}}
+{\footnotesize\ttfamily modules.\+bases.\+Base.\+set\+\_\+\+Coordinates (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{np.\+ndarray}]{coordinates\+UTM }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Set the UTM coordinates within the corresponding UTM Zone of the base as a 2D or 3D vector.
+The UTM Zone needs to be set with set_UTM_Zone()
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_a0860cfb6731507e584aa7647d129fac8}\label{classmodules_1_1bases_1_1Base_a0860cfb6731507e584aa7647d129fac8} 
+\index{modules.bases.Base@{modules.bases.Base}!set\_Name@{set\_Name}}
+\index{set\_Name@{set\_Name}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{set\_Name()}{set\_Name()}}
+{\footnotesize\ttfamily modules.\+bases.\+Base.\+set\+\_\+\+Name (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{name }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Sets the name of the base.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1bases_1_1Base_ae96d909d45e894e15998fc182b255948}\label{classmodules_1_1bases_1_1Base_ae96d909d45e894e15998fc182b255948} 
+\index{modules.bases.Base@{modules.bases.Base}!set\_UTM\_Zone@{set\_UTM\_Zone}}
+\index{set\_UTM\_Zone@{set\_UTM\_Zone}!modules.bases.Base@{modules.bases.Base}}
+\doxysubsubsection{\texorpdfstring{set\_UTM\_Zone()}{set\_UTM\_Zone()}}
+{\footnotesize\ttfamily modules.\+bases.\+Base.\+set\+\_\+\+UTM\+\_\+\+Zone (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{tuple}]{zone }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Set the UTM Zone for the base. zone must be a tuple (Z_Number, Z_letter)
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+modules/bases.\+py\end{DoxyCompactItemize}

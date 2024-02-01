@@ -1,0 +1,111 @@
+\doxysection{modules.\+weather.\+Weather Class Reference}
+\hypertarget{classmodules_1_1weather_1_1Weather}{}\label{classmodules_1_1weather_1_1Weather}\index{modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classmodules_1_1weather_1_1Weather_ad7c5e0e77e15f55e101153a0770d80a1}\label{classmodules_1_1weather_1_1Weather_ad7c5e0e77e15f55e101153a0770d80a1} 
+{\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self, np.\+ndarray wind\+\_\+vec=\mbox{[}0.\+0, 0.\+0, 0.\+0\mbox{]}, float Temperature=20.\+0, float Humidity=0.\+3, float Pressure=101325.\+0)
+\item 
+\mbox{\hyperlink{classmodules_1_1weather_1_1Weather_ad9e37fba8ca6fdb91a049a6d7b343f7e}{set\+\_\+\+Wind\+\_\+\+Vector}} (self, np.\+ndarray wind\+\_\+vector)
+\item 
+\mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a153691b531f85e02f04a22c61aea781c}{set\+\_\+\+Temperature}} (self, float temperature)
+\item 
+\mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a9de6164fc467822ab54d7035af0d5657}{set\+\_\+\+Humidity}} (self, float humidity)
+\item 
+\mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a354fec2875383b9d2464deae51b63c62}{set\+\_\+\+Pressure}} (self, float pressure)
+\item 
+\Hypertarget{classmodules_1_1weather_1_1Weather_a6595cca290dc028cea6a3a780bf1366c}\label{classmodules_1_1weather_1_1Weather_a6595cca290dc028cea6a3a780bf1366c} 
+{\bfseries update\+\_\+\+Online} (self, np.\+ndarray latlon)
+\item 
+float \mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a5c00006ecc6c9f444a159c0bde841814}{get\+\_\+\+Wind\+\_\+\+Vector}} (self)
+\item 
+float \mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a68bf36b3458eedaf929c7749033c2365}{get\+\_\+\+Temperature}} (self)
+\item 
+float \mbox{\hyperlink{classmodules_1_1weather_1_1Weather_acc11fc083b20722ec48975ae1838cccd}{get\+\_\+\+Humidity}} (self)
+\item 
+float \mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a6e9c35e71cbca7cf1270655a322a77ce}{get\+\_\+\+Pressure}} (self)
+\item 
+float \mbox{\hyperlink{classmodules_1_1weather_1_1Weather_a257f9356ff2303b11d99f59703ea500e}{get\+\_\+\+Air\+\_\+\+Density}} (self)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classmodules_1_1weather_1_1Weather_a257f9356ff2303b11d99f59703ea500e}\label{classmodules_1_1weather_1_1Weather_a257f9356ff2303b11d99f59703ea500e} 
+\index{modules.weather.Weather@{modules.weather.Weather}!get\_Air\_Density@{get\_Air\_Density}}
+\index{get\_Air\_Density@{get\_Air\_Density}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{get\_Air\_Density()}{get\_Air\_Density()}}
+{\footnotesize\ttfamily  float modules.\+weather.\+Weather.\+get\+\_\+\+Air\+\_\+\+Density (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Gets the air density of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_acc11fc083b20722ec48975ae1838cccd}\label{classmodules_1_1weather_1_1Weather_acc11fc083b20722ec48975ae1838cccd} 
+\index{modules.weather.Weather@{modules.weather.Weather}!get\_Humidity@{get\_Humidity}}
+\index{get\_Humidity@{get\_Humidity}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{get\_Humidity()}{get\_Humidity()}}
+{\footnotesize\ttfamily  float modules.\+weather.\+Weather.\+get\+\_\+\+Humidity (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Gets the humidity (R%) of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_a6e9c35e71cbca7cf1270655a322a77ce}\label{classmodules_1_1weather_1_1Weather_a6e9c35e71cbca7cf1270655a322a77ce} 
+\index{modules.weather.Weather@{modules.weather.Weather}!get\_Pressure@{get\_Pressure}}
+\index{get\_Pressure@{get\_Pressure}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{get\_Pressure()}{get\_Pressure()}}
+{\footnotesize\ttfamily  float modules.\+weather.\+Weather.\+get\+\_\+\+Pressure (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Gets the atmospheric pressure (Pa) of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_a68bf36b3458eedaf929c7749033c2365}\label{classmodules_1_1weather_1_1Weather_a68bf36b3458eedaf929c7749033c2365} 
+\index{modules.weather.Weather@{modules.weather.Weather}!get\_Temperature@{get\_Temperature}}
+\index{get\_Temperature@{get\_Temperature}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{get\_Temperature()}{get\_Temperature()}}
+{\footnotesize\ttfamily  float modules.\+weather.\+Weather.\+get\+\_\+\+Temperature (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Gets the temperature (ºC) of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_a5c00006ecc6c9f444a159c0bde841814}\label{classmodules_1_1weather_1_1Weather_a5c00006ecc6c9f444a159c0bde841814} 
+\index{modules.weather.Weather@{modules.weather.Weather}!get\_Wind\_Vector@{get\_Wind\_Vector}}
+\index{get\_Wind\_Vector@{get\_Wind\_Vector}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{get\_Wind\_Vector()}{get\_Wind\_Vector()}}
+{\footnotesize\ttfamily  float modules.\+weather.\+Weather.\+get\+\_\+\+Wind\+\_\+\+Vector (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Gets the wind vector of an exisiting weather status. The length of the vector is the speed of the wind [m/s] and
+the direction is the direction of the wind.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_a9de6164fc467822ab54d7035af0d5657}\label{classmodules_1_1weather_1_1Weather_a9de6164fc467822ab54d7035af0d5657} 
+\index{modules.weather.Weather@{modules.weather.Weather}!set\_Humidity@{set\_Humidity}}
+\index{set\_Humidity@{set\_Humidity}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{set\_Humidity()}{set\_Humidity()}}
+{\footnotesize\ttfamily modules.\+weather.\+Weather.\+set\+\_\+\+Humidity (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{float}]{humidity }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Sets the humidity (R%) of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_a354fec2875383b9d2464deae51b63c62}\label{classmodules_1_1weather_1_1Weather_a354fec2875383b9d2464deae51b63c62} 
+\index{modules.weather.Weather@{modules.weather.Weather}!set\_Pressure@{set\_Pressure}}
+\index{set\_Pressure@{set\_Pressure}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{set\_Pressure()}{set\_Pressure()}}
+{\footnotesize\ttfamily modules.\+weather.\+Weather.\+set\+\_\+\+Pressure (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{float}]{pressure }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Sets the atmospheric pressure (Pa) of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_a153691b531f85e02f04a22c61aea781c}\label{classmodules_1_1weather_1_1Weather_a153691b531f85e02f04a22c61aea781c} 
+\index{modules.weather.Weather@{modules.weather.Weather}!set\_Temperature@{set\_Temperature}}
+\index{set\_Temperature@{set\_Temperature}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{set\_Temperature()}{set\_Temperature()}}
+{\footnotesize\ttfamily modules.\+weather.\+Weather.\+set\+\_\+\+Temperature (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{float}]{temperature }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Sets the temperature (ºC) of an existing weather status
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1weather_1_1Weather_ad9e37fba8ca6fdb91a049a6d7b343f7e}\label{classmodules_1_1weather_1_1Weather_ad9e37fba8ca6fdb91a049a6d7b343f7e} 
+\index{modules.weather.Weather@{modules.weather.Weather}!set\_Wind\_Vector@{set\_Wind\_Vector}}
+\index{set\_Wind\_Vector@{set\_Wind\_Vector}!modules.weather.Weather@{modules.weather.Weather}}
+\doxysubsubsection{\texorpdfstring{set\_Wind\_Vector()}{set\_Wind\_Vector()}}
+{\footnotesize\ttfamily modules.\+weather.\+Weather.\+set\+\_\+\+Wind\+\_\+\+Vector (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{np.\+ndarray}]{wind\+\_\+vector }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Sets the wind vector for an exisiting weather status. The length of the vector is the speed of the wind [m/s] and
+the direction is the direction of the wind.
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+modules/weather.\+py\end{DoxyCompactItemize}

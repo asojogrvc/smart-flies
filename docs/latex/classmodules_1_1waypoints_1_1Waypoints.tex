@@ -1,0 +1,114 @@
+\doxysection{modules.\+waypoints.\+Waypoints Class Reference}
+\hypertarget{classmodules_1_1waypoints_1_1Waypoints}{}\label{classmodules_1_1waypoints_1_1Waypoints}\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_aac2c8c869a5a5fdd47162670b7782175}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self)
+\item 
+\mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_ab7c177c4bee77c3790f7883c3b865477}{add\+\_\+\+Waypoint}} (self, np.\+ndarray point, dict actions, str mode)
+\item 
+\mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_a87b76f7527ae734798e22d192104a589}{add\+\_\+\+Waypoint\+\_\+\+List}} (self, np.\+ndarray points, list actions\+\_\+list, list modes\+\_\+list)
+\item 
+tuple\mbox{[}list, list, list\mbox{]} \mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_ad044498d7c5a06efcc4c1ca2b9630c68}{get\+\_\+\+Waypoint}} (self, int which)
+\item 
+list \mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_aeb6da096e3bea16cbb112a38a3aed42a}{get\+\_\+\+Points\+\_\+\+List}} (self)
+\item 
+list \mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_a3d04075da5ca92410936cc2d0bc61ea2}{get\+\_\+\+Actions\+\_\+\+List}} (self)
+\item 
+list \mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_ac2119bf432e83d56950e904a29521636}{get\+\_\+\+Modes\+\_\+\+List}} (self)
+\item 
+\mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_aa851c6874a2f57013193a38e7a840b66}{reset}} (self)
+\item 
+\Hypertarget{classmodules_1_1waypoints_1_1Waypoints_ab5acb61ff333f7bcca89af877c030eb8}\label{classmodules_1_1waypoints_1_1Waypoints_ab5acb61ff333f7bcca89af877c030eb8} 
+{\bfseries \+\_\+\+\_\+iter\+\_\+\+\_\+} (self)
+\item 
+\Hypertarget{classmodules_1_1waypoints_1_1Waypoints_a6802a420e4bc66220ad76a0148f2e76a}\label{classmodules_1_1waypoints_1_1Waypoints_a6802a420e4bc66220ad76a0148f2e76a} 
+{\bfseries \+\_\+\+\_\+next\+\_\+\+\_\+} (self)
+\item 
+\mbox{\hyperlink{classmodules_1_1waypoints_1_1Waypoints_aa610db839fb1d500b0091c6ac8b6d7be}{print}} (self)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classmodules_1_1waypoints_1_1Waypoints_aac2c8c869a5a5fdd47162670b7782175}\label{classmodules_1_1waypoints_1_1Waypoints_aac2c8c869a5a5fdd47162670b7782175} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily modules.\+waypoints.\+Waypoints.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Waypoints class to store the physical location of each waypoint and the actions the
+UAV is required to perform at such point. 
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classmodules_1_1waypoints_1_1Waypoints_ab7c177c4bee77c3790f7883c3b865477}\label{classmodules_1_1waypoints_1_1Waypoints_ab7c177c4bee77c3790f7883c3b865477} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!add\_Waypoint@{add\_Waypoint}}
+\index{add\_Waypoint@{add\_Waypoint}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{add\_Waypoint()}{add\_Waypoint()}}
+{\footnotesize\ttfamily modules.\+waypoints.\+Waypoints.\+add\+\_\+\+Waypoint (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{np.\+ndarray}]{point,  }\item[{dict}]{actions,  }\item[{str}]{mode }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Add new waypoint to the list. It takes a 3D vector (usually latlon+Z) and the actions
+that a uav will make at that point as a dictionary.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_a87b76f7527ae734798e22d192104a589}\label{classmodules_1_1waypoints_1_1Waypoints_a87b76f7527ae734798e22d192104a589} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!add\_Waypoint\_List@{add\_Waypoint\_List}}
+\index{add\_Waypoint\_List@{add\_Waypoint\_List}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{add\_Waypoint\_List()}{add\_Waypoint\_List()}}
+{\footnotesize\ttfamily modules.\+waypoints.\+Waypoints.\+add\+\_\+\+Waypoint\+\_\+\+List (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{np.\+ndarray}]{points,  }\item[{list}]{actions\+\_\+list,  }\item[{list}]{modes\+\_\+list }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Add a list of physical points (usually latlon+Z) as a Nx3 matrix and the list of N actions to peform at each of them.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_a3d04075da5ca92410936cc2d0bc61ea2}\label{classmodules_1_1waypoints_1_1Waypoints_a3d04075da5ca92410936cc2d0bc61ea2} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!get\_Actions\_List@{get\_Actions\_List}}
+\index{get\_Actions\_List@{get\_Actions\_List}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{get\_Actions\_List()}{get\_Actions\_List()}}
+{\footnotesize\ttfamily  list modules.\+waypoints.\+Waypoints.\+get\+\_\+\+Actions\+\_\+\+List (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Returns a list with the UAV actions of the each waypoint.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_ac2119bf432e83d56950e904a29521636}\label{classmodules_1_1waypoints_1_1Waypoints_ac2119bf432e83d56950e904a29521636} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!get\_Modes\_List@{get\_Modes\_List}}
+\index{get\_Modes\_List@{get\_Modes\_List}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{get\_Modes\_List()}{get\_Modes\_List()}}
+{\footnotesize\ttfamily  list modules.\+waypoints.\+Waypoints.\+get\+\_\+\+Modes\+\_\+\+List (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Returns a list with the UAV mode of the each waypoint, i.e., Inspection or Navigation
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_aeb6da096e3bea16cbb112a38a3aed42a}\label{classmodules_1_1waypoints_1_1Waypoints_aeb6da096e3bea16cbb112a38a3aed42a} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!get\_Points\_List@{get\_Points\_List}}
+\index{get\_Points\_List@{get\_Points\_List}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{get\_Points\_List()}{get\_Points\_List()}}
+{\footnotesize\ttfamily  list modules.\+waypoints.\+Waypoints.\+get\+\_\+\+Points\+\_\+\+List (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Returns a list with the UTM Coordinates of the each waypoint.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_ad044498d7c5a06efcc4c1ca2b9630c68}\label{classmodules_1_1waypoints_1_1Waypoints_ad044498d7c5a06efcc4c1ca2b9630c68} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!get\_Waypoint@{get\_Waypoint}}
+\index{get\_Waypoint@{get\_Waypoint}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{get\_Waypoint()}{get\_Waypoint()}}
+{\footnotesize\ttfamily  tuple\mbox{[}list, list, list\mbox{]} modules.\+waypoints.\+Waypoints.\+get\+\_\+\+Waypoint (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{int}]{which }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Outputs the waypoint given by position "which"
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_aa610db839fb1d500b0091c6ac8b6d7be}\label{classmodules_1_1waypoints_1_1Waypoints_aa610db839fb1d500b0091c6ac8b6d7be} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!print@{print}}
+\index{print@{print}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily modules.\+waypoints.\+Waypoints.\+print (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints the UTM coordinates and actions of each waypoint.
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1waypoints_1_1Waypoints_aa851c6874a2f57013193a38e7a840b66}\label{classmodules_1_1waypoints_1_1Waypoints_aa851c6874a2f57013193a38e7a840b66} 
+\index{modules.waypoints.Waypoints@{modules.waypoints.Waypoints}!reset@{reset}}
+\index{reset@{reset}!modules.waypoints.Waypoints@{modules.waypoints.Waypoints}}
+\doxysubsubsection{\texorpdfstring{reset()}{reset()}}
+{\footnotesize\ttfamily modules.\+waypoints.\+Waypoints.\+reset (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Reset the entire list to empty
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+modules/waypoints.\+py\end{DoxyCompactItemize}

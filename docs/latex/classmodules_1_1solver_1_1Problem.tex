@@ -1,0 +1,88 @@
+\doxysection{modules.\+solver.\+Problem Class Reference}
+\hypertarget{classmodules_1_1solver_1_1Problem}{}\label{classmodules_1_1solver_1_1Problem}\index{modules.solver.Problem@{modules.solver.Problem}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmodules_1_1solver_1_1Problem_a053c2222a3854a5d2519f3bb431468ce}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, TW.\+Towers towers, BA.\+Bases bases, UAVS.\+UAV\+\_\+\+Team uavs, weather=WT.\+Weather)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a6d884f0fe005f8d069d6435847435d3b}\label{classmodules_1_1solver_1_1Problem_a6d884f0fe005f8d069d6435847435d3b} 
+{\bfseries set\+\_\+\+Towers} (self, TW.\+Towers towers)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_adba5c769861ab558af7376be603d4d8d}\label{classmodules_1_1solver_1_1Problem_adba5c769861ab558af7376be603d4d8d} 
+{\bfseries set\+\_\+\+Bases} (self, BA.\+Bases bases)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a049b11e7ff994a23bd2e1a6ec004a76a}\label{classmodules_1_1solver_1_1Problem_a049b11e7ff994a23bd2e1a6ec004a76a} 
+{\bfseries set\+\_\+\+UAV\+\_\+\+Team} (self, UAVS.\+UAV\+\_\+\+Team uavs)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_ae383b8297c705f4c7f51420428bad610}\label{classmodules_1_1solver_1_1Problem_ae383b8297c705f4c7f51420428bad610} 
+{\bfseries set\+\_\+\+Weather} (self, WT.\+Weather weather)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_ac4eb0feefc8ca9a278efae07f03ecca5}\label{classmodules_1_1solver_1_1Problem_ac4eb0feefc8ca9a278efae07f03ecca5} 
+TW.\+Towers {\bfseries get\+\_\+\+Towers} (self)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a81ffb7bd0ebb1458f48b5f179c5c5a77}\label{classmodules_1_1solver_1_1Problem_a81ffb7bd0ebb1458f48b5f179c5c5a77} 
+BA.\+Bases {\bfseries get\+\_\+\+Bases} (self)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a29f366a07c005f2b9b29e0e92bdd72e3}\label{classmodules_1_1solver_1_1Problem_a29f366a07c005f2b9b29e0e92bdd72e3} 
+UAVS.\+UAV\+\_\+\+Team {\bfseries get\+\_\+\+UAV\+\_\+\+Team} (self)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a7b6c2ee2921265ba7d97cf32a491aa04}\label{classmodules_1_1solver_1_1Problem_a7b6c2ee2921265ba7d97cf32a491aa04} 
+WT.\+Weather {\bfseries get\+\_\+\+Weather} (self)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a7886934bc7cc51edc6c19c6c2d319f3e}\label{classmodules_1_1solver_1_1Problem_a7886934bc7cc51edc6c19c6c2d319f3e} 
+nx.\+Multi\+Di\+Graph {\bfseries get\+\_\+\+Graph} (self)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a019b83b31911589548103395bd747b58}\label{classmodules_1_1solver_1_1Problem_a019b83b31911589548103395bd747b58} 
+SCIP.\+Model {\bfseries get\+\_\+\+SCIP\+\_\+\+Model} (self)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_ae6d399237f639c907a24b9154d2b8ff0}\label{classmodules_1_1solver_1_1Problem_ae6d399237f639c907a24b9154d2b8ff0} 
+{\bfseries set\+\_\+\+Progress\+\_\+\+Bar\+\_\+\+Value} (self, float value)
+\item 
+\Hypertarget{classmodules_1_1solver_1_1Problem_a6fb06bbd834ab7d7e0b37dba408739da}\label{classmodules_1_1solver_1_1Problem_a6fb06bbd834ab7d7e0b37dba408739da} 
+bool {\bfseries progress\+\_\+\+Bar\+\_\+\+LinkedQ} (self)
+\item 
+\mbox{\hyperlink{classmodules_1_1solver_1_1Problem_ae5ee9a64343fce74bb0d75a5b607360c}{solve}} (self, str which\+\_\+solver)
+\item 
+\mbox{\hyperlink{classmodules_1_1solver_1_1Problem_a1c97b6de194df5985f8887175eea4e04}{link\+\_\+\+Progress\+\_\+\+Bar}} (self, QProgress\+Bar ui\+\_\+progressbar)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classmodules_1_1solver_1_1Problem_a053c2222a3854a5d2519f3bb431468ce}\label{classmodules_1_1solver_1_1Problem_a053c2222a3854a5d2519f3bb431468ce} 
+\index{modules.solver.Problem@{modules.solver.Problem}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!modules.solver.Problem@{modules.solver.Problem}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily modules.\+solver.\+Problem.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{TW.\+Towers}]{towers,  }\item[{BA.\+Bases}]{bases,  }\item[{UAVS.\+UAV\+\_\+\+Team}]{uavs,  }\item[{}]{weather = {\ttfamily WT.Weather} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This class contains everything needed to define the GTSP-MUAV problem in any of its forms. That is Towers, Bases, UAV Team and weather conditions.
+It can be solved with of the already impleted methods by using .solve()
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classmodules_1_1solver_1_1Problem_a1c97b6de194df5985f8887175eea4e04}\label{classmodules_1_1solver_1_1Problem_a1c97b6de194df5985f8887175eea4e04} 
+\index{modules.solver.Problem@{modules.solver.Problem}!link\_Progress\_Bar@{link\_Progress\_Bar}}
+\index{link\_Progress\_Bar@{link\_Progress\_Bar}!modules.solver.Problem@{modules.solver.Problem}}
+\doxysubsubsection{\texorpdfstring{link\_Progress\_Bar()}{link\_Progress\_Bar()}}
+{\footnotesize\ttfamily modules.\+solver.\+Problem.\+link\+\_\+\+Progress\+\_\+\+Bar (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{QProgress\+Bar}]{ui\+\_\+progressbar }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Connects a PyQt progress bar to the problem. This allows us to update any UI progress within the class
+\end{DoxyVerb}
+ \Hypertarget{classmodules_1_1solver_1_1Problem_ae5ee9a64343fce74bb0d75a5b607360c}\label{classmodules_1_1solver_1_1Problem_ae5ee9a64343fce74bb0d75a5b607360c} 
+\index{modules.solver.Problem@{modules.solver.Problem}!solve@{solve}}
+\index{solve@{solve}!modules.solver.Problem@{modules.solver.Problem}}
+\doxysubsubsection{\texorpdfstring{solve()}{solve()}}
+{\footnotesize\ttfamily modules.\+solver.\+Problem.\+solve (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{which\+\_\+solver }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Solves an existing problem with any of the implement formulations / methods. As of now:
+    - "regular": This formulation uses a direct interpretation of the power line network
+        as a graph. It is simpler but limited. Based on Javi's Matlab PLIP
+    - "abstract": This formulation creates a astraction layer that assigns a graph to the problem which nodes
+        are not the towers but the power line segments that require inspection. It scales faster than
+        "regular" with the size of the problem but it is more general and less limited.
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+modules/solver.\+py\end{DoxyCompactItemize}
