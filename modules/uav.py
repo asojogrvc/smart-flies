@@ -214,18 +214,18 @@ class UAV():
         # Reset waypoints first
         self.waypoints.reset()
 
+        dH = 20 # Security height offset for navigation
+        fH = 5 # first height First and last height.
+        tH = 5 # Tower height, this should be a external parameter
+
+        # Precompute the coordinates into a dict. THIS COULD SIMNPLIFY STUFF IF I SAVED DIRECTLY INTO THE UI
+        coords_dict = towers.get_DictCoordinates()
+        coords_dict[self.missionSettings["Base"]] = bases.get_Base(self.missionSettings["Base"]).get_Coordinates()
+        bH = coords_dict[self.missionSettings["Base"]][2]
+
         match mode:
 
             case 0:
-
-                dH = 20 # Security height offset for navigation
-                fH = 5 # first height First and last height.
-                tH = 5 # Tower height, this should be a external parameter
-
-                # Precompute the coordinates into a dict. THIS COULD SIMNPLIFY STUFF IF I SAVED DIRECTLY INTO THE UI
-                coords_dict = towers.get_DictCoordinates()
-                coords_dict[self.missionSettings["Base"]] = bases.get_Base(self.missionSettings["Base"]).get_Coordinates()
-                bH = coords_dict[self.missionSettings["Base"]][2]
 
                 # Precompute points parallel to the power lines without heights
                 preMoves = []
@@ -363,20 +363,6 @@ class UAV():
 
             case 1:
 
-                preMoves = []
-                preNdirs = []
-                preVdirs = []
-                point = self.routeUTM[0][0][:2] # Base
-                for move in self.routeUTM[1:-1]: 
-
-                    pmove, n_dir, v_dir = CO.compute_Orbital_Trajectory(point, move[1], self.missionSettings["Insp. horizontal offset"])
-
-                    preMoves.append(pmove)
-                    preNdirs.append(n_dir)
-                    preVdirs.append(v_dir)
-
-                    point = pmove[1]
-
                 # Gimbal is fixed beforehand
                 gimbal = - float(self.missionSettings["Cam. angle"])
 
@@ -385,7 +371,7 @@ class UAV():
 
                 point = np.append(self.routeUTM[0][0][:2], fH)
 
-                n_dir = preMoves[0][0]-self.routeUTM[0][0][:2]
+                n_dir = self.routeUTM[0][1][:2]-self.routeUTM[0][0][:2]
                 n_dir = n_dir / np.linalg.norm(n_dir)
 
                 yaw = np.rad2deg(np.arccos(n_dir[1]))
@@ -398,6 +384,51 @@ class UAV():
                 point = np.append(self.routeUTM[0][0][:2], tH + dH)
                 actions = {"gimbal": gimbal, "yaw": yaw}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
+
+
+                m = 0
+                for move in self.routeUTM[0:-1]: 
+
+                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], self.missionSettings["Insp. horizontal offset"], 5)
+
+                    # Above the first orbital point
+                    point = np.append(orbit[0], tH + dH)
+                    yaw = np.rad2deg(np.arccos(n_dir[1]))
+                    if n_dir[0] < 0: yaw = -yaw
+                    actions = {"gimbal": gimbal, "yaw": yaw}
+                    self.waypoints.add_Waypoint(point, actions, "Navigation")
+
+                    
+                    # Get down, orbit and inspect
+                    k = 0
+                    for porbit in orbit:
+
+                        btH1 = coords_dict[self.route[1:-1][k][0]][2] - bH   # base of tower 1 with respect to the uav base
+                        
+                        point = np.append(self.routeUTM[0][0][:2], btH1 + tH + self.missionSettings["Insp. height"])
+
+                        n_dir = v_dirs[k]
+
+                        yaw = np.rad2deg(np.arccos(n_dir[1]))
+                        if n_dir[0] < 0: yaw = -yaw
+                        actions = {"gimbal": gimbal, "yaw": yaw}
+
+                        self.waypoints.add_Waypoint(point, actions, "Inspection")
+                        k += 1
+
+                    # Above the last orbital point
+                    point = np.append(orbit[-1], tH + dH)
+
+                    n_dir = self.routeUTM[0:-1][k+1][:2]-orbit[-1]
+                    n_dir = n_dir / np.linalg.norm(n_dir)
+
+                    yaw = np.rad2deg(np.arccos(n_dir[1]))
+                    if n_dir[0] < 0: yaw = -yaw
+                    actions = {"gimbal": gimbal, "yaw": yaw}
+                    self.waypoints.add_Waypoint(point, actions, "Navigation")
+
+                    m += 1
+
 
             case _ :
                 print("No such mode exits")

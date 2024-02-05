@@ -213,7 +213,7 @@ def compute_Parallel_Trajectory(current_pos: np.ndarray, segment: tuple, offset:
         p3 = s2 - offset * n_perp
         return (p2, p3), n_dir, n_perp
     
-def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, distance: float, n_points: int) -> tuple[list, np.ndarray]:
+def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, distance: float, n_points: int) -> tuple[list, np.ndarray, list]:
     """
     Given the current position and a point (as a 2D or 3D vector), it compute the waypoints for a circular inspection trajectory at a horizontal distance
     distance. Height is ignored in the entire function.
@@ -241,7 +241,9 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, dista
 
     orbit = [p1 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
 
-    return orbit, n_dir
+    v_dirs = [-np.array([np.sin(i / n_points * 2 * np.pi + phi), np.cos(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
+
+    return orbit, n_dir, v_dirs
     
 
 # -------------------------  Plotting functions ---------------------------------------
