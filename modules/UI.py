@@ -65,6 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.uavs = UAVS.UAV_Team()
         self.location_LatLon = [37.411669, -6.0016236] # [Latitude, Longitud] GRVC Lab as default
         self.problem_graph = None
+        self.mission_mode = 0
 
         # Window settings --------------------------------
 
@@ -97,10 +98,14 @@ class MainWindow(QtWidgets.QMainWindow):
         db_action12.setStatusTip("Apply Dark theme")
         db_action12.triggered.connect(self.setDarkTheme)
 
+
         menu2 = menubar.addMenu('Solver')
+
+        """
         db_action21 = menu2.addAction("Regular Solver")
         db_action21.setStatusTip("Currently broken and will probably be deprecated in the future")
         db_action21.triggered.connect(lambda: self.changeSolverType('regular'))
+        """
 
         db_action22 = menu2.addAction("Abstract Solver")
         db_action22.setStatusTip("Faster than the others abstract solvers. However, it breaks for not completely connected maps")
@@ -114,8 +119,10 @@ class MainWindow(QtWidgets.QMainWindow):
         db_action23.setStatusTip("It enforces each of the DFJ Subtour elimination constraints one at a time and when needed")
         db_action23.triggered.connect(lambda: self.changeSolverType('abstract_DFJ'))
 
+        """
         db_action24 = menu2.addAction("GRASP Solver")
         db_action24.setStatusTip("Work in Progress")
+        """
 
         menu3 = menubar.addMenu("Weather")
         db_action31 = menu3.addAction("Edit manually")
@@ -661,7 +668,7 @@ def load_data_from_YAML(ui: MainWindow):
     ui.bases.reset()
     ui.uavs.empty()
 
-    ui.bases, ui.towers, ui.uavs, _ = YAML.load_data_from_YAML(filename[0])
+    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode = YAML.load_data_from_YAML(filename[0])
 
     # Update with new data
     updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())
@@ -743,6 +750,7 @@ def loadInputdata(ui: MainWindow):
         ui.towers.load_File(ui.towerFileBox.text(), ui.onlineCheckBox.isChecked())
         ui.bases.load_File(ui.baseFileBox.text(), ui.onlineCheckBox.isChecked())
         ui.uavs.load_File(ui.uavFileBox.text())
+
         
         # Update with new data
         updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())
@@ -1513,7 +1521,7 @@ def exec_Planner(ui: MainWindow):
     
     getMissionSettings(ui)
 
-    problem = SO.Problem(ui.towers, ui.bases, ui.uavs, ui.weather)
+    problem = SO.Problem(ui.towers, ui.bases, ui.uavs, ui.weather, ui.mission_mode)
     problem.link_Progress_Bar(ui.loadingPlanner)
     ui.loadingPlanner.setValue(10)
     problem.solve(ui.solverType)

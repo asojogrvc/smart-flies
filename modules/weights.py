@@ -129,89 +129,122 @@ def compute_Edge_Weights(node1:tuple, node2:tuple, uavs: UAVS.UAV_Team, weather:
 
 # -------------------------------------- Abstract Solver functions -----------------------------------
 
-def compute_Abstract_Edge_Weights(node1: tuple, node2: tuple, uavs: UAVS.UAV_Team, weather: WT.Weather) -> tuple[dict, dict]:
+def compute_Abstract_Edge_Weights(node1: tuple, node2: tuple, uavs: UAVS.UAV_Team, weather: WT.Weather, mode: int) -> tuple[dict, dict]:
     """
     Arguments depend on case
+
+    Mode 0:
      - Base to Tower: node1 is a tuple ('Name', UTM); node2 is a list (tower1, tower2) with toweri = ('Name', UTM)
      - Tower to Base: node2 is a tuple ('Name', UTM); node1 is a list (tower1, tower2) with toweri = ('Name', UTM)
      - Tower to Tower: node1 and node2 are lists (tower1, tower2) with toweri = ('Name', UTM)
+
+    Mode 1:
+     - node1 and node2 are tuples ('Name', UTM)
     """
 
-    W_t = {}
-    W_e1 = {}
-    W_e2 = {}
+    match mode:
+        case 0:
 
-    # Parsing cases
+            W_t = {}
+            W_e1 = {}
+            W_e2 = {}
 
-    # Base to Tower
-    if node1[0][0] == 'B':
+            # Parsing cases
 
-        travel_vector = node2[0][1] - node1[1]
-        d_travel = np.linalg.norm(travel_vector)
+            # Base to Tower
+            if node1[0][0] == 'B':
 
-        insp_vector = node2[1][1] - node2[0][1]
-        d_insp = np.linalg.norm(insp_vector)
+                travel_vector = node2[0][1] - node1[1]
+                d_travel = np.linalg.norm(travel_vector)
 
-        # UAVs are distinguished using their IDs, not their names
-        for uav in uavs:
+                insp_vector = node2[1][1] - node2[0][1]
+                d_insp = np.linalg.norm(insp_vector)
 
-            c_speed = uav.missionSettings['Nav. speed']
-            i_speed = uav.missionSettings['Insp. speed']
+                # UAVs are distinguished using their IDs, not their names
+                for uav in uavs:
 
-            W_t[uav.get_ID()] = d_insp / i_speed + d_travel / c_speed
+                    c_speed = uav.missionSettings['Nav. speed']
+                    i_speed = uav.missionSettings['Insp. speed']
 
-            W_e1[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
-            W_e2[uav.get_ID()] = compute_Consumption(insp_vector, i_speed, uav, weather)
+                    W_t[uav.get_ID()] = d_insp / i_speed + d_travel / c_speed
 
-        #print('BT')
-        return W_t, {key: W_e1[key] + W_e2[key] for key in W_e1}
+                    W_e1[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
+                    W_e2[uav.get_ID()] = compute_Consumption(insp_vector, i_speed, uav, weather)
+
+                #print('BT')
+                return W_t, {key: W_e1[key] + W_e2[key] for key in W_e1}
     
-    # Tower to Base
-    elif node2[0][0] == 'B':
+            # Tower to Base
+            elif node2[0][0] == 'B':
 
-        travel_vector = node2[1] - node1[1][1]
-        d_travel = np.linalg.norm(travel_vector)
+                travel_vector = node2[1] - node1[1][1]
+                d_travel = np.linalg.norm(travel_vector)
 
-        for uav in uavs:
+                for uav in uavs:
 
-            c_speed = uav.missionSettings['Nav. speed']
+                    c_speed = uav.missionSettings['Nav. speed']
 
-            W_t[uav.get_ID()] = d_travel / c_speed
+                    W_t[uav.get_ID()] = d_travel / c_speed
 
-            W_e1[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
+                    W_e1[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
 
-        #print('SB')
-        return W_t, W_e1
+                #print('SB')
+                return W_t, W_e1
     
-    # S to S
-    else:
+            # S to S
+            else:
 
-        if node2[0][0] == node1[1][0]:
-            for uav in uavs:
-                W_t[uav.get_ID()] = 0.0
-                W_e1[uav.get_ID()] = 0.0
-            print('SS2')
-            return W_t, W_e1
+                if node2[0][0] == node1[1][0]:
+                    for uav in uavs:
+                        W_t[uav.get_ID()] = 0.0
+                        W_e1[uav.get_ID()] = 0.0
+                    # print('SS2')
+                    return W_t, W_e1
         
-        travel_vector = node2[0][1] - node1[1][1]
-        d_travel = np.linalg.norm(travel_vector)
+                travel_vector = node2[0][1] - node1[1][1]
+                d_travel = np.linalg.norm(travel_vector)
 
-        insp_vector = node2[1][1] - node2[0][1]
-        d_insp = np.linalg.norm(insp_vector)
+                insp_vector = node2[1][1] - node2[0][1]
+                d_insp = np.linalg.norm(insp_vector)
 
-        # UAVs are distinguished using their IDs, not their names
-        for uav in uavs:
+                # UAVs are distinguished using their IDs, not their names
+                for uav in uavs:
 
-            c_speed = uav.missionSettings['Nav. speed']
-            i_speed = uav.missionSettings['Insp. speed']
+                    c_speed = uav.missionSettings['Nav. speed']
+                    i_speed = uav.missionSettings['Insp. speed']
 
-            W_t[uav.get_ID()] = d_insp / i_speed + d_travel / c_speed
+                    W_t[uav.get_ID()] = d_insp / i_speed + d_travel / c_speed
 
-            W_e1[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
-            W_e2[uav.get_ID()] = compute_Consumption(insp_vector, i_speed, uav, weather)
+                    W_e1[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
+                    W_e2[uav.get_ID()] = compute_Consumption(insp_vector, i_speed, uav, weather)
 
-        #print('SS')
-        return W_t, {key: W_e1[key] + W_e2[key] for key in W_e1}
+                #print('SS')
+                return W_t, {key: W_e1[key] + W_e2[key] for key in W_e1}
+        
+        
+        # Point Inspection
+        case 1:
+            
+            W_t = {}
+            W_e = {}
+
+            travel_vector = node2[1] - node1[1]
+            d_travel = np.linalg.norm(travel_vector)
+
+
+            # UAVs are distinguished using their IDs, not their names
+            for uav in uavs:
+
+                c_speed = uav.missionSettings['Nav. speed']
+
+                W_t[uav.get_ID()] = d_travel / c_speed
+                W_e[uav.get_ID()] = compute_Consumption(travel_vector, c_speed, uav, weather)
+
+            return W_t, W_e
+
+
+            
+
 
     
 

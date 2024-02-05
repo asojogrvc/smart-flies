@@ -153,7 +153,7 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
 
     return wps
 
-def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather]:
+def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int]:
     """
     Loads the bases, towers, uavs and weather from a YAML input file.
     """
@@ -233,4 +233,4 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
 
     towers.load_from_Arrays(paths, True)
 
-    return bases, towers, uavs, weather
+    return bases, towers, uavs, weather, mission_init["settings"]["type"]

@@ -303,7 +303,7 @@ def planner():
     # --- Placeholder data -------------------------
 
     if "yaml" == app.get_Input_type("Bases"):
-        bases, towers, uavs, weather = iYAML.load_data_from_YAML("./server/dynamic/mission_init.yaml")
+        bases, towers, uavs, weather, mode = iYAML.load_data_from_YAML("./server/dynamic/mission_init.yaml")
 
     else:
 
@@ -317,16 +317,17 @@ def planner():
 
         uavs = UAVS.UAV_Team()
         uavs.load_File("./files/UAV_team.xml")
-    
 
         weather = WT.Weather()
         base1 = bases.get_Base("B1")
         weather.update_Online(CO.utm2latlon(base1.get_Coordinates(), base1.get_UTM_Zone()))
+
+        mode = 0 # WHAT HERE?
     
         
         # ----------------------------------------------
 
-    problem = SO.Problem(towers, bases, uavs, weather)
+    problem = SO.Problem(towers, bases, uavs, weather, mode)
 
     problem.solve("")
 

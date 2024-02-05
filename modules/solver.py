@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import QProgressBar
 from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, weights as WE
 
 class Problem():
-    def __init__(self, towers: TW.Towers, bases: BA.Bases, uavs: UAVS.UAV_Team, weather = WT.Weather):
+    def __init__(self, towers: TW.Towers, bases: BA.Bases, uavs: UAVS.UAV_Team, weather: WT.Weather, mode: int):
         """
         This class contains everything needed to define the GTSP-MUAV problem in any of its forms. That is Towers, Bases, UAV Team and weather conditions.
         It can be solved with of the already impleted methods by using .solve()
@@ -26,11 +26,15 @@ class Problem():
         self.__uav_team = uavs
         self.__weather = weather
 
+        # Use case mode:
+        #   0 = Segment Inspection
+        #   1 = Point Inspection
+        self.__mode = mode
+
         # Auxiliary parameters: 
         #   - The graph represents the abstract representation of the towers and bases. It dependes on the used solver method
         #   - The SCIP model is just another abstraction layer to communicate the actual MILP problem to SCIP
         #   - The progressBar is linked to any progress on the UI to then update it from within the class
-
         self.__graph = nx.MultiDiGraph()
         self.__scip_model = SCIP.Model("GTSP-MUAV")
         self.__progressBar = None
@@ -40,6 +44,7 @@ class Problem():
     # ------------------------ Parameters setting functions ----------------
     # As to get an problem instance, all the requiered parameters are set,
     # these functions just replace the current values
+
     def set_Towers(self, towers: TW.Towers):
         self.__towers = towers
         return None
@@ -54,6 +59,10 @@ class Problem():
     
     def set_Weather(self, weather: WT.Weather):
         self.__weather = weather
+        return None
+    
+    def set_Mission_Mode(self, mode:int):
+        self.__mode = mode
         return None
 
     # ------------------------ Parameters output functions -----------------
@@ -76,6 +85,9 @@ class Problem():
     def get_SCIP_Model(self) -> SCIP.Model:
         return self.__scip_model
     
+    def get_Mission_Mode(self) -> int:
+        return self.__mode
+
     # ------------------------ Auxiliary functions -------------------------
     def set_Progress_Bar_Value(self, value: float):
         self.__progressBar.setValue(value)
@@ -99,16 +111,19 @@ class Problem():
 
         # Depending on the selection, exec one of the solvers
         match which_solver:
-            case "regular":  # Javi's
-                regular_Solver(self)
+
+            # case "regular":  # Javi's
+                # regular_Solver(self)
+
             case "abstract": # Alvaro's
                 abstract_Solver(self)
             case "abstract_DFJ":
                 abstract_DFJ_Solver(self)
             case "abstract_dynamic_DFJ":
                 abstract_Dynamic_DFJ_Solver(self)
-            case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
-                GRASP_Solver()
+
+            # case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
+            #    GRASP_Solver()
 
             # Default case
             case "":
@@ -130,11 +145,9 @@ class Problem():
 
 # -------------------------------------- Solvers --------------------------------------------- 
 
+"""
 def regular_Solver(problem: Problem):
-    """
-    Solves the given GTSP-MUAV problem using a simple formulation. This formulation uses a direct interpretation of the power line network
-    as a graph. It is simpler but limited. Based on Javi's Matlab PLIP.
-    """
+
 
     # Maybe, to avoid using explicit ordering of stuff, you could pass data from networkx directly to SCIPI
 
@@ -244,18 +257,6 @@ def regular_Solver(problem: Problem):
 
             # Sigma constrains
 
-            """
-            # Nonlinear version. Might freeze SCIP even if it is able to handle it
-            problem.scipi_model.addCons(
-
-                sigmas[pair[0].id+','+pair[1].id] 
-                            >= 
-                np.abs(quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].id] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].id] 
-                              - t[edge[0]+'->'+edge[1]+'|'+pair[1].id] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].id] 
-                            for edge in problem.graph.edges()))
-
-            )
-            """
             # Linearized version. It is way less problematic
             pmodel.addCons(
                 SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
@@ -310,22 +311,7 @@ def regular_Solver(problem: Problem):
                 0
             )
         
-    """
-    for node in tower_nodes:
-        for uav in problem.uav_team.list:
 
-            Y[node+','+uav.id] = problem.scipi_model.addVar(vtype = 'B',
-                                                            name='Y_{'+node+','+uav.id+'}')
-            
-            other_towers = copy.deepcopy(list(problem.graph.nodes()))
-            other_towers.remove(node)
-
-            problem.scipi_model.addCons(
-                quicksum(Z[node2+'->'+node+'|'+uav.id] + Z[node+'->'+node2+'|'+uav.id] for node2 in other_towers)
-                    ==
-                2 * Y[node+','+uav.id]
-            )
-    """
 
     # Select power line segments
     edges_types = nx.get_edge_attributes(pgraph, 'type')
@@ -425,10 +411,11 @@ def regular_Solver(problem: Problem):
     if problem.progress_Bar_LinkedQ(): problem.set_Progress_Bar_Value(100)
 
     return None
+    """
 
 def abstract_Solver(problem: Problem):
     """
-    This formulation creates a astraction layer that assigns a graph to the problem which nodes
+    This formulation creates a abstraction layer that assigns a graph to the problem which nodes
     are not the towers but the power line segments that require inspection. It scales faster than
     "regular" with the size of the problem but it is more general and less limited. Currently, charging stations are not implemented. 
     """
@@ -668,49 +655,48 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
     #--------------------------------- Graph ---------------------------------------------------------
 
-    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph)
+    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph, problem.get_Mission_Mode())
 
     # With this, the abstract graph is fully constructed.     
         
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
+
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
+
+    if 0 == problem.get_Mission_Mode():
+
+        tgraph = ptowers.get_Graph()
     
-    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
+        if not nx.is_connected(tgraph):
 
-    tgraph = ptowers.get_Graph()
-    
-    if not nx.is_connected(tgraph):
+            # If the towers are not connected, then compute a list with the list of towers of each component
+            SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
 
-        # If the towers are not connected, then compute a list with the list of towers of each component
-        SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
+            subsets = []
+            for subcomponent in SC:
 
-
-
-        subsets = []
-        for subcomponent in SC:
-
-            subset = []
-            for line_segment in subcomponent.edges():
-                edge_str = line_segment[0]+','+line_segment[1]
-                if 'SUP_{'+edge_str+'}' in pgraph.nodes():
-                    subset.append('SUP_{'+edge_str+'}')
-                    subset.append('SDOWN_{'+edge_str+'}')
-                else:
-                    subset.append('SUP_{'+line_segment[1]+','+line_segment[0]+'}')
-                    subset.append('SDOWN_{'+line_segment[1]+','+line_segment[0]+'}')
+                subset = []
+                for line_segment in subcomponent.edges():
+                    edge_str = line_segment[0]+','+line_segment[1]
+                    if 'SUP_{'+edge_str+'}' in pgraph.nodes():
+                        subset.append('SUP_{'+edge_str+'}')
+                        subset.append('SDOWN_{'+edge_str+'}')
+                    else:
+                        subset.append('SUP_{'+line_segment[1]+','+line_segment[0]+'}')
+                        subset.append('SDOWN_{'+line_segment[1]+','+line_segment[0]+'}')
 
 
-            subsets.append(subset)
+                subsets.append(subset)
 
-        for W in subsets:
+            for W in subsets:
 
-            if len(W) < 10: # This might be adjusted by the user.
+                if len(W) < 10: # This might be adjusted by the user.
 
-                Qlist = itertools.chain.from_iterable(itertools.combinations(W, r) for r in range(2, len(W)+1))
+                    Qlist = itertools.chain.from_iterable(itertools.combinations(W, r) for r in range(2, len(W)+1))
 
-                for Q in Qlist:
-                    add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
-
+                    for Q in Qlist:
+                        add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
 
@@ -746,7 +732,10 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
     # -------------------- Route parsing -----------------------------
 
-    parse_Abstract_Routes(sol, Z, puavs)
+    parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
+
+    for uav in puavs:
+        print(uav.routeAbstract)
 
     subtoursQ = False
     
@@ -789,7 +778,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                 sol_num[key] = sol[Z[key]]
             """
 
-            parse_Abstract_Routes(sol, Z, puavs)
+            parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
             subtoursQ = True
             break
@@ -839,7 +828,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                     sol_num[key] = sol[Z[key]]
                 """
 
-                parse_Abstract_Routes(sol, Z, puavs)
+                parse_Abstract_Routes(sol, Z, puavs,  problem.get_Mission_Mode())
 
                 subtoursQ = True
 
@@ -960,242 +949,323 @@ def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     return routeUTM
 
 def construct_Abstract_Graph(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.UAV_Team,
-                             pweather: WT.Weather, pgraph: nx.MultiDiGraph):
+                             pweather: WT.Weather, pgraph: nx.MultiDiGraph, mode:int):
+    
     """
     Auxiliary function for the abstract series of solvers. Given a problem, compute
     the abstract graph. It edits pgraph in place.
     """
 
+    match mode:
+
+        # Segment Inspection
+        case 0:
     
-    # Add all S (Sup and Sdown) nodes
-    # Iterate every pair of connected towers to create the segment nodes
-    for line_segment in ptowers.get_Graph().edges():
+            # Add all S (Sup and Sdown) nodes
+            # Iterate every pair of connected towers to create the segment nodes
+            for line_segment in ptowers.get_Graph().edges():
 
-        # Inspection in one direction. S^UPARROW
-        pgraph.add_node(
-            'SUP_{'+line_segment[0]+','+line_segment[1]+'}'
-            )
+                # Inspection in one direction. S^UPARROW
+                pgraph.add_node(
+                    'SUP_{'+line_segment[0]+','+line_segment[1]+'}'
+                )
         
-        # The other. S^DOWNARROW
-        pgraph.add_node(
-            'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'
-            )
+                # The other. S^DOWNARROW
+                pgraph.add_node(
+                    'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'
+                )
     
-    # Prefetch all tower coordinates
-    coords = nx.get_node_attributes(ptowers.get_Graph(), 'UTM')
+            # Prefetch all tower coordinates
+            coords = nx.get_node_attributes(ptowers.get_Graph(), 'UTM')
 
-    # Add connection between S with itself
-    # Iterate over all possible pairs of different line power segments
-    for line_segment_pair in list(itertools.combinations(ptowers.get_Graph().edges(), 2)):
+            # Add connection between S with itself
+            # Iterate over all possible pairs of different line power segments
+            for line_segment_pair in list(itertools.combinations(ptowers.get_Graph().edges(), 2)):
 
-        # Parses the 2 towers pairs into nodes
-        t1 = line_segment_pair[0][0]
-        t2 = line_segment_pair[0][1]
-        t3 = line_segment_pair[1][0]
-        t4 = line_segment_pair[1][1]
+                # Parses the 2 towers pairs into nodes
+                t1 = line_segment_pair[0][0]
+                t2 = line_segment_pair[0][1]
+                t3 = line_segment_pair[1][0]
+                t4 = line_segment_pair[1][1]
 
-        s1_tag = t1+','+t2
-        s2_tag = t3+','+t4
+                s1_tag = t1+','+t2
+                s2_tag = t3+','+t4
 
-        node1 = [(t1, coords[t1]), (t2, coords[t2])]
-        node2 = [(t3, coords[t3]), (t4, coords[t4])]
+                node1 = [(t1, coords[t1]), (t2, coords[t2])]
+                node2 = [(t3, coords[t3]), (t4, coords[t4])]
 
-        # Compute weights for each added edge
+                # Compute weights for each added edge
 
-        # One edge direction 
-        # Sup and Sup connection
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                # One edge direction 
+                # Sup and Sup connection
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node1,
                                             node2,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
         
-        pgraph.add_edge(
-            'SUP_{'+s1_tag+'}',
-            'SUP_{'+s2_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SUP_{'+s1_tag+'}',
+                    'SUP_{'+s2_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        # Sup and Sdown connection
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                # Sup and Sdown connection
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node1,
                                             node2[::-1],
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
 
-        pgraph.add_edge(
-            'SUP_{'+s1_tag+'}',
-            'SDOWN_{'+s2_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SUP_{'+s1_tag+'}',
+                    'SDOWN_{'+s2_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        # Sdown and Sdown connection
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                # Sdown and Sdown connection
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node1[::-1],
                                             node2[::-1],
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-        pgraph.add_edge(
-            'SDOWN_{'+s1_tag+'}',
-            'SDOWN_{'+s2_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SDOWN_{'+s1_tag+'}',
+                    'SDOWN_{'+s2_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        # Sdown and Sdown connection
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                # Sdown and Sdown connection
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node1[::-1],
                                             node2,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-        pgraph.add_edge(
-            'SDOWN_{'+s1_tag+'}',
-            'SUP_{'+s2_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SDOWN_{'+s1_tag+'}',
+                    'SUP_{'+s2_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        # Now the same but with the edge in the other direction
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                # Now the same but with the edge in the other direction
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node2,
                                             node1,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-        pgraph.add_edge(
-            'SUP_{'+s2_tag+'}',
-            'SUP_{'+s1_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SUP_{'+s2_tag+'}',
+                    'SUP_{'+s1_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node2,
                                             node1[::-1],
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
 
-        pgraph.add_edge(
-            'SUP_{'+s2_tag+'}',
-            'SDOWN_{'+s1_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                   'SUP_{'+s2_tag+'}',
+                    'SDOWN_{'+s1_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node2[::-1],
                                             node1[::-1],
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-        pgraph.add_edge(
-            'SDOWN_{'+s2_tag+'}',
-            'SDOWN_{'+s1_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SDOWN_{'+s2_tag+'}',
+                    'SDOWN_{'+s1_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-        W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node2[::-1],
                                             node1,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-        pgraph.add_edge(
-            'SDOWN_{'+s2_tag+'}',
-            'SUP_{'+s1_tag+'}',
-            type = 'TT',
-            Wt = W_t,
-            We = W_e 
-        )
+                pgraph.add_edge(
+                    'SDOWN_{'+s2_tag+'}',
+                    'SUP_{'+s1_tag+'}',
+                    type = 'TT',
+                    Wt = W_t,
+                    We = W_e 
+                )
 
-    # Add base nodes and connect them with all S nodes
-    for base in pbases:
-        pgraph.add_node(
-            base.get_Name()
-            )
+            # Add base nodes and connect them with all S nodes
+            for base in pbases:
+                pgraph.add_node(
+                    base.get_Name()
+                )
         
-        for line_segment in ptowers.get_Graph().edges():
+                for line_segment in ptowers.get_Graph().edges():
 
-            t1 = line_segment[0]
-            t2 = line_segment[1]
-            s_tag = t1+','+t2
+                    t1 = line_segment[0]
+                    t2 = line_segment[1]
+                    s_tag = t1+','+t2
 
-            node1 = (base.get_Name(), base.get_Coordinates())
-            node2 = [(t1, coords[t1]), (t2, coords[t2])]
+                    node1 = (base.get_Name(), base.get_Coordinates())
+                    node2 = [(t1, coords[t1]), (t2, coords[t2])]
 
-            W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                    W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node1,
                                             node2,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-            pgraph.add_edge(
-                base.get_Name(),
-                'SUP_{'+s_tag+'}',
-                type = 'BT',
-                Wt = W_t,
-                We = W_e
-            )
+                    pgraph.add_edge(
+                        base.get_Name(),
+                        'SUP_{'+s_tag+'}',
+                        type = 'BT',
+                        Wt = W_t,
+                        We = W_e
+                    )
 
-            W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                    W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node2,
                                             node1,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-            pgraph.add_edge(
-                'SUP_{'+s_tag+'}',
-                base.get_Name(),
-                type = 'TB',
-                Wt = W_t,
-                We = W_e
-            )
+                    pgraph.add_edge(
+                        'SUP_{'+s_tag+'}',
+                        base.get_Name(),
+                        type = 'TB',
+                        Wt = W_t,
+                        We = W_e
+                    )
 
-            W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                    W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node1,
                                             node2[::-1],
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-            pgraph.add_edge(
-                base.get_Name(),
-                'SDOWN_{'+s_tag+'}',
-                type = 'BT',
-                Wt = W_t,
-                We = W_e
-            )
+                    pgraph.add_edge(
+                        base.get_Name(),
+                        'SDOWN_{'+s_tag+'}',
+                        type = 'BT',
+                        Wt = W_t,
+                        We = W_e
+                    )
 
-            W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                    W_t, W_e = WE.compute_Abstract_Edge_Weights(
                                             node2[::-1],
                                             node1,
                                             puavs,
-                                            pweather)
+                                            pweather, mode)
 
-            pgraph.add_edge(
-                'SDOWN_{'+s_tag+'}',
-                base.get_Name(),
-                type = 'TB',
-                Wt = W_t,
-                We = W_e
-            )
+                    pgraph.add_edge(
+                       'SDOWN_{'+s_tag+'}',
+                        base.get_Name(),
+                        type = 'TB',
+                        Wt = W_t,
+                        We = W_e
+                    )
+
+        # Point Inspection
+        case 1:
+            
+            # Prefetch all tower coordinates
+            coords = nx.get_node_attributes(ptowers.get_Graph(), 'UTM')
+            
+            edges = list(itertools.combinations(coords.keys(), 2))
+
+            # Set all towers to the problem graph. No Power Line segment connection are needed.
+            pgraph.add_nodes_from(coords)
+            
+            for edge in edges:
+
+                node1 = (edge[0], coords[edge[0]])
+                node2 = (edge[1], coords[edge[1]])
+
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                                            node1,
+                                            node2,
+                                            puavs,
+                                            pweather, mode)
+
+                pgraph.add_edge(edge[0], edge[1],
+                    Wt = W_t,
+                    We = W_e 
+                    )
+                
+                W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                                            node2,
+                                            node1,
+                                            puavs,
+                                            pweather, mode)
+
+
+                pgraph.add_edge(edge[1], edge[0],
+                    Wt = W_t,
+                    We = W_e 
+                    )
+                    
+                
+            for base in pbases:
+
+                pgraph.add_node(
+                    base.get_Name(),
+                    UTM = base.get_Coordinates()
+                )
+
+                for tower in ptowers.get_Graph().nodes():
+
+                    node1 = (base.get_Name(), base.get_Coordinates())
+                    node2 = (tower, coords[tower])
+
+                    W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                                            node1,
+                                            node2,
+                                            puavs,
+                                            pweather, mode)
+
+                    pgraph.add_edge(base.get_Name(), tower,
+                        Wt = W_t,
+                        We = W_e 
+                        )
+                
+                    W_t, W_e = WE.compute_Abstract_Edge_Weights(
+                                            node2,
+                                            node1,
+                                            puavs,
+                                            pweather, mode)
+
+
+                    pgraph.add_edge(tower, base.get_Name(),
+                        Wt = W_t,
+                        We = W_e 
+                        )
+    
     return None
 
-def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team):
+def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team, mode: int):
 
     for uav in puavs:
         uav.route = []
@@ -1212,131 +1282,140 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team):
 
             nodes = temp[0].split('->')
 
-            puavs.select_UAV(temp[1]).routeAbstract.append((nodes[0], nodes[1]))
+            match mode:
+                case 0:
+
+                    puavs.select_UAV(temp[1]).routeAbstract.append((nodes[0], nodes[1]))
 
             
-            #print(nodes, temp[1])
+                    #print(nodes, temp[1])
 
-            # B to S
-            if nodes[0][0] == 'B':
+                    # B to S
+                    if nodes[0][0] == 'B':
 
-                #print('B to S')
+                        #print('B to S')
                 
-                mode_segment = nodes[1].split('_')
-                towers = mode_segment[1][1:-1].split(',')
+                        mode_segment = nodes[1].split('_')
+                        towers = mode_segment[1][1:-1].split(',')
 
-                # Add edges to UAV Route. Later, it will be ordered.
-                if mode_segment[0] == 'SUP':
-                    # Base to Tower
-                    puavs.select_UAV(temp[1]).route.append(nodes[0]+'->'+towers[0])
-                    puavs.select_UAV(temp[1]).routeModes.append('Navigation')
-                    # Inspection SUP
-                    puavs.select_UAV(temp[1]).route.append(towers[0]+'->'+towers[1])
-                    puavs.select_UAV(temp[1]).routeModes.append('Inspection')
-                else:
-                    # Base to Tower
-                    puavs.select_UAV(temp[1]).route.append(nodes[0]+'->'+towers[1])
-                    puavs.select_UAV(temp[1]).routeModes.append('Navigation')
-                    # Inspection SDOWN
-                    puavs.select_UAV(temp[1]).route.append(towers[1]+'->'+towers[0])
-                    puavs.select_UAV(temp[1]).routeModes.append('Inspection')
+                        # Add edges to UAV Route. Later, it will be ordered.
+                        if mode_segment[0] == 'SUP':
+                            # Base to Tower
+                            puavs.select_UAV(temp[1]).route.append(nodes[0]+'->'+towers[0])
+                            puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                            # Inspection SUP
+                            puavs.select_UAV(temp[1]).route.append(towers[0]+'->'+towers[1])
+                            puavs.select_UAV(temp[1]).routeModes.append('Inspection')
+                        else:
+                            # Base to Tower
+                            puavs.select_UAV(temp[1]).route.append(nodes[0]+'->'+towers[1])
+                            puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                            # Inspection SDOWN
+                            puavs.select_UAV(temp[1]).route.append(towers[1]+'->'+towers[0])
+                            puavs.select_UAV(temp[1]).routeModes.append('Inspection')
 
-            # S to B
-            elif nodes[1][0] == 'B':
+                    # S to B
+                    elif nodes[1][0] == 'B':
 
-                #print('S to B')
+                        #print('S to B')
 
-                mode_segment = nodes[0].split('_')
-                towers = mode_segment[1][1:-1].split(',')
+                        mode_segment = nodes[0].split('_')
+                        towers = mode_segment[1][1:-1].split(',')
 
-                # Add edges to UAV Route. Later, it will be ordered.
-                if mode_segment[0] == 'SUP':
-                    # Inspection SUP
-                    # problem.uav_team.selectUAV(temp[1]).route.append(towers[0]+'->'+towers[1])
-                    # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
-                    # Base to Tower
-                    puavs.select_UAV(temp[1]).route.append(towers[1]+'->'+nodes[1])
-                    puavs.select_UAV(temp[1]).routeModes.append('Navigation')
-                else:
-                    # Inspection SDOWN
-                    # problem.uav_team.selectUAV(temp[1]).route.append(towers[1]+'->'+towers[0])
-                    # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
-                    # Base to Tower
-                    puavs.select_UAV(temp[1]).route.append(towers[0]+'->'+nodes[1])
-                    puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                        # Add edges to UAV Route. Later, it will be ordered.
+                        if mode_segment[0] == 'SUP':
+                            # Inspection SUP
+                            # problem.uav_team.selectUAV(temp[1]).route.append(towers[0]+'->'+towers[1])
+                            # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
+                            # Base to Tower
+                            puavs.select_UAV(temp[1]).route.append(towers[1]+'->'+nodes[1])
+                            puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                        else:
+                            # Inspection SDOWN
+                            # problem.uav_team.selectUAV(temp[1]).route.append(towers[1]+'->'+towers[0])
+                            # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
+                            # Base to Tower
+                            puavs.select_UAV(temp[1]).route.append(towers[0]+'->'+nodes[1])
+                            puavs.select_UAV(temp[1]).routeModes.append('Navigation')
 
-            # S to S
-            else:
+                    # S to S
+                    else:
 
-                #print('S to S')
+                        #print('S to S')
 
-                mode_segment1 = nodes[0].split('_')
-                towers1 = mode_segment1[1][1:-1].split(',')
+                        mode_segment1 = nodes[0].split('_')
+                        towers1 = mode_segment1[1][1:-1].split(',')
 
-                mode_segment2 = nodes[1].split('_')
-                towers2 = mode_segment2[1][1:-1].split(',')
+                        mode_segment2 = nodes[1].split('_')
+                        towers2 = mode_segment2[1][1:-1].split(',')
 
-                if mode_segment1[0] == 'SUP' and mode_segment2[0] == 'SUP':
+                        if mode_segment1[0] == 'SUP' and mode_segment2[0] == 'SUP':
 
-                    # Inspection SUP 1
-                    # problem.uav_team.selectUAV(temp[1]).route.append(towers1[0]+'->'+towers1[1])
-                    # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
+                            # Inspection SUP 1
+                            # problem.uav_team.selectUAV(temp[1]).route.append(towers1[0]+'->'+towers1[1])
+                            # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
                     
-                    # Tower to Tower movement
-                    if towers1[1] != towers2[0]:
-                        puavs.select_UAV(temp[1]).route.append(towers1[1]+'->'+towers2[0])
-                        puavs.select_UAV(temp[1]).routeModes.append('Navigation')
-                    # Inspection SUP 2
-                    puavs.select_UAV(temp[1]).route.append(towers2[0]+'->'+towers2[1])
-                    puavs.select_UAV(temp[1]).routeModes.append('Inspection')
+                            # Tower to Tower movement
+                            if towers1[1] != towers2[0]:
+                                puavs.select_UAV(temp[1]).route.append(towers1[1]+'->'+towers2[0])
+                                puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                            # Inspection SUP 2
+                            puavs.select_UAV(temp[1]).route.append(towers2[0]+'->'+towers2[1])
+                            puavs.select_UAV(temp[1]).routeModes.append('Inspection')
 
-                elif mode_segment1[0] == 'SUP' and mode_segment2[0] == 'SDOWN':
+                        elif mode_segment1[0] == 'SUP' and mode_segment2[0] == 'SDOWN':
 
-                    # Inspection SUP 1
-                    # problem.uav_team.selectUAV(temp[1]).route.append(towers1[0]+'->'+towers1[1])
-                    # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
+                            # Inspection SUP 1
+                            # problem.uav_team.selectUAV(temp[1]).route.append(towers1[0]+'->'+towers1[1])
+                            # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
 
-                    # Tower to Tower movement
-                    if towers1[1] != towers2[1]:
-                        puavs.select_UAV(temp[1]).route.append(towers1[1]+'->'+towers2[1])
-                        puavs.select_UAV(temp[1]).routeModes.append('Navigation')
-                    # Inspection SDOWN 2
-                    puavs.select_UAV(temp[1]).route.append(towers2[1]+'->'+towers2[0])
-                    puavs.select_UAV(temp[1]).routeModes.append('Inspection')
+                            # Tower to Tower movement
+                            if towers1[1] != towers2[1]:
+                                puavs.select_UAV(temp[1]).route.append(towers1[1]+'->'+towers2[1])
+                                puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                            # Inspection SDOWN 2
+                            puavs.select_UAV(temp[1]).route.append(towers2[1]+'->'+towers2[0])
+                            puavs.select_UAV(temp[1]).routeModes.append('Inspection')
 
-                elif mode_segment1[0] == 'SDOWN' and mode_segment2[0] == 'SUP':
+                        elif mode_segment1[0] == 'SDOWN' and mode_segment2[0] == 'SUP':
                     
-                    # Inspection SDOWN 1
-                    # problem.uav_team.selectUAV(temp[1]).route.append(towers1[1]+'->'+towers1[0])
-                    # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
+                            # Inspection SDOWN 1
+                            # problem.uav_team.selectUAV(temp[1]).route.append(towers1[1]+'->'+towers1[0])
+                            # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
 
-                    # Tower to Tower movement
-                    if towers1[0] != towers2[0]:
-                        puavs.select_UAV(temp[1]).route.append(towers1[0]+'->'+towers2[0])
-                        puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                            # Tower to Tower movement
+                            if towers1[0] != towers2[0]:
+                                puavs.select_UAV(temp[1]).route.append(towers1[0]+'->'+towers2[0])
+                                puavs.select_UAV(temp[1]).routeModes.append('Navigation')
 
-                    # Inspection SUP 2
-                    puavs.select_UAV(temp[1]).route.append(towers2[0]+'->'+towers2[1])
-                    puavs.select_UAV(temp[1]).routeModes.append('Inspection')
+                            # Inspection SUP 2
+                            puavs.select_UAV(temp[1]).route.append(towers2[0]+'->'+towers2[1])
+                            puavs.select_UAV(temp[1]).routeModes.append('Inspection')
 
-                else:
+                        else:
 
-                    # Inspection SDOWN 1
-                    # problem.uav_team.selectUAV(temp[1]).route.append(towers1[1]+'->'+towers1[0])
-                    # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
+                            # Inspection SDOWN 1
+                            # problem.uav_team.selectUAV(temp[1]).route.append(towers1[1]+'->'+towers1[0])
+                            # problem.uav_team.selectUAV(temp[1]).routeModes.append('Inspection')
 
-                    # Tower to Tower movement
-                    if towers1[0] != towers2[1]:
-                        puavs.select_UAV(temp[1]).route.append(towers1[0]+'->'+towers2[1])
-                        puavs.select_UAV(temp[1]).routeModes.append('Navigation')
-                    # Inspection SDOWN 2
-                    puavs.select_UAV(temp[1]).route.append(towers2[1]+'->'+towers2[0])
-                    puavs.select_UAV(temp[1]).routeModes.append('Inspection')
+                            # Tower to Tower movement
+                            if towers1[0] != towers2[1]:
+                                puavs.select_UAV(temp[1]).route.append(towers1[0]+'->'+towers2[1])
+                                puavs.select_UAV(temp[1]).routeModes.append('Navigation')
+                            # Inspection SDOWN 2
+                            puavs.select_UAV(temp[1]).route.append(towers2[1]+'->'+towers2[0])
+                            puavs.select_UAV(temp[1]).routeModes.append('Inspection')
             
-            #print('t = ', puavs.get_List()[0].route)
+                    #print('t = ', puavs.get_List()[0].route)
+                            
+                case 1:
+
+                    puavs.select_UAV(temp[1]).routeAbstract.append((nodes[0], nodes[1]))
+                    puavs.select_UAV(temp[1]).route.append(nodes[0]+'->'+nodes[1])
+                    puavs.select_UAV(temp[1]).routeModes.append('Navigation')
 
 def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.UAV_Team,
-                                   pgraph: nx.MultiDiGraph, pmodel: SCIP.Model) -> tuple[dict, dict, dict, dict, dict]:
+                                   pgraph: nx.MultiDiGraph, pmodel: SCIP.Model, mode: int) -> tuple[dict, dict, dict, dict, dict]:
     
     # Dictionaries to store SCIP variables
     Z = {}
@@ -1350,133 +1429,246 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     Wt = nx.get_edge_attributes(pgraph, 'Wt')
     We = nx.get_edge_attributes(pgraph, 'We')
 
-    # For each edge in the graph assign a Z variable and assign the corresponding weights
-    # to its key in the weights dictionaries
-    for edge in pgraph.edges():
+    match mode:
+        case 0:
 
-        for uav in puavs:
+            # For each edge in the graph assign a Z variable and assign the corresponding weights
+            # to its key in the weights dictionaries
+            for edge in pgraph.edges():
 
-            edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge|UAV Tag
+                for uav in puavs:
 
-            Z[edge_uav] = pmodel.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"Z"+edge[0]+edge[1])
+                    edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge|UAV Tag
+
+                    Z[edge_uav] = pmodel.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"Z"+edge[0]+edge[1])
             
-            t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
-            e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
+                    t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
+                    e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
 
 
-    # Only one inspection constrain
-    for line_segment in ptowers.get_Graph().edges():
+            # Only one inspection constrain
+            for line_segment in ptowers.get_Graph().edges():
 
-        nodelist = copy.deepcopy(list(pgraph.nodes()))
-        nodelist.remove('SUP_{'+line_segment[0]+','+line_segment[1]+'}')
-        nodelist.remove('SDOWN_{'+line_segment[0]+','+line_segment[1]+'}')
+                nodelist = copy.deepcopy(list(pgraph.nodes()))
+                nodelist.remove('SUP_{'+line_segment[0]+','+line_segment[1]+'}')
+                nodelist.remove('SDOWN_{'+line_segment[0]+','+line_segment[1]+'}')
 
-        pmodel.addCons(
-            SCIP.quicksum(
-                SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                for uav in puavs)
-            for node in nodelist)
-                == 
-            1.0
-        )
+                pmodel.addCons(
+                    SCIP.quicksum(
+                        SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                            + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                        for uav in puavs)
+                    for node in nodelist)
+                        == 
+                    1.0
+                )
 
-        pmodel.addCons(
-            SCIP.quicksum(
-                SCIP.quicksum(Z[  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for uav in puavs)
-            for node in nodelist)
-                == 
-            1.0
-        )
+                pmodel.addCons(
+                    SCIP.quicksum(
+                        SCIP.quicksum(Z[  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                            + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                        for uav in puavs)
+                    for node in nodelist)
+                       == 
+                    1.0
+                )
 
-        # Continuity. The UAV that inspects must be the one that exits the segment
-        for uav in puavs:
+                # Continuity. The UAV that inspects must be the one that exits the segment
+                for uav in puavs:
 
-            Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
+                    Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
 
-            pmodel.addCons(
-                SCIP.quicksum(Z[node+'->'+'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                2 * Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-            )
+                    pmodel.addCons(
+                        SCIP.quicksum(Z[node+'->'+'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                            + Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            == 
+                        2 * Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                    )
 
-            Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
+                    Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
 
-            pmodel.addCons(
-                SCIP.quicksum(Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                       + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                2 * Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-            )
+                    pmodel.addCons(
+                        SCIP.quicksum(Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                            + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            == 
+                        2 * Y['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                    )
 
     
-    for uav in puavs:
+            for uav in puavs:
 
-        nodelist = copy.deepcopy(list(pgraph.nodes()))
+                nodelist = copy.deepcopy(list(pgraph.nodes()))
 
-        for base in pbases:
-            nodelist.remove(base.get_Name())
+                for base in pbases:
+                    nodelist.remove(base.get_Name())
 
-        # Base exit constrain
-        pmodel.addCons(
-                SCIP.quicksum(
-                    Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                1
-        )
+                # Base exit constrain
+                pmodel.addCons(
+                        SCIP.quicksum(
+                            Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            == 
+                        1
+                )
 
-        # Base entering constrain
-        pmodel.addCons(
-                SCIP.quicksum(
-                    Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
-                for node in nodelist)
-                    == 
-                1
-        )
+                # Base entering constrain
+                pmodel.addCons(
+                        SCIP.quicksum(
+                            Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            == 
+                        1
+                )
 
-        # Energy constrain
-        pmodel.addCons(
-            SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
-                     for edge in pgraph.edges()) 
-                <= 
-            1.0
-        )
+                # Energy constrain
+                pmodel.addCons(
+                    SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
+                            for edge in pgraph.edges()) 
+                        <= 
+                    1.0
+                )
 
 
-    # The N(N-1)/2 UAVs pairs. No repetitions and no order.
-    uav_pairs = list(itertools.combinations(puavs, 2))
+            # The N(N-1)/2 UAVs pairs. No repetitions and no order.
+            uav_pairs = list(itertools.combinations(puavs, 2))
 
-    # Create the sigma variables on SCIP. Also add the sigma definition constrains
-    for pair in uav_pairs:
-            pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
-            sigmas[pair_tag] = pmodel.addVar(vtype = 'C', name = "Sigma"+pair[0].get_ID()+pair[1].get_ID())
+            # Create the sigma variables on SCIP. Also add the sigma definition constrains
+            for pair in uav_pairs:
+                    pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
+                    sigmas[pair_tag] = pmodel.addVar(vtype = 'C', name = "Sigma"+pair[0].get_ID()+pair[1].get_ID())
 
-            # Sigma constrains
-            # Linearized version. It is way less problematic
+                    # Sigma constrains
+                    # Linearized version. It is way less problematic
             
-            pmodel.addCons(
-                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
-                       - t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
-                            for edge in pgraph.edges())
-                - sigmas[pair_tag] 
-                            <= 
-                0.0
-            )
+                    pmodel.addCons(
+                        SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
+                               - t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
+                                    for edge in pgraph.edges())
+                        - sigmas[pair_tag] 
+                                    <= 
+                        0.0
+                    )
 
-            pmodel.addCons(
-                SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
-                       - t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
-                            for edge in pgraph.edges())
-                - sigmas[pair_tag] 
-                            <= 
-                0.0
-            )
+                    pmodel.addCons(
+                        SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
+                            - t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
+                                    for edge in pgraph.edges())
+                        - sigmas[pair_tag] 
+                                    <= 
+                        0.0
+                    )
+        
+        case 1:
+            
+            # For each edge in the graph assign a Z variable and assign the corresponding weights
+            # to its key in the weights dictionaries
+            for edge in pgraph.edges():
+
+                for uav in puavs:
+
+                    edge_uav = edge[0]+'->'+edge[1]+'|'+uav.get_ID() # Edge | UAV Tag
+
+                    Z[edge_uav] = pmodel.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"Z"+edge[0]+edge[1])
+            
+                    t[edge_uav] = Wt[(edge[0], edge[1], 0)][uav.get_ID()]
+                    e[edge_uav] = We[(edge[0], edge[1], 0)][uav.get_ID()]
+
+            # Only one inspection per tower and continutiy. The UAV that inspects must be the one that exits the segment
+            for tower in ptowers.get_Graph().nodes():
+
+                nodelist = copy.deepcopy(list(pgraph.nodes()))
+                nodelist.remove(tower)
+
+                pmodel.addCons(
+                    SCIP.quicksum(
+                        SCIP.quicksum(Z[node+'->'+tower+'|'+uav.get_ID()] for uav in puavs)
+                    for node in nodelist)
+                        == 
+                    1.0
+                )
+
+                pmodel.addCons(
+                    SCIP.quicksum(
+                        SCIP.quicksum(Z[tower+'->'+node+'|'+uav.get_ID()] for uav in puavs)
+                    for node in nodelist)
+                        == 
+                    1.0
+                )
+                
+                for uav in puavs:
+
+                    Y[tower+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+tower)
+
+                    pmodel.addCons(
+                        SCIP.quicksum(Z[node+'->'+tower+'|'+uav.get_ID()] + Z[tower+'->'+node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            2 * Y[tower+'|'+uav.get_ID()]
+                    )
+            
+            for uav in puavs:
+
+                nodelist = copy.deepcopy(list(pgraph.nodes()))
+
+                for base in pbases:
+                    nodelist.remove(base.get_Name())
+
+                # Base exit constrain
+                pmodel.addCons(
+                        SCIP.quicksum(
+                            Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            == 
+                        1
+                )
+
+                # Base entering constrain
+                pmodel.addCons(
+                        SCIP.quicksum(
+                            Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            == 
+                        1
+                )
+
+                # Energy constrain
+                pmodel.addCons(
+                    SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
+                            for edge in pgraph.edges()) 
+                        <= 
+                    1.0
+                )
+
+            # The N(N-1)/2 UAVs pairs. No repetitions and no order.
+            uav_pairs = list(itertools.combinations(puavs, 2))
+
+            # Create the sigma variables on SCIP. Also add the sigma definition constrains
+            for pair in uav_pairs:
+                    pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
+                    sigmas[pair_tag] = pmodel.addVar(vtype = 'C', name = "Sigma"+pair[0].get_ID()+pair[1].get_ID())
+
+                    # Sigma constrains
+                    # Linearized version. It is way less problematic
+            
+                    pmodel.addCons(
+                        SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
+                               - t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
+                                    for edge in pgraph.edges())
+                        - sigmas[pair_tag] 
+                                    <= 
+                        0.0
+                    )
+
+                    pmodel.addCons(
+                        SCIP.quicksum(t[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[1].get_ID()] 
+                            - t[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+pair[0].get_ID()] 
+                                    for edge in pgraph.edges())
+                        - sigmas[pair_tag] 
+                                    <= 
+                        0.0
+                    )
 
     return Z, Y, sigmas, t, e
 
