@@ -401,17 +401,18 @@ class UAV():
                     
                     # Get down, orbit and inspect
                     k = 0
-                    for porbit in orbit:
 
-                        btH1 = coords_dict[self.route[1:-1][k][0]][2] - bH   # base of tower 1 with respect to the uav base
+                    btH1 = coords_dict[self.route[0:-1][m][1]][2] - bH   # base of tower 1 with respect to the uav base
+
+                    for porbit in orbit:
                         
-                        point = np.append(self.routeUTM[0][0][:2], btH1 + tH + self.missionSettings["Insp. height"])
+                        point = np.append(porbit, btH1 + tH + self.missionSettings["Insp. height"])
 
                         n_dir = v_dirs[k]
 
                         yaw = np.rad2deg(np.arccos(n_dir[1]))
                         if n_dir[0] < 0: yaw = -yaw
-                        actions = {"gimbal": gimbal, "yaw": yaw}
+                        actions = {"gimbal": gimbal, "yaw": yaw, "photo": True}
 
                         self.waypoints.add_Waypoint(point, actions, "Inspection")
                         k += 1
@@ -419,7 +420,7 @@ class UAV():
                     # Above the last orbital point
                     point = np.append(orbit[-1], tH + dH)
 
-                    n_dir = self.routeUTM[0:-1][k+1][:2]-orbit[-1]
+                    n_dir = self.routeUTM[m+1][1][:2]-orbit[-1]
                     n_dir = n_dir / np.linalg.norm(n_dir)
 
                     yaw = np.rad2deg(np.arccos(n_dir[1]))
@@ -429,6 +430,23 @@ class UAV():
 
                     m += 1
 
+
+                n_dir = self.routeUTM[-1][1][:2]-self.routeUTM[-1][0][:2]
+                n_dir = n_dir / np.linalg.norm(n_dir)
+
+                point = np.append(self.routeUTM[0][0][:2], tH + dH)
+
+                yaw = np.rad2deg(np.arccos(n_dir[1]))
+                if n_dir[0] < 0: yaw = -yaw
+
+                actions = {"gimbal": gimbal, "yaw": yaw}
+                self.waypoints.add_Waypoint(point, actions, "Navigation")
+
+                point = np.append(self.routeUTM[0][0][:2], fH)
+
+                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw}
+                self.waypoints.add_Waypoint(point, actions, "Navigation")
+                
 
             case _ :
                 print("No such mode exits")

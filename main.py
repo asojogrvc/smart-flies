@@ -10,6 +10,7 @@
 #       and the orderRoute could just close the base loop without entering the other one first.
 #   - In abstract_dynamic_DFJ: Allow user to change the max size for the initial subtour elimination constrains (the one
 #        that are added before solving the problem for the first time)
+#   - For point inspectio, choose the orbiting direction depending on the next tower relative position
 #
 # TO DO (OPTIONAL)
 #   - In regularSolver: All tower to tower are treated as inspection.
