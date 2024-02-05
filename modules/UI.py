@@ -831,7 +831,7 @@ def compute_sim_trajectories(ui: MainWindow):
     
     if not(is_set(ui.status_flag, 5)):
         print('Waypoints need to be computed')
-        ui.uavs.compute_Team_Waypoints("PaV", ui.towers, ui.bases)
+        ui.uavs.compute_Team_Waypoints(ui.mission_mode, ui.towers, ui.bases)
 
     
     ui.continueQ = []
@@ -1383,7 +1383,7 @@ def getLandingModeMissionSettings(ui: MainWindow):
 def updateMissionSettings(ui: MainWindow, item: QtWidgets.QTableWidgetItem):
 
     if is_set(ui.status_flag, 1):
-        ui.uavs.compute_Team_Waypoints("PaV", ui.towers, ui.bases)
+        ui.uavs.compute_Team_Waypoints(ui.mission_mode, ui.towers, ui.bases)
 
     print(item.column())
 
@@ -1528,9 +1528,7 @@ def exec_Planner(ui: MainWindow):
     ui.loadingPlanner.setValue(100)
     ui.loadingPlanner.reset()
 
-    mode = "PaV"
-
-    ui.uavs.compute_Team_Waypoints(mode, ui.towers, ui.bases)
+    ui.uavs.compute_Team_Waypoints(ui.mission_mode, ui.towers, ui.bases)
     ui.status_flag = set_bit(ui.status_flag, 5, 1)
     print(bin(ui.status_flag))
 

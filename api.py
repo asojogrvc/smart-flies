@@ -331,7 +331,7 @@ def planner():
 
     problem.solve("")
 
-    problem.get_UAV_Team().compute_Team_Waypoints("PaV", problem.get_Towers(), problem.get_Bases())
+    problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
     base0 = problem.get_Bases().get_Base("B0")
     iYAML.save_Mission("./server/dynamic/mission.yaml", problem.get_UAV_Team(), base0.get_UTM_Zone())
         

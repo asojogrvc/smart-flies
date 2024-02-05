@@ -201,13 +201,14 @@ class UAV():
 
     # ----------------------------- General functions -------------------------------
 
-    def compute_Waypoints(self, mode: str, towers: TW.Towers, bases: BA.Bases):
+    def compute_Waypoints(self, mode: int, towers: TW.Towers, bases: BA.Bases):
         """
         Computes the corresponding waypoints and actions for the UAV depending on the use case (mode) and
         mission settings
 
         Modes:
-            - "PaV": Photo and video power line inspection
+            - "0": Photo and video of segments
+            - "1": Photo and video of points
         """
 
         # Reset waypoints first
@@ -215,7 +216,7 @@ class UAV():
 
         match mode:
 
-            case "PaV":
+            case 0:
 
                 dH = 20 # Security height offset for navigation
                 fH = 5 # first height First and last height.
@@ -360,6 +361,43 @@ class UAV():
                 print(self.__name+":")
                 self.waypoints.print()
 
+            case 1:
+
+                preMoves = []
+                preNdirs = []
+                preVdirs = []
+                point = self.routeUTM[0][0][:2] # Base
+                for move in self.routeUTM[1:-1]: 
+
+                    pmove, n_dir, v_dir = CO.compute_Orbital_Trajectory(point, move[1], self.missionSettings["Insp. horizontal offset"])
+
+                    preMoves.append(pmove)
+                    preNdirs.append(n_dir)
+                    preVdirs.append(v_dir)
+
+                    point = pmove[1]
+
+                # Gimbal is fixed beforehand
+                gimbal = - float(self.missionSettings["Cam. angle"])
+
+                # First waypoint is at base but at "fH" height. Start video and point
+                # the camera to the next point. Always at Z = fH
+
+                point = np.append(self.routeUTM[0][0][:2], fH)
+
+                n_dir = preMoves[0][0]-self.routeUTM[0][0][:2]
+                n_dir = n_dir / np.linalg.norm(n_dir)
+
+                yaw = np.rad2deg(np.arccos(n_dir[1]))
+                if n_dir[0] < 0: yaw = -yaw
+
+                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw}
+                self.waypoints.add_Waypoint(point, actions, "Navigation")
+
+                # The next point is at the same place but at Z = fH + dH
+                point = np.append(self.routeUTM[0][0][:2], tH + dH)
+                actions = {"gimbal": gimbal, "yaw": yaw}
+                self.waypoints.add_Waypoint(point, actions, "Navigation")
 
             case _ :
                 print("No such mode exits")
@@ -497,13 +535,14 @@ class UAV_Team():
         """
         return self.__list[which]
     
-    def compute_Team_Waypoints(self, mode: str, towers: TW.Towers, bases: BA.Bases):
+    def compute_Team_Waypoints(self, mode: int, towers: TW.Towers, bases: BA.Bases):
         """
         Computes the corresponding waypoints and actions of the entire team depending on the use case (mode) and
         mission settings
 
         Modes:
-            - "PaV": Photo and video power line inspection
+            - "0": Photo and video of segments
+            - "1": Photo and video of points
 
         """
 
