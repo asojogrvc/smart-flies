@@ -184,6 +184,9 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
 
             # For each Q subset, a constrain is added:
             for Q in Qlist:
+
+                # So it is feasible at least if 2 < len(Q) and len(Q) < 8. THIS DOESN FIX IT NEITHER
+                
                 add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
 
     elif 1 == problem.get_Mission_Mode():
