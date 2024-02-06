@@ -345,7 +345,10 @@ def planner():
 
     problem = SO.Problem(towers, bases, uavs, weather, mode)
 
-    problem.solve("")
+    status = problem.solve("")
+
+    if False == status:
+        return {"output" : "The problem is infeasible"}
 
     problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
     base0 = problem.get_Bases().get_Base("B0")

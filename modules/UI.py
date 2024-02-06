@@ -670,6 +670,10 @@ def load_data_from_YAML(ui: MainWindow):
     ui.status_flag = set_bit(ui.status_flag, 1, 0)
     print(bin(ui.status_flag))
 
+    # In case no file is selected
+    if "" == filename[0]:
+        return None
+
     ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode = YAML.load_data_from_YAML(filename[0])
 
     # Update with new data
@@ -752,6 +756,10 @@ def load_data_from_JSON(ui: MainWindow):
 
     ui.status_flag = set_bit(ui.status_flag, 1, 0)
     print(bin(ui.status_flag))
+
+    # In case no file is selected
+    if "" == filename[0]:
+        return None
 
     f = open(filename[0])
     json_obj = json.load(f)
@@ -1612,9 +1620,13 @@ def exec_Planner(ui: MainWindow):
     problem = SO.Problem(ui.towers, ui.bases, ui.uavs, ui.weather, ui.mission_mode)
     problem.link_Progress_Bar(ui.loadingPlanner)
     ui.loadingPlanner.setValue(10)
-    problem.solve(ui.solverType)
+    status = problem.solve(ui.solverType)
     ui.loadingPlanner.setValue(100)
     ui.loadingPlanner.reset()
+
+    if False == status:
+        print("Problem is infeasible")
+        return None
 
     ui.uavs.compute_Team_Waypoints(ui.mission_mode, ui.towers, ui.bases)
     ui.status_flag = set_bit(ui.status_flag, 5, 1)

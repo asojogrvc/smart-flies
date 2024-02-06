@@ -96,7 +96,7 @@ class Problem():
     def progress_Bar_LinkedQ(self) -> bool:
         return self.__progressBar != None
     
-    def solve(self, which_solver:str):
+    def solve(self, which_solver:str) -> bool:
         """
         Solves an existing problem with any of the implement formulations / methods. As of now:
             - "regular": This formulation uses a direct interpretation of the power line network
@@ -119,22 +119,22 @@ class Problem():
             #    abstract_Solver(self)
 
             case "abstract_DFJ":
-                abstract_DFJ_Solver(self)
+                status = abstract_DFJ_Solver(self)
             case "abstract_dynamic_DFJ":
-                abstract_Dynamic_DFJ_Solver(self)
+                status = abstract_Dynamic_DFJ_Solver(self)
 
             # case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
             #    GRASP_Solver()
 
             # Default case
             case "":
-                abstract_Dynamic_DFJ_Solver(self)
+                status = abstract_Dynamic_DFJ_Solver(self)
 
             # In case that the given solver name is not found.
             case _:
                 raise Exception("No such solver is implemented")
         
-        return None
+        return status
 
     def link_Progress_Bar(self, ui_progressbar: QProgressBar):
         """
@@ -147,7 +147,7 @@ class Problem():
 # -------------------------------------- Solvers --------------------------------------------- 
 
 
-def abstract_DFJ_Solver(problem: Problem):
+def abstract_DFJ_Solver(problem: Problem) -> bool:
     """
     It is the same as the abstract solver excepts that it implements the DFJ Subtour elimination constrains.
     """
@@ -216,7 +216,12 @@ def abstract_DFJ_Solver(problem: Problem):
     pmodel.writeProblem('scip_model.cip')
             
     pmodel.optimize()
+    if "infeasible" == pmodel.getStatus():
+        return False
+    
     sol = pmodel.getBestSol()
+
+    print("Problem Status is:", pmodel.getStatus())
 
     #print(problem.scipi_model.checkSol(sol))
 
@@ -234,9 +239,9 @@ def abstract_DFJ_Solver(problem: Problem):
         print('O = ', uav.route)
         print(uav.routeModes)
 
-    return None
+    return True
 
-def abstract_Dynamic_DFJ_Solver(problem: Problem):
+def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
     """
     It is the same as the abstract solver excepts that it implements a dynamic DFJ Subtour elimination constraint.
     """
@@ -315,7 +320,12 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
     print("----------------------------------------")
 
     pmodel.optimize()
+    if "infeasible" == pmodel.getStatus():
+        return False
+
     sol = pmodel.getBestSol()
+
+    
 
     """
     sol_num = {}
@@ -366,6 +376,9 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
 
             pmodel.optimize()
+            if "infeasible" == pmodel.getStatus():
+                return False
+            
             sol = pmodel.getBestSol()
 
             """
@@ -416,6 +429,8 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                 """
 
                 pmodel.optimize()
+                if "infeasible" == pmodel.getStatus():
+                    return False
                 sol = pmodel.getBestSol()
 
                 """
@@ -450,7 +465,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
         print('OF = ', uav.route)
         print(uav.routeModes)
 
-    return None
+    return True
 
 def GRASP_Solver():
     """

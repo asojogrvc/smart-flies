@@ -8,7 +8,9 @@
 #   - Fix Simulator and probably waypoints for cases where a tower is entered and exited twice. This create joint loops 
 #       and the orderRoute could just close the base loop without entering the other one first.
 #   - In abstract_dynamic_DFJ: Allow user to change the max size for the initial subtour elimination constrains (the one
-#        that are added before solving the problem for the first time)
+#       that are added before solving the problem for the first time)
+#   - In abstract_DFJ: Some times, a problem is infeasible. It makes no sense. It might be related with unconnected towers islands and how
+#       the subsets Q are generated and selected.
 #
 # TO DO (OPTIONAL)
 #   - Add correct UI scaling for smaller than 1080p displays. This might be done using a global parameter
