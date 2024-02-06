@@ -1,6 +1,6 @@
 # Mission yaml ouput code
 
-import numpy as np, os, yaml, copy 
+import numpy as np, os, yaml, copy, json
 
 from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, coordinates as CO, solver as SO
 
@@ -234,3 +234,80 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
     towers.load_from_Arrays(paths, True)
 
     return bases, towers, uavs, weather, mission_init["settings"]["type"]
+
+
+def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int]:
+    """
+    Loads the bases, towers, uavs and weather from a JSON object.
+    """
+
+    # Initialize data
+    bases = BA.Bases()
+    towers = TW.Towers()
+    uavs = UAVS.UAV_Team()
+    weather = WT.Weather()
+
+    print(json_obj)
+
+    tower_height = json_obj["settings"][0]["mission"]["tower"]
+
+    # Load the UAVs
+    k = 0
+    for uav_dict in json_obj["settings"]:
+
+        uav = UAVS.UAV()
+        uav.load_from_Model(uav_dict["devices"]["category"], str(uav_dict["devices"]["deviceId"]))
+        uav.missionSettings["Base"] = "B"+str(k)
+        uav.missionSettings["Nav. speed"] = uav_dict["devices"]["speed_navegation"]
+        uav.missionSettings["Insp. speed"] = uav_dict["devices"]["speed_mission"]
+        uav.missionSettings["Landing Mode"] = int_to_Landing_Mode(0)
+        geom = json_obj["settings"][k]["mission"]
+        uav.missionSettings["Insp. height"] = geom["height"]
+        uav.missionSettings["Insp. horizontal offset"] = geom["offset"]
+
+        # Update from the other pair
+        uav.missionSettings['Tower distance'] = float(np.sqrt(
+            uav.missionSettings['Insp. height']**2 + uav.missionSettings['Insp. horizontal offset']**2))
+        
+        temp = uav.missionSettings['Insp. horizontal offset']
+        if temp == 0:
+            uav.missionSettings['Cam. angle'] = 90
+        else:
+            uav.missionSettings['Cam. angle'] = float(np.rad2deg(np.arctan(
+                uav.missionSettings['Insp. height'] / temp)))
+
+        uavs.add_UAV(copy.deepcopy(uav))
+
+        coords = np.array([json_obj["bases"][k]["latitude"], json_obj["bases"][k]["longitude"], 0])
+        CO.update_Height_Online(coords)
+        coords = CO.latlon2utm(coords)
+
+        bases.add_Base(BA.Base(
+            "B"+str(k),
+            coords[0],
+            coords[1]
+        ))
+
+        k += 1
+    
+    base0 = bases.get_Base("B0")
+    weather.update_Online(CO.utm2latlon(base0.get_Coordinates(), base0.get_UTM_Zone()))
+
+    paths = []
+
+    for loc in json_obj["loc"]:
+        firstQ = True
+        for point in loc["items"]:
+
+            if True == firstQ:
+                path = np.array([[point["latitude"], point["longitude"], 0.0]])
+                firstQ = False
+            else: path = np.concatenate((path, np.array([[point["latitude"], point["longitude"], 0.0]])))
+
+        paths.append(path)
+
+    print(paths)
+
+    towers.load_from_Arrays(paths, True)
+
+    return bases, towers, uavs, weather, json_obj["objetivo"]["id"]

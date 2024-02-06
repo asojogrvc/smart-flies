@@ -2,7 +2,6 @@
 # The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm"
 
 # TO DO (CRITICAL)
-#   - Check why some trivial constrains are added to the SCIP Problem. Probably because some DFJ Constraints are added with Q = []
 #  
 # TO DO (MUST)
 #   - Delete SUP and SDOWN names. Instead, use T1->T2 and T2->T1 or similar.

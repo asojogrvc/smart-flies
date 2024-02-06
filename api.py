@@ -1,6 +1,7 @@
 # General imports
 
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
+from flask_cors import CORS
 import os, yaml
 
 # Projects internal modules imports
@@ -21,6 +22,8 @@ class Server(Flask):
     __status = "inactive"    # By default, the API server is inactive.
     __bases_Input = "file"   # How was data received
     __towers_Input  = "file" # How was data received
+
+    mission_json = {}
 
     def set_Status(self, statusI: str):
 
@@ -68,6 +71,9 @@ class Server(Flask):
 template_dir = os.path.abspath('./server/static/')
 app = Server(__name__, template_folder=template_dir, static_url_path="", static_folder="./server/static/")
 
+# To allow CORS External Origins
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
+
 # --------------------------------------------------------------------
 #
 #                        Define the API routes
@@ -106,7 +112,15 @@ def receive_YAML() -> dict | None:
             app.set_Input_type("yaml", "Bases")
     
             return {"output": "YAML Received"}
-        
+    
+@app.route('/input_json', methods = ['POST'])
+def receive_test() -> dict | None:
+
+    app.mission_json = request.get_json()
+
+    app.set_Input_type("json", "Bases")
+
+    return {"output": "JSON Received"}
 
 @app.route('/input_bases', methods = ['POST'])
 def receive_bases() -> dict | None:
@@ -300,10 +314,12 @@ def planner():
     
     app.set_Status("occupied")
     
-    # --- Placeholder data -------------------------
 
     if "yaml" == app.get_Input_type("Bases"):
         bases, towers, uavs, weather, mode = iYAML.load_data_from_YAML("./server/dynamic/mission_init.yaml")
+
+    if "json" == app.get_Input_type("Bases"):
+        bases, towers, uavs, weather, mode = iYAML.load_data_from_JSON(app.mission_json)
 
     else:
 

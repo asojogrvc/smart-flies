@@ -8,6 +8,22 @@ GET http://localhost:8004/status
 GET http://localhost:8004/output
 
 ### Send bases as JSON
+POST http://localhost:8004/input_test
+Content-Type: application/json
+
+{
+    "name": "uav_757",
+    "category": "dji_M300",
+    "ip": "10.42.0.44",
+    "camera":[
+        {
+            "type": "WebRTC",
+            "source": "main"
+        }
+    ]
+}
+
+### Send bases as JSON
 POST http://localhost:8004/input_bases
 Content-Type: application/json
 
