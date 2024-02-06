@@ -1,5 +1,5 @@
 # Smart Flies Planner
-# The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name SFP --noconfirm"
+# The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm"
 
 # TO DO (CRITICAL)
 #   - Check why some trivial constrains are added to the SCIP Problem. Probably because some DFJ Constraints are added with Q = []

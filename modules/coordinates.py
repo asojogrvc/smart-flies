@@ -241,7 +241,13 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, dista
 
     orbit = [p2 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
 
-    v_dirs = [np.array([-np.sin(i / n_points * 2 * np.pi + phi), np.cos(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
+    v_dirs = [point[:2] - 0.5*(orbit[i]+orbit[i+1])  for i in range(n_points-1)]
+    v_dirs.append(point[:2] - 0.5*(orbit[0]+orbit[-1]))
+
+    k = 0
+    for vec in v_dirs:
+        v_dirs[k]= vec / np.linalg.norm(vec)
+        k += 1
 
     return orbit, n_dir, v_dirs
     
