@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.pyplot as plt
 import yaml
+import json
 
 import modules.towers as TW
 import modules.bases as BA
@@ -81,14 +82,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.solverType = "abstract_dynamic_DFJ"
 
         menu0 = menubar.addMenu('File')
-        db_action01 = menu0.addAction("Load Mission Initialization")
+        db_action01 = menu0.addAction("Load YAML Mission Initialization")
         db_action01.setStatusTip("Load a YAML file for the problem definition")
         db_action01.triggered.connect(lambda: load_data_from_YAML(self))
 
-        db_action02 = menu0.addAction("Load Bases KML")
-        db_action02.setStatusTip("Not implemented yet")
-        db_action03 = menu0.addAction("Load Towers KML")
+        db_action02 = menu0.addAction("Load JSON Mission Initialization")
+        db_action02.setStatusTip("Load a JSON file for the problem definition")
+        db_action02.triggered.connect(lambda: load_data_from_JSON(self))
+
+        db_action03 = menu0.addAction("Load Bases KML")
         db_action03.setStatusTip("Not implemented yet")
+        db_action04 = menu0.addAction("Load Towers KML")
+        db_action04.setStatusTip("Not implemented yet")
 
         menu = menubar.addMenu('Theme')
         db_action11 = menu.addAction("Light Theme")
@@ -665,12 +670,93 @@ def load_data_from_YAML(ui: MainWindow):
     ui.status_flag = set_bit(ui.status_flag, 1, 0)
     print(bin(ui.status_flag))
 
-    # Reset. This is redundant
-    ui.towers.reset()
-    ui.bases.reset()
-    ui.uavs.empty()
-
     ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode = YAML.load_data_from_YAML(filename[0])
+
+    # Update with new data
+    updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())
+
+    # Set general location as the first base. This could be better done
+    base1 = ui.bases.get_Base("B1")
+    ui.location_LatLon = CO.utm2latlon(base1.get_Coordinates(), base1.get_UTM_Zone()) # [Latitude, Longitud]
+
+
+    # UAVs Model Info Update to treeview
+    updateUAVsModelData(ui.treeView)
+
+    # Update TableView with models
+
+    UAVs_IDs = []
+
+    for uav in ui.uavs:
+        UAVs_IDs.append(uav.get_ID())
+
+    ui.tableModel.setVerticalHeaderLabels(UAVs_IDs)
+
+
+    ui.combo_modes = []
+    ui.combo_bases = []
+
+        
+    keys = list(uav.missionSettings.keys())
+
+    bases_list = [uav.missionSettings["Base"] for uav in ui.uavs]
+    landing_list = ["None", "Auto"]
+
+    for i in range(len(UAVs_IDs)):
+
+        b_index = bases_list.index(ui.uavs.select_UAV_by_Order(i).missionSettings["Base"])
+        lm_index = landing_list.index(ui.uavs.select_UAV_by_Order(i).missionSettings["Landing Mode"])
+
+        for k in range(ui.tableModel.columnCount()):
+            ui.tableModel.setData(ui.tableModel.index(i, k), ui.uavs.select_UAV_by_Order(i).missionSettings[keys[k]],
+                                    QtCore.Qt.ItemDataRole.EditRole)
+
+        ui.combo_bases.append(QtWidgets.QComboBox())
+        ui.combo_bases[i].addItems(bases_list)
+        ui.combo_bases[i].setCurrentIndex(b_index)
+
+        ui.combo_modes.append(QtWidgets.QComboBox())
+        ui.combo_modes[i].addItems(landing_list)
+        ui.combo_modes[i].setCurrentIndex(lm_index)
+    
+        ui.tableView.setIndexWidget(ui.tableModel.index(i, 0), ui.combo_bases[i])
+        ui.tableView.setIndexWidget(ui.tableModel.index(i, 3), ui.combo_modes[i])
+        
+        ui.combo_bases[i].currentTextChanged.connect(lambda: getBaseMissionSettings(ui))
+        ui.combo_modes[i].currentTextChanged.connect(lambda: getLandingModeMissionSettings(ui))
+
+    # data changed or itemchanged do not detect combo changes
+    ui.tableModel.itemChanged.connect(lambda item: updateMissionSettings(ui, item))
+    ui.tableView.resizeColumnsToContents()
+        
+    # Set Flag Status
+    ui.status_flag = set_bit(ui.status_flag, 1, 1)
+    print(bin(ui.status_flag))
+
+    print("Bases, Towers and UAV files loaded and drawn")
+
+    return None
+
+def load_data_from_JSON(ui: MainWindow):
+    """
+    Auxiliary UI function to load everything needed to define a GTSP-MUAV problem (Towers, Bases & UAV Team) except from weather.
+    It uses the menubar item to do so.
+    """
+
+    filename = QtWidgets.QFileDialog.getOpenFileName(
+        ui,
+        "Open Mission Initialization JSON",
+        '',
+        "Mission Initialization (*.json)", 
+    )
+
+    ui.status_flag = set_bit(ui.status_flag, 1, 0)
+    print(bin(ui.status_flag))
+
+    f = open(filename[0])
+    json_obj = json.load(f)
+    f.close()
+    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode = YAML.load_data_from_JSON(json_obj)
 
     # Update with new data
     updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())

@@ -164,6 +164,9 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
     uavs = UAVS.UAV_Team()
     weather = WT.Weather()
 
+    # If a YAML is loaded twice, it crashed. This fixes it
+    uavs.empty()
+
     # Open YAML stream from the file path and load it as a Python object
     f = open(file_path, "r")
     mission_init = yaml.load(f, Loader = yaml.Loader)
@@ -247,7 +250,8 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
     uavs = UAVS.UAV_Team()
     weather = WT.Weather()
 
-    print(json_obj)
+     # If a YAML is loaded twice, it crashed. This fixes it
+    uavs.empty()
 
     tower_height = json_obj["settings"][0]["mission"]["tower"]
 
