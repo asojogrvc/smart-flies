@@ -115,8 +115,9 @@ class Problem():
             # case "regular":  # Javi's
                 # regular_Solver(self)
 
-            case "abstract": # Alvaro's
-                abstract_Solver(self)
+            # case "abstract": # Alvaro's
+            #    abstract_Solver(self)
+
             case "abstract_DFJ":
                 abstract_DFJ_Solver(self)
             case "abstract_dynamic_DFJ":
@@ -413,12 +414,13 @@ def regular_Solver(problem: Problem):
     return None
     """
 
+"""
 def abstract_Solver(problem: Problem):
-    """
+
     This formulation creates a abstraction layer that assigns a graph to the problem which nodes
     are not the towers but the power line segments that require inspection. It scales faster than
     "regular" with the size of the problem but it is more general and less limited. Currently, charging stations are not implemented. 
-    """
+
 
     ptowers = problem.get_Towers() # This does not duplicate in memory, just "reference" it.
                                    # This is just default python. Just for faster coding and less referencing
@@ -430,14 +432,14 @@ def abstract_Solver(problem: Problem):
 
     #--------------------------------- Graph ---------------------------------------------------------
 
-    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph)
+    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph, problem.get_Mission_Mode())
     
     # With this, the abstract graph is fully constructed.     
         
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
     
-    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
 
     # THIS THING ONLY WORKS FOR SOME CASES. IT STILL PRESENTS SUBROUTES FOR MANY OTHERS
     # --------------------- Subroute S.T.U.P.I.D. Solution ----------------------------
@@ -538,6 +540,7 @@ def abstract_Solver(problem: Problem):
         print(uav.routeModes)
 
     return None
+"""
 
 def abstract_DFJ_Solver(problem: Problem):
     """
@@ -554,53 +557,41 @@ def abstract_DFJ_Solver(problem: Problem):
 
     #--------------------------------- Graph ---------------------------------------------------------
 
-    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph)
+    construct_Abstract_Graph(pbases, ptowers, puavs, pweather, pgraph, problem.get_Mission_Mode())
 
     # With this, the abstract graph is fully constructed.     
         
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
  
-    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel)
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
 
     # --------------------- Subroute DFJ Solution ----------------------------
-            
-    tgraph = ptowers.get_Graph()
+    if 0 == problem.get_Mission_Mode():
+        
+        tgraph = ptowers.get_Graph()
     
-    if not nx.is_connected(tgraph):
+        if not nx.is_connected(tgraph):
             
+            # We first need to compute all subsets Q of the list of nodes with cardinality >= 2.
+            pnodes = list(pgraph.nodes)
+            Qlist = itertools.chain.from_iterable(itertools.combinations(list(pgraph.nodes), r) for r in range(2, len(pnodes)+1))
+
+            # For each Q subset, a constrain is added:
+            for Q in Qlist:
+                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+
+    elif 1 == problem.get_Mission_Mode():
         # We first need to compute all subsets Q of the list of nodes with cardinality >= 2.
-        pnodes = list(pgraph.nodes)
-        Qlist = itertools.chain.from_iterable(itertools.combinations(list(pgraph.nodes), r) for r in range(2, len(pnodes)+1))
+            pnodes = list(pgraph.nodes)
+            Qlist = itertools.chain.from_iterable(itertools.combinations(list(pgraph.nodes), r) for r in range(2, len(pnodes)+1))
 
-        # For each Q subset, a constrain is added:
-        for Q in Qlist:
+            # For each Q subset, a constrain is added:
+            for Q in Qlist:
 
-            # Compute all pair of Q nodes:
-            pairs_t = list(itertools.combinations(Q, 2))
-            pairs = []
-            for pair in pairs_t:
+                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+        
 
-                if pair[0][0] == "S" and pair[1][0] == "S" and pair[0].split("_")[1] == pair[1].split("_")[1]:
-                    continue
-                elif pair[0][0] == "B" and pair[1][0] == "B":   continue
-                
-                pairs.append(pair)
-
-            # ADD CONDITION TO DELETE INVALID PAIRS WHILE NOT DESTROYING THE LIST
-
-            # print("PAIRS: ", pairs)
-
-            # Each constrain is added for each UAV
-            for uav in puavs:
-
-                pmodel.addCons(
-                    SCIP.quicksum(
-                        Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] + Z[edge[1]+'->'+edge[0]+'|'+uav.get_ID()] 
-                    for edge in pairs)
-                    <= 
-                    len(Q) - 1.0
-                )
 
     # --------------------- Subroute DFJ Solution ----------------------------
     
@@ -626,7 +617,7 @@ def abstract_DFJ_Solver(problem: Problem):
 
     # -------------------- Route parsing -----------------------------
 
-    parse_Abstract_Routes(sol, Z, puavs)
+    parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
     for uav_pair in sigmas:
         print('sigma_', uav_pair, ' = ' ,sol[sigmas[uav_pair]])
@@ -696,7 +687,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                     Qlist = itertools.chain.from_iterable(itertools.combinations(W, r) for r in range(2, len(W)+1))
 
                     for Q in Qlist:
-                        add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
+                        add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
 
@@ -757,7 +748,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
             pmodel.freeTransform()
 
-            add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
+            add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
 
             # Write Scipi Problem externally into a human-readable file
             pmodel.writeProblem('scip_model_DFJ.cip')
@@ -808,7 +799,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
 
                 pmodel.freeTransform()
 
-                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel)
+                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
 
                 # Write Scipi Problem externally into a human-readable file
                 pmodel.writeProblem('scip_model_DFJ.cip')
@@ -828,7 +819,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem):
                     sol_num[key] = sol[Z[key]]
                 """
 
-                parse_Abstract_Routes(sol, Z, puavs,  problem.get_Mission_Mode())
+                parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
                 subtoursQ = True
 
@@ -1672,7 +1663,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
     return Z, Y, sigmas, t, e
 
-def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SCIP.Model):
+def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SCIP.Model, mode: int):
     """
     Adds one of the DFJ subtour elimination constraints for the subset Q. This is used to dynamically add
     subtour constrains if after one unconstrained run, subtours appear.
@@ -1681,15 +1672,24 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SC
     # Compute all pair of Q nodes:
     pairs_t = list(itertools.combinations(Q, 2))
     pairs = []
-    for pair in pairs_t:
 
-        if pair[0][0] == "S" and pair[1][0] == "S" and pair[0].split("_")[1] == pair[1].split("_")[1]:
-            continue
-        elif pair[0][0] == "B" and pair[1][0] == "B":   continue
-                
-        pairs.append(pair)
+    match mode:
+        case 0:
+            for pair in pairs_t:
 
-    print("Pairs:", pairs)
+                if pair[0][0] == "S" and pair[1][0] == "S" and pair[0].split("_")[1] == pair[1].split("_")[1]:
+                    continue
+                elif pair[0][0] == "B" and pair[1][0] == "B":   continue
+
+                pairs.append(pair)
+
+        case 1:
+            for pair in pairs_t:
+                if pair[0][0] == "B" and pair[1][0] == "B":   continue
+
+                pairs.append(pair)
+
+    # print("Pairs:", pairs)
 
     # Each constrain is added for each UAV
     for uav in puavs:

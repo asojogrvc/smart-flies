@@ -389,7 +389,8 @@ class UAV():
                 m = 0
                 for move in self.routeUTM[0:-1]: 
 
-                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], self.missionSettings["Insp. horizontal offset"], 5)
+                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], coords_dict[self.route[0:-1][m][0]]
+                                                                         , self.missionSettings["Insp. horizontal offset"], 5)
 
                     # Above the first orbital point
                     point = np.append(orbit[0], tH + dH)

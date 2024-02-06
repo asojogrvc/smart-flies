@@ -107,9 +107,11 @@ class MainWindow(QtWidgets.QMainWindow):
         db_action21.triggered.connect(lambda: self.changeSolverType('regular'))
         """
 
+        """
         db_action22 = menu2.addAction("Abstract Solver")
         db_action22.setStatusTip("Faster than the others abstract solvers. However, it breaks for not completely connected maps")
         db_action22.triggered.connect(lambda: self.changeSolverType('abstract'))
+        """
 
         db_action22 = menu2.addAction("Abstract DFJ Solver")
         db_action22.setStatusTip(". It enforces the elimination of all subroutes from the start. It is too slow")

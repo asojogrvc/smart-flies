@@ -213,7 +213,7 @@ def compute_Parallel_Trajectory(current_pos: np.ndarray, segment: tuple, offset:
         p3 = s2 - offset * n_perp
         return (p2, p3), n_dir, n_perp
     
-def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, distance: float, n_points: int) -> tuple[list, np.ndarray, list]:
+def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_point: np.ndarray, distance: float, n_points: int) -> tuple[list, np.ndarray, list]:
     """
     Given the current position and a point (as a 2D or 3D vector), it compute the waypoints for a circular inspection trajectory at a horizontal distance
     distance. Height is ignored in the entire function.
@@ -226,6 +226,7 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, dista
     # Get heights out
     p1 = current_pos[:2]
     p2 = point[:2]
+    p3 = next_point[:2]
 
     # If the two points are the same, then ???
     if (p1 == p2).all():
@@ -239,10 +240,19 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, dista
     phi = np.arccos(-n_dir[0])
     if 0 < n_dir[1]: phi = - phi
 
-    orbit = [p2 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
+    p4 = [np.cos((n_points - 1) / n_points * 2 * np.pi + phi), np.sin((n_points - 1) / n_points* 2 * np.pi + phi)]
+    p5 = [np.cos((n_points - 1) / n_points * 2 * np.pi + phi), -np.sin((n_points - 1) / n_points* 2 * np.pi + phi)]
 
-    v_dirs = [point[:2] - 0.5*(orbit[i]+orbit[i+1])  for i in range(n_points-1)]
-    v_dirs.append(point[:2] - 0.5*(orbit[0]+orbit[-1]))
+    d4 = np.linalg.norm(p3-p4)
+    d5 = np.linalg.norm(p3-p5)
+
+    if d4 < d5: sign = +1
+    else: sign = -1
+
+    orbit = [p2 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), sign * np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
+
+    v_dirs = [p2 - 0.5*(orbit[i]+orbit[i+1])  for i in range(n_points-1)]
+    v_dirs.append(p2 - 0.5*(orbit[0]+orbit[-1]))
 
     k = 0
     for vec in v_dirs:
