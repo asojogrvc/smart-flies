@@ -314,4 +314,4 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 
     towers.load_from_Arrays(paths, True)
 
-    return bases, towers, uavs, weather, json_obj["objetivo"]["id"]
+    return bases, towers, uavs, weather, json_obj["objetivo"]

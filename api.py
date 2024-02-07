@@ -2,6 +2,7 @@
 
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
 from flask_cors import CORS
+import json
 import os, yaml
 
 # Projects internal modules imports
@@ -301,9 +302,15 @@ def yaml_output():
     """
     Outputs the file last file mission if it exists
     """
-    return send_from_directory("./server/dynamic/", 'mission.yaml')
 
-@app.route("/mission_request", methods = ["GET"])
+    with open("./server/dynamic/mission.yaml", 'r') as file:
+        mission_output = yaml.safe_load(file)
+
+    return jsonify(mission_output)
+
+    # return send_from_directory("./server/dynamic/", 'mission.yaml')
+
+@app.route("/mission_request", methods = ["POST", "GET"])
 def planner():
 
     # If the server is already doing some computations,

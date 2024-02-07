@@ -55,12 +55,7 @@
       }
     }
   ],
-  "objetivo": {
-    "id": 0,
-    "name": "Inspeccion de linea",
-    "type": "path-object",
-    "description": "select towers to create a path"
-  },
+  "objetivo": 0,
   "bases": [
     {
       "latitude": 38.1385113182596,
