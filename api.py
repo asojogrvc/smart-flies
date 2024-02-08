@@ -2,8 +2,7 @@
 
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
 from flask_cors import CORS
-import json
-import os, glob, yaml
+import os, glob, json, yaml, threading
 
 # Projects internal modules imports
 from modules import bases as BA, towers as TW, uav as UAVS, solver as SO, weather as WT, coordinates as CO, yaml as iYAML
@@ -84,46 +83,131 @@ def status():
 
     return {"status": app.get_Status()}
 
+@app.route('/uav_database', methods = ["GET"])
+def uav_database() -> str:
+
+    f = open("./files/devices.yaml", "r")
+    database = yaml.load(f, Loader = yaml.Loader)
+    f.close()
+
+    html_data = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Smart Flies Project</title>
+        </head>
+        <link rel="icon" href="
+        """+url_for('static', filename='favicon.ico')+"""" />
+        <style>
+            table, th, td {
+                border:1px solid black;
+            }
+        </style>
+        <body>
+            <center><img src="
+        """ + url_for('static', filename='ico.png') + """
+                " alt="Project logo" width="50" height="50">
+            <h1>Smart Flies Project</h1></center>
+   
+            <table style="width:100%">
+                <tr>
+                    <th>Model</th>
+                    <th>Mass [kg]</th>
+                    <th>Number of rotors</th>
+                    <th>Blades per rotor</th>
+                    <th>Rotor radius [m]</th>
+                    <th>Blade chord [m]</th>
+                    <th>Lift Coefficient</th>
+                    <th>Drag Coefficient</th>
+                    <th>Induced Power Factor</th>
+                    <th>Energy Efficiency</th>
+                    <th>Equivalent Flat Plate Area</th>
+                    <th>Battery</th>
+                </tr>
+        """
+    
+    for model in database:
+            
+            data = database[model]
+            model_column = f"""
+            <tr>
+                <th>{model}</th>
+                <th>{data['mass']}</th>
+                <th>{data['number_of_rotors']}</th>
+                <th>{data['rotor_blades']}</th>
+                <th>{data['rotor_radius']}</th>
+                <th>{data['blade_chord']}</th>
+                <th>{data['lift_coefficient']}</th>
+                <th>{data['draft_coefficient']}</th>
+                <th>{data['induced_power_factor']}</th>
+                <th>{data['energy_efficiency']}</th>
+                <th>{data['P0_numerical_constant']}</th>
+                <th>{data['equivalent_flat_plate_area']}</th>
+            <tr>
+            """
+            html_data = html_data + model_column
+
+    html_data = html_data + """
+            </table> 
+
+            <center><p align = bottom>&copy; Antonio Sojo@GRVC</p></center>
+        </body>
+        </html>
+        """
+
+    return html_data
 
 @app.route('/mission_request', methods = ['POST'])
 def mission_Request() -> dict | None:
     """
     Receives a JSON, start the planification and saves the plan into a local file.
     """
-
     try:
-        output = planner(request.get_json())
+        mission =  request.get_json()
     except:
-        output = {"output" : "Something went wrong"}
+        output = {"output": "Not a JSON"}
 
-    return output
+    thread = threading.Thread(target=planner, kwargs={'mission_json': mission})
+    thread.start()
+
+    return {"output": "JSON Received. Computing..."}
 
 def planner(mission_json):
+    """
+    Takes a mission as a json, computes the plan and saves it to a local file with its ID
+    """
 
     # If the server is already doing some computations,
-    # do not execute the planner again.
+    # do not execute the planner again. I don't think this is necessary as it runs single-threaded
 
-    if "Occupied" == app.get_Status():
-        return {"status": "Occupied"}
+    if "occupied" == app.get_Status():
+        return {"status": "occupied"}
     
     app.set_Status("occupied")
 
-    bases, towers, uavs, weather, mode, id = iYAML.load_data_from_JSON(mission_json)
+    try: 
+        bases, towers, uavs, weather, mode, id = iYAML.load_data_from_JSON(mission_json)
 
-    problem = SO.Problem(towers, bases, uavs, weather, mode)
+        problem = SO.Problem(towers, bases, uavs, weather, mode)
 
-    status = problem.solve("")
+        status = problem.solve("")
 
-    if False == status:
-        return {"output" : "The problem is infeasible"}
+        if False == status:
+            app.set_Status("inactive")
+            iYAML.save_Dict_to_File({str(id): "Planner failed: infeasibility"}, "./server/dynamic/mission_"+str(id)+".yaml")
 
-    problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
-    base0 = problem.get_Bases().get_Base("B0")
-    iYAML.save_Mission("./server/dynamic/mission_"+str(id)+".yaml", problem.get_UAV_Team(), base0.get_UTM_Zone())
-        
-    app.set_Status("inactive")
-        
-    return {"output" : "The problem has been solved successfully. Updated file to /get_plan"}
+        problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
+        base0 = problem.get_Bases().get_Base("B0")
+        iYAML.save_Mission("./server/dynamic/mission_"+str(id)+".yaml", problem.get_UAV_Team(), base0.get_UTM_Zone())
+        app.set_Status("inactive")
+
+    except:
+
+        app.set_Status("inactive")
+        iYAML.save_Dict_to_File({str(id): "JSON Format not valid or the planner failed"}, "./server/dynamic/mission_"+str(id)+".yaml")
+
+    return None
 
 
 @app.route("/get_plan", methods = ["GET"])
@@ -132,19 +216,26 @@ def json_output():
     Outputs a json of the requested missions (by IDs) if all of them exist
     """
 
-    # here we want to get the value of user (i.e. ?IDs=1,2,3,)
+    # here we want to get the value of ids (i.e. ?IDs=1,2,3,)
     ids = request.args.get('IDs')
-    ids = ids.split(",")
+
+    if "" == ids:
+        return {"output": "No IDs given"}
+    
+    try:
+        ids = ids.split(",")
+    except:
+        return {"output": "No IDs syntax"}
 
     json = {}
     for id in ids:
 
         try:
             f = open("./server/dynamic/mission_"+id+".yaml", 'r')
-            mission_output = yaml.safe_load(f)
+            mission_data = yaml.safe_load(f)
         except:
-            return {"output": "Some of the requested IDs are not valid or do not exist"}
+            mission_data = "Not a valid ID"
 
-        json[id] = mission_output
+        json[id] = mission_data
 
     return jsonify(json)

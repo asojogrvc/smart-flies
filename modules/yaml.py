@@ -91,6 +91,17 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
 
     return None
 
+def save_Dict_to_File(data: dict, file_path: str):
+
+    if os.path.isfile(file_path):
+        print("File already exists. Overwritting")
+
+    f = open(file_path, 'w')
+    yaml.dump(data, f)
+    f.close()
+
+    return None
+
 def save_Mission(file_path, uavs: UAVS.UAV_Team, utmZone: tuple):
     """
     Save the mission to a YAML file in the specified file path
@@ -237,7 +248,6 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
     towers.load_from_Arrays(paths, True)
 
     return bases, towers, uavs, weather, mission_init["settings"]["type"]
-
 
 def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int, str]:
     """
