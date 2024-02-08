@@ -268,14 +268,16 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
     Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
 
-    if 0 == problem.get_Mission_Mode():
-
-        tgraph = ptowers.get_Graph()
     
-        if not nx.is_connected(tgraph):
 
-            # If the towers are not connected, then compute a list with the list of towers of each component
-            SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
+    tgraph = ptowers.get_Graph()
+    
+    if not nx.is_connected(tgraph):
+
+        # If the towers are not connected, then compute a list with the list of towers of each component
+        SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
+
+        if 0 == problem.get_Mission_Mode():
 
             subsets = []
             for subcomponent in SC:
@@ -293,7 +295,13 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
                 subsets.append(subset)
 
-            for W in subsets:
+        elif 1 == problem.get_Mission_Mode():
+
+            subsets = []
+            for subcomponent in SC:
+                subsets.append(list(subcomponent.nodes()))
+        
+        for W in subsets:
 
                 if len(W) < 10: # This might be adjusted by the user.
 
@@ -301,6 +309,8 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
                     for Q in Qlist:
                         add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+
+
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
 
