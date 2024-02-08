@@ -3,10 +3,15 @@
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
 from flask_cors import CORS
 import json
-import os, yaml
+import os, glob, yaml
 
 # Projects internal modules imports
 from modules import bases as BA, towers as TW, uav as UAVS, solver as SO, weather as WT, coordinates as CO, yaml as iYAML
+
+def delete_all_mission_data():
+    files = glob.glob('./server/dynamic/*.yaml')
+    for f in files:
+        os.remove(f)
 
 # --------------------------------------------------------------------
 #
@@ -14,17 +19,14 @@ from modules import bases as BA, towers as TW, uav as UAVS, solver as SO, weathe
 #
 # --------------------------------------------------------------------
 
-
 class Server(Flask):
     """
     This is a derived class from Flask. It contains all the extra data that needs to be accessed for the
     I/O to happen interactively.
     """
     __status = "inactive"    # By default, the API server is inactive.
-    __bases_Input = "file"   # How was data received
-    __towers_Input  = "file" # How was data received
 
-    mission_json = {}
+    delete_all_mission_data()
 
     def set_Status(self, statusI: str):
 
@@ -39,35 +41,7 @@ class Server(Flask):
 
     def get_Status(self) -> str:
         return self.__status
-    
-    def set_Input_type(self, new_type: str, which:str):
 
-        valid_types = ["file", "json", "yaml"]
-
-        if new_type in valid_types:
-
-            match which:
-                case "Bases":
-                    self.__bases_Input = new_type
-                case "Towers":
-                    self.__towers_Input = new_type
-                case _:
-                    raise Exception("Not a valid input parameter")
-                
-        else:
-            raise Exception("New type is not valid")
-        
-        return None
-    
-    def get_Input_type(self, which:str) -> str:
-
-        match which:
-            case "Bases":
-                return self.__bases_Input
-            case "Towers":
-                return self.__towers_Input
-            case _:
-                raise Exception("Not a valid input parameter")
 
 template_dir = os.path.abspath('./server/static/')
 app = Server(__name__, template_folder=template_dir, static_url_path="", static_folder="./server/static/")
@@ -86,193 +60,6 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 # https://sentry.io/answers/flask-getting-post-data/
 # https://flask.palletsprojects.com/en/2.3.x/patterns/fileuploads/
 
-@app.route('/input_yaml', methods = ['POST'])
-def receive_YAML() -> dict | None:
-    """
-    Receive all the needed data to define the problem from an YAML file.
-    """
-    # Check if the request contains a file.
-
-    # If not, consider it a data stream for some content type
-    if 'file' not in request.files:
-
-        return {"output" : "Not a file"}
-    
-    # If it does, treat the data as a file.
-    else:
-
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            return {"output": "Empty File"}
-        if file:
-
-            file.save("./server/dynamic/mission_init.yaml")
-
-            app.set_Input_type("yaml", "Bases")
-    
-            return {"output": "YAML Received"}
-    
-@app.route('/input_json', methods = ['POST'])
-def receive_test() -> dict | None:
-
-    app.mission_json = request.get_json()
-
-    app.set_Input_type("json", "Bases")
-
-    return {"output": "JSON Received"}
-
-@app.route('/input_bases', methods = ['POST'])
-def receive_bases() -> dict | None:
-    """
-    Receive the needed data to define bases. It can be done as an "application/json" or
-    as an .kml file.
-    """
-
-    # Check if the request contains a file.
-
-    # If not, consider it a data stream for some content type
-    if 'file' not in request.files:
-
-        content_type = request.headers.get('Content-Type')
-
-        if (content_type == 'application/json'):
-
-            # request.get_json()
-
-            app.set_Input_type("json", "Bases")
-            return {"output":"JSON Received"}
-        else:
-            return {"output":"No file in the request and the stream is not a json"}
-    
-    # If it does, treat the data as a file.
-    else:
-
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            return {"output": "No file or json in request"}
-        if file:
-
-            file.save("./server/dynamic/bases.kml")
-
-            app.set_Input_type("file", "Bases")
-            return {"output": "KML Received"}
-
-@app.route('/input_towers', methods = ['POST'])
-def receive_towers() -> dict | None:
-    """
-    Receive the needed data to define the towers. It can be done as an "application/json" or
-    as an .kml file.
-    """
-
-    # Check if the request contains a file.
-
-    # If not, consider it a data stream for some content type
-    if 'file' not in request.files:
-
-        content_type = request.headers.get('Content-Type')
-
-        if (content_type == 'application/json'):
-            
-            # request.get_json()
-
-            app.set_Input_type("json", "Towers")
-            return {"output":"JSON Received"}
-        else:
-            return {"output":"No file in the request and the stream is not a json"}
-    
-    # If it does, treat the data as a file.
-    else:
-
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            return {"output": "No file or json in request"}
-        if file:
-
-            file.save("./server/dynamic/towers.kml")
-
-            app.set_Input_type("file", "Towers")
-            return {"output": "KML Received"}
-
-@app.route('/uav_database', methods = ["GET"])
-def uav_database() -> str:
-
-    f = open("./files/devices.yaml", "r")
-    database = yaml.load(f, Loader = yaml.Loader)
-    f.close()
-
-    html_data = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>Smart Flies Project</title>
-        </head>
-        <link rel="icon" href="
-        """+url_for('static', filename='favicon.ico')+"""" />
-        <style>
-            table, th, td {
-                border:1px solid black;
-            }
-        </style>
-        <body>
-            <center><img src="
-        """ + url_for('static', filename='ico.png') + """
-                " alt="Project logo" width="50" height="50">
-            <h1>Smart Flies Project</h1></center>
-   
-            <table style="width:100%">
-                <tr>
-                    <th>Model</th>
-                    <th>Mass [kg]</th>
-                    <th>Number of rotors</th>
-                    <th>Blades per rotor</th>
-                    <th>Rotor radius [m]</th>
-                    <th>Blade chord [m]</th>
-                    <th>Lift Coefficient</th>
-                    <th>Drag Coefficient</th>
-                    <th>Induced Power Factor</th>
-                    <th>Energy Efficiency</th>
-                    <th>Equivalent Flat Plate Area</th>
-                    <th>Battery</th>
-                </tr>
-        """
-    
-    for model in database:
-            
-            data = database[model]
-            model_column = f"""
-            <tr>
-                <th>{model}</th>
-                <th>{data['mass']}</th>
-                <th>{data['number_of_rotors']}</th>
-                <th>{data['rotor_blades']}</th>
-                <th>{data['rotor_radius']}</th>
-                <th>{data['blade_chord']}</th>
-                <th>{data['lift_coefficient']}</th>
-                <th>{data['draft_coefficient']}</th>
-                <th>{data['induced_power_factor']}</th>
-                <th>{data['energy_efficiency']}</th>
-                <th>{data['P0_numerical_constant']}</th>
-                <th>{data['equivalent_flat_plate_area']}</th>
-            <tr>
-            """
-            html_data = html_data + model_column
-
-    html_data = html_data + """
-            </table> 
-
-            <center><p align = bottom>&copy; Antonio Sojo@GRVC</p></center>
-        </body>
-        </html>
-        """
-
-    return html_data
 
 @app.route('/favicon.ico', methods = ["GET"])
 def favicon():
@@ -280,7 +67,7 @@ def favicon():
     Webpage icon for web browsers.
     """
     return send_from_directory(os.path.join(app.root_path, 'server','static'),
-                          'favicon.ico',mimetype='image/vnd.microsoft.icon')
+                          'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route("/", methods = ["GET"])
 def main_page():
@@ -297,21 +84,21 @@ def status():
 
     return {"status": app.get_Status()}
 
-@app.route("/output", methods = ["GET"])
-def yaml_output():
+
+@app.route('/mission_request', methods = ['POST'])
+def mission_Request() -> dict | None:
     """
-    Outputs the file last file mission if it exists
+    Receives a JSON, start the planification and saves the plan into a local file.
     """
 
-    with open("./server/dynamic/mission.yaml", 'r') as file:
-        mission_output = yaml.safe_load(file)
+    try:
+        output = planner(request.get_json())
+    except:
+        output = {"output" : "Something went wrong"}
 
-    return jsonify(mission_output)
+    return output
 
-    # return send_from_directory("./server/dynamic/", 'mission.yaml')
-
-@app.route("/mission_request", methods = ["POST", "GET"])
-def planner():
+def planner(mission_json):
 
     # If the server is already doing some computations,
     # do not execute the planner again.
@@ -320,35 +107,8 @@ def planner():
         return {"status": "Occupied"}
     
     app.set_Status("occupied")
-    
 
-    if "yaml" == app.get_Input_type("Bases"):
-        bases, towers, uavs, weather, mode = iYAML.load_data_from_YAML("./server/dynamic/mission_init.yaml")
-
-    if "json" == app.get_Input_type("Bases"):
-        bases, towers, uavs, weather, mode = iYAML.load_data_from_JSON(app.mission_json)
-
-    else:
-
-        bases = BA.Bases()
-        if "file" == app.get_Input_type("Bases"): bases.load_File("./server/dynamic/bases.kml", True)
-        else: bases.load_File("./files/bases.kml", True) # TBI
-
-        towers = TW.Towers()
-        if "file" == app.get_Input_type("Towers"): towers.load_File("./server/dynamic/towers.kml", True)
-        else: towers.load_File("./files/towers.kml", True) # TBI
-
-        uavs = UAVS.UAV_Team()
-        uavs.load_File("./files/UAV_team.xml")
-
-        weather = WT.Weather()
-        base1 = bases.get_Base("B1")
-        weather.update_Online(CO.utm2latlon(base1.get_Coordinates(), base1.get_UTM_Zone()))
-
-        mode = 0 # WHAT HERE?
-    
-        
-        # ----------------------------------------------
+    bases, towers, uavs, weather, mode, id = iYAML.load_data_from_JSON(mission_json)
 
     problem = SO.Problem(towers, bases, uavs, weather, mode)
 
@@ -359,8 +119,32 @@ def planner():
 
     problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
     base0 = problem.get_Bases().get_Base("B0")
-    iYAML.save_Mission("./server/dynamic/mission.yaml", problem.get_UAV_Team(), base0.get_UTM_Zone())
+    iYAML.save_Mission("./server/dynamic/mission_"+str(id)+".yaml", problem.get_UAV_Team(), base0.get_UTM_Zone())
         
     app.set_Status("inactive")
         
-    return {"output" : "The problem has been solved successfully. Updated file from /output"}
+    return {"output" : "The problem has been solved successfully. Updated file to /get_plan"}
+
+
+@app.route("/get_plan", methods = ["GET"])
+def json_output():
+    """
+    Outputs a json of the requested missions (by IDs) if all of them exist
+    """
+
+    # here we want to get the value of user (i.e. ?IDs=1,2,3,)
+    ids = request.args.get('IDs')
+    ids = ids.split(",")
+
+    json = {}
+    for id in ids:
+
+        try:
+            f = open("./server/dynamic/mission_"+id+".yaml", 'r')
+            mission_output = yaml.safe_load(f)
+        except:
+            return {"output": "Some of the requested IDs are not valid or do not exist"}
+
+        json[id] = mission_output
+
+    return jsonify(json)
