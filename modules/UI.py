@@ -764,7 +764,7 @@ def load_data_from_JSON(ui: MainWindow):
     f = open(filename[0])
     json_obj = json.load(f)
     f.close()
-    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode = YAML.load_data_from_JSON(json_obj)
+    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode, _ = YAML.load_data_from_JSON(json_obj)
 
     # Update with new data
     updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())

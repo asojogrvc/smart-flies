@@ -16,6 +16,7 @@ maps_image.py
 test.png
 scip_testing.py
 scip_model.cip
+scip_model_DFJ.cip
 sim_test.py
 yaml_old.py
 yaml_test.py

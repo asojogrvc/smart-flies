@@ -44,6 +44,7 @@ class Server(Flask):
 
 template_dir = os.path.abspath('./server/static/')
 app = Server(__name__, template_folder=template_dir, static_url_path="", static_folder="./server/static/")
+# threaded=False, processes=3
 
 # To allow CORS External Origins
 cors = CORS(app, resources={r"/*": {"origins": "*"}})

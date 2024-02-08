@@ -313,10 +313,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
     #pmodel.setHeuristics(SCIP_PARAMSETTING.OFF) # Disable HEURISTICS
     #pmodel.disablePropagation()                 # Disable solution Propagation
 
-    #notsolvedmodel = SCIP.Model(sourceModel=pmodel)
-
-    # Write Scipi Problem externally into a human-readable file
-    pmodel.writeProblem('scip_model.cip')
+    pmodel.hideOutput()
 
     print("")
     print("Initial iter")
@@ -327,16 +324,6 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         return False
 
     sol = pmodel.getBestSol()
-
-    
-
-    """
-    sol_num = {}
-    for var in pmodel.getVars():
-        sol_num[var.name] = sol[var]
-    """
-        
-
     #print(problem.scipi_model.checkSol(sol))
 
     # -------------------- Route parsing -----------------------------
@@ -353,7 +340,11 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
     print("Dynamic DFJ Subtour elimination iter: ", k)
     print("----------------------------------------")
     
+    Qlist = []
     for uav in puavs:
+
+        print("UAV:", uav.get_ID())
+
         loops = list_Loops(uav.routeAbstract)
 
         print("Route: ", uav.routeAbstract)
@@ -364,19 +355,14 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
 
+            Qlist.append(Q)
+
+        if Qlist: 
+
             pmodel.freeTransform()
 
-            add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
-
-            # Write Scipi Problem externally into a human-readable file
-            pmodel.writeProblem('scip_model_DFJ.cip')
-
-            """
-            init_sol = pmodel.createSol()
-            for var in pmodel.getVars():
-                pmodel.setSolVal(init_sol, var, sol_num[var.name])
-            """
-
+            for Q in Qlist:
+                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
 
             pmodel.optimize()
             if "infeasible" == pmodel.getStatus():
@@ -384,18 +370,10 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
             
             sol = pmodel.getBestSol()
 
-            """
-            sol_num = {}
-            for key in Z:
-                sol_num[key] = sol[Z[key]]
-            """
-
             parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
             subtoursQ = True
-            break
     
-
     k += 1
     while subtoursQ:
 
@@ -404,8 +382,11 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         print("----------------------------------------")
 
         subtoursQ = False
+        Qlist = []
 
         for uav in puavs:
+
+            print("UAV:", uav.get_ID())
 
             print("Route: ", uav.routeAbstract)
 
@@ -413,43 +394,35 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
             print("Loops: ", loops)
 
             if len(loops) > 1:
-                
-                print("Q: ", Q)
 
                 Q = get_Q_from_loops(loops)
+                print("Q: ", Q)
 
-                pmodel.freeTransform()
+                if len(Q) == 1: raise Exception("STOP")
+
+                Qlist.append(Q)
+
+        if Qlist:
+
+            pmodel.freeTransform()
+
+            for Q in Qlist:
 
                 add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
 
-                # Write Scipi Problem externally into a human-readable file
-                pmodel.writeProblem('scip_model_DFJ.cip')
+            pmodel.optimize()
+            if "infeasible" == pmodel.getStatus():
+                return False
+            sol = pmodel.getBestSol()
 
-                """
-                init_sol = pmodel.createSol()
-                for var in pmodel.getVars():
-                    pmodel.setSolVal(init_sol, var, 1)
-                """
+            parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
-                pmodel.optimize()
-                if "infeasible" == pmodel.getStatus():
-                    return False
-                sol = pmodel.getBestSol()
-
-                """
-                sol_num = {}
-                for key in Z:
-                    sol_num[key] = sol[Z[key]]
-                """
-
-                parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
-
-                subtoursQ = True
-
-                break
+            subtoursQ = True
 
         k += 1
 
+    # Write Scipi Problem externally into a human-readable file
+    pmodel.writeProblem('scip_model_DFJ.cip')
 
     for uav_pair in sigmas:
         print('sigma_', uav_pair, ' = ' ,sol[sigmas[uav_pair]])
@@ -571,8 +544,6 @@ def fix_Route_Valid_Subloops(ordered_route: list, ordered_modes:list) -> tuple[l
     modes = copy.deepcopy(ordered_modes[:repeated_node-1] + second_loop_modes + ordered_modes[repeated_node:first_loop_ending])
 
     return route, modes
-
-
 
 def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     """
@@ -1399,7 +1370,7 @@ def find_Loop(abstract_Route: list):
 def list_Loops(abstract_Route: list) -> list:
 
     loop_list = []
-    loop, left = find_Loop(abstract_Route)
+    loop,left = find_Loop(abstract_Route)
     loop_list.append(loop)
 
     while left:

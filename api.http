@@ -65,7 +65,7 @@ Content-Type: application/json
       }
     }
   ],
-  "objetivo": 0,
+  "objetivo": 1,
   "bases": [
     {
       "latitude": 38.1385113182596,
