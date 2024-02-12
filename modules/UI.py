@@ -373,7 +373,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.saveButton = QtWidgets.QPushButton(parent=self.saveGroup)
         self.saveButton.setText("Save")
         self.saveButton.setGeometry(QtCore.QRect(70, 60, 200, 30))
-        self.saveButton.clicked.connect(lambda: YAML.save_Mission(self.fileLineLocation.text(), self.uavs, self.towers.get_UTM_Zone()))
+        self.saveButton.clicked.connect(lambda: YAML.save_Mission(self.fileLineLocation.text(), "0", self.uavs, self.towers.get_UTM_Zone()))
 
         # Left Dockable --------------------------------------
 
@@ -1617,7 +1617,7 @@ def exec_Planner(ui: MainWindow):
     
     getMissionSettings(ui)
 
-    problem = SO.Problem(ui.towers, ui.bases, ui.uavs, ui.weather, ui.mission_mode)
+    problem = SO.Problem("0", ui.towers, ui.bases, ui.uavs, ui.weather, ui.mission_mode)
     problem.link_Progress_Bar(ui.loadingPlanner)
     ui.loadingPlanner.setValue(10)
     status = problem.solve(ui.solverType)

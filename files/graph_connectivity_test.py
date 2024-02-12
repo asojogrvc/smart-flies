@@ -6,6 +6,7 @@ from modules import solver as SO, towers as TW, bases as BA, uav as UAVS, weathe
 bases, towers, uavs, weather = YAML.load_data_from_YAML("./server/dynamic/mission_init.yaml")
 
 problem = SO.Problem(
+    "1",
     towers,
     bases,
     uavs,

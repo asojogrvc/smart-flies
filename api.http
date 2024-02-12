@@ -2,7 +2,7 @@
 GET http://localhost:8004/status
 
 ### Get output
-GET http://localhost:8004/get_plan?IDs=1234,1234,123
+GET http://localhost:8004/get_plan?IDs=1234
 
 ### Send input data as JSON
 POST http://localhost:8004//mission_request

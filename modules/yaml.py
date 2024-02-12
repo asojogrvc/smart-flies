@@ -35,12 +35,13 @@ mode_yaw = 2
 mode_gimbal = 0
 idle_vel = 5.0
 
-def print_Header(file):
+def print_Header(file, id:str):
     """
     Writes the YAML header to a file using the internal parameters
     """
     file.write("version: "+str(yaml_version)+"\n")
-    file.write("frame_id: "+f_id+"\n\n\n")
+    file.write("frame_id: "+f_id+"\n")
+    file.write("id: "+id+"\n")
 
     return None
 
@@ -102,7 +103,7 @@ def save_Dict_to_File(data: dict, file_path: str):
 
     return None
 
-def save_Mission(file_path, uavs: UAVS.UAV_Team, utmZone: tuple):
+def save_Mission(file_path, mission_id: str, uavs: UAVS.UAV_Team, utmZone: tuple):
     """
     Save the mission to a YAML file in the specified file path
     """
@@ -112,7 +113,7 @@ def save_Mission(file_path, uavs: UAVS.UAV_Team, utmZone: tuple):
 
     with open(file_path, 'w') as f:
 
-        print_Header(f)
+        print_Header(f, mission_id)
         print_Description(f, "")
         print_Routes(f, uavs, utmZone)
 
@@ -128,7 +129,6 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
     """
 
     wps = {}
-
     wps["version"] = 3
     wps["frame_id"] = "/gps"
 

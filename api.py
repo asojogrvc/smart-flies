@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory, flash, redirect,
 from flask_cors import CORS
 import os, glob, json, yaml, threading
 
+
 # Projects internal modules imports
 from modules import bases as BA, towers as TW, uav as UAVS, solver as SO, weather as WT, coordinates as CO, yaml as iYAML
 
@@ -192,23 +193,26 @@ def planner(mission_json):
     try: 
         bases, towers, uavs, weather, mode, id = iYAML.load_data_from_JSON(mission_json)
 
-        problem = SO.Problem(towers, bases, uavs, weather, mode)
+        problem = SO.Problem(str(id), towers, bases, uavs, weather, mode)
 
         status = problem.solve("")
 
+        file_path = os.path.join("server", "dynamic", "mission_"+str(id)+".yaml")
+
         if False == status:
             app.set_Status("inactive")
-            iYAML.save_Dict_to_File({str(id): "Planner failed: infeasibility"}, "./server/dynamic/mission_"+str(id)+".yaml")
+            iYAML.save_Dict_to_File({str(id): "Planner failed: infeasibility"}, file_path)
 
         problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
         base0 = problem.get_Bases().get_Base("B0")
-        iYAML.save_Mission("./server/dynamic/mission_"+str(id)+".yaml", problem.get_UAV_Team(), base0.get_UTM_Zone())
+        
+        iYAML.save_Mission(file_path, str(id), problem.get_UAV_Team(), base0.get_UTM_Zone())
         app.set_Status("inactive")
 
     except:
 
         app.set_Status("inactive")
-        iYAML.save_Dict_to_File({str(id): "JSON Format not valid or the planner failed"}, "./server/dynamic/mission_"+str(id)+".yaml")
+        iYAML.save_Dict_to_File({str(id): "JSON Format not valid or the planner failed"}, file_path)
 
     return None
 
@@ -219,26 +223,44 @@ def json_output():
     Outputs a json of the requested missions (by IDs) if all of them exist
     """
 
+    output = {}
+
     # here we want to get the value of ids (i.e. ?IDs=1,2,3,)
     ids = request.args.get('IDs')
 
     if "" == ids:
-        return {"output": "No IDs given"}
+        output["status"] = [app.get_Status(), "ID ERROR"]
+        output["description"] = "No IDs given"
     
     try:
         ids = ids.split(",")
     except:
-        return {"output": "No IDs syntax"}
+        output["status"] = [app.get_Status(), "ID ERROR"]
+        output["description"] = "No IDs syntax"
 
-    json = {}
+    json = []
+    failedQ = False
     for id in ids:
 
+        file_path = os.path.join("server", "dynamic", "mission_"+str(id)+".yaml")
+
         try:
-            f = open("./server/dynamic/mission_"+id+".yaml", 'r')
+            f = open(file_path, 'r')
             mission_data = yaml.safe_load(f)
+            json.append(mission_data)
         except:
-            mission_data = "Not a valid ID"
+            failedQ = True
+            continue
 
-        json[id] = mission_data
+    output["results"] = json
 
-    return jsonify(json)
+    if True == failedQ:
+        output["status"] = [app.get_Status(), "PARTIAL ERROR"]
+        output["description"] = "One or more requested IDs is not present"
+    else:
+        output["status"] = [app.get_Status(), "OK"]
+        output["description"] = "Everything went OK"
+
+    
+
+    return output

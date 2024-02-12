@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import QProgressBar
 from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, weights as WE
 
 class Problem():
-    def __init__(self, towers: TW.Towers, bases: BA.Bases, uavs: UAVS.UAV_Team, weather: WT.Weather, mode: int):
+    def __init__(self, id:str, towers: TW.Towers, bases: BA.Bases, uavs: UAVS.UAV_Team, weather: WT.Weather, mode: int):
         """
         This class contains everything needed to define the GTSP-MUAV problem in any of its forms. That is Towers, Bases, UAV Team and weather conditions.
         It can be solved with of the already impleted methods by using .solve()
@@ -25,6 +25,7 @@ class Problem():
         self.__bases = bases   
         self.__uav_team = uavs
         self.__weather = weather
+        self.__id = id
 
         # Use case mode:
         #   0 = Segment Inspection
@@ -64,6 +65,10 @@ class Problem():
     def set_Mission_Mode(self, mode:int):
         self.__mode = mode
         return None
+    
+    def set_ID(self, id: str):
+        self.__id = id
+        return None
 
     # ------------------------ Parameters output functions -----------------
 
@@ -87,6 +92,9 @@ class Problem():
     
     def get_Mission_Mode(self) -> int:
         return self.__mode
+    
+    def get_ID(self) -> str:
+        return self.__id
 
     # ------------------------ Auxiliary functions -------------------------
     def set_Progress_Bar_Value(self, value: float):
