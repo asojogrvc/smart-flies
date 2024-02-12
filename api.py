@@ -187,6 +187,8 @@ def planner(mission_json):
     
     app.set_Status("occupied")
 
+    print(mission_json)
+
     try: 
         bases, towers, uavs, weather, mode, id = iYAML.load_data_from_JSON(mission_json)
 
