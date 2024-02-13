@@ -13,6 +13,13 @@ def delete_all_mission_data():
     for f in files:
         os.remove(f)
 
+    return None
+
+def add_dynamic_folder():
+    os.makedirs("./server/dynamic/", exist_ok=True) 
+
+    return None
+
 # --------------------------------------------------------------------
 #
 #    Derive the Flask class to allow new parameters and methods
@@ -26,6 +33,7 @@ class Server(Flask):
     """
     __status = "inactive"    # By default, the API server is inactive.
 
+    add_dynamic_folder()
     delete_all_mission_data()
 
     def set_Status(self, statusI: str):
