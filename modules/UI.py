@@ -946,24 +946,29 @@ def compute_sim_trajectories(ui: MainWindow):
 
         print(points)
 
-        angles = []
-        [angles.append(action['yaw']) for action in actions]
+        if not(points):
+            sim_trajectory = []
+            sim_angles = []
+        else:
 
-        for k in range(len(points)-1):
+            angles = []
+            [angles.append(action['yaw']) for action in actions]
 
-            if 'Inspection' == modes[k]:  # TO BE FINISHED
-                uav_speed = uav.missionSettings['Insp. speed']
-            else: uav_speed = uav.missionSettings['Nav. speed']
+            for k in range(len(points)-1):
 
-            if firstQ:
-                sim_trajectory = SIM.get_Path_Points(points[k][0:2], points[k+1][0:2], uav_speed, dt)
-                sim_angles =  np.asarray([angles[k]] * len(sim_trajectory))
-                firstQ = False
-            else:
-                temp = SIM.get_Path_Points(points[k][0:2], points[k+1][0:2], uav_speed, dt)
-                sim_trajectory = np.concatenate((sim_trajectory, temp))
-                sim_angles =  np.concatenate((sim_angles, np.asarray([angles[k]] * len(temp))))
-            k += 1
+                if 'Inspection' == modes[k]:  # TO BE FINISHED
+                    uav_speed = uav.missionSettings['Insp. speed']
+                else: uav_speed = uav.missionSettings['Nav. speed']
+
+                if firstQ:
+                    sim_trajectory = SIM.get_Path_Points(points[k][0:2], points[k+1][0:2], uav_speed, dt)
+                    sim_angles =  np.asarray([angles[k]] * len(sim_trajectory))
+                    firstQ = False
+                else:
+                    temp = SIM.get_Path_Points(points[k][0:2], points[k+1][0:2], uav_speed, dt)
+                    sim_trajectory = np.concatenate((sim_trajectory, temp))
+                    sim_angles =  np.concatenate((sim_angles, np.asarray([angles[k]] * len(temp))))
+                k += 1
 
         uav.sim_trajectory = copy.deepcopy(sim_trajectory)
         uav.sim_angles = copy.deepcopy(sim_angles)
