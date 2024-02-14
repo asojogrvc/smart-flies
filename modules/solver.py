@@ -1122,23 +1122,25 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 # Continuity. The UAV that inspects must be the one that exits the segment
                 for uav in puavs:
 
-                    Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
+                    if len(puavs.get_List()) > 2 * len(list(ptowers.get_Graph().edges())):
 
-                    pmodel.addCons(
-                        SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                                + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            <= 
-                        Y[uav.get_ID()]
-                    )
+                        Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
-                    pmodel.addCons(
-                        SCIP.quicksum(Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                            + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            <= 
-                        Y[uav.get_ID()]
-                    )
+                        pmodel.addCons(
+                            SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                                    + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                <= 
+                            Y[uav.get_ID()]
+                        )
+
+                        pmodel.addCons(
+                            SCIP.quicksum(Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                                + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                <= 
+                            Y[uav.get_ID()]
+                        )
 
                     Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
 
@@ -1168,23 +1170,42 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 for base in pbases:
                     nodelist.remove(base.get_Name())
 
-                # Base exit constrain
-                pmodel.addCons(
-                        SCIP.quicksum(
-                            Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            == 
-                        Y[uav.get_ID()]
-                )
+                if len(puavs.get_List()) > 2 * len(list(ptowers.get_Graph().edges())):
+                    # Base exit constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                               Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            Y[uav.get_ID()]
+                    )
 
-                # Base entering constrain
-                pmodel.addCons(
-                        SCIP.quicksum(
-                            Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            == 
-                        Y[uav.get_ID()]
-                )
+                    # Base entering constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            Y[uav.get_ID()]
+                    )
+                else:
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                               Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            1
+                    )
+
+                    # Base entering constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            1
+                    )
+
 
                 # Energy constrain
                 pmodel.addCons(
@@ -1262,24 +1283,25 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 )
                 
                 for uav in puavs:
+                    
+                    if len(puavs.get_List()) > len(list(ptowers.get_Graph().nodes)):
+                        Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
-                    Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
+                        pmodel.addCons(
+                        SCIP.quicksum(
+                            Z[node+'->'+tower+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            <= 
+                        Y[uav.get_ID()]
+                        )
 
-                    pmodel.addCons(
-                    SCIP.quicksum(
-                        Z[node+'->'+tower+'|'+uav.get_ID()]
-                    for node in nodelist)
-                        <= 
-                    Y[uav.get_ID()]
-                    )
-
-                    pmodel.addCons(
-                    SCIP.quicksum(
-                        Z[tower+'->'+node+'|'+uav.get_ID()]
-                    for node in nodelist)
-                        <= 
-                    Y[uav.get_ID()]
-                    )
+                        pmodel.addCons(
+                        SCIP.quicksum(
+                            Z[tower+'->'+node+'|'+uav.get_ID()]
+                        for node in nodelist)
+                            <= 
+                        Y[uav.get_ID()]
+                        )
 
                     Y[tower+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+tower)
 
@@ -1297,23 +1319,43 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 for base in pbases:
                     nodelist.remove(base.get_Name())
 
-                # Base exit constrain
-                pmodel.addCons(
-                        SCIP.quicksum(
-                            Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            == 
-                        Y[uav.get_ID()]
-                )
+                if len(puavs.get_List()) > len(list(ptowers.get_Graph().nodes)):
+                    # Base exit constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            Y[uav.get_ID()]
+                    )
 
-                # Base entering constrain
-                pmodel.addCons(
-                        SCIP.quicksum(
-                            Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            == 
-                        Y[uav.get_ID()]
-                )
+                    # Base entering constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            Y[uav.get_ID()]
+                    )
+                else:
+                    # Base exit constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[uav.missionSettings['Base']+'->'+node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            1
+                    )
+
+                    # Base entering constrain
+                    pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[node+'->'+uav.missionSettings['Base']+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            1
+                    )
+
 
                 # Energy constrain
                 pmodel.addCons(
