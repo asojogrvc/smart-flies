@@ -252,6 +252,8 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
 def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int, str]:
     """
     Loads the bases, towers, uavs and weather from a JSON object.
+
+    Returns bases, towers, uavs, weather, misssion_mode, mission_id
     """
 
     # Initialize data

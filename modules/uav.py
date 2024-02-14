@@ -227,6 +227,9 @@ class UAV():
 
             case 0:
 
+                if len(self.route) == 1:
+                    return None
+
                 # Precompute points parallel to the power lines without heights
                 preMoves = []
                 preNdirs = []
@@ -362,6 +365,9 @@ class UAV():
                 self.waypoints.print()
 
             case 1:
+
+                if len(self.route) == 1:
+                    return None
 
                 # Gimbal is fixed beforehand
                 gimbal = - float(self.missionSettings["Cam. angle"])
