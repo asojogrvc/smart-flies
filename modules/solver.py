@@ -373,24 +373,30 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
 
-            Qlist.append(Q)
+            if 0 == problem.get_Mission_Mode():
+                Qlist = Qlist + get_Subsets_from_Q(Q)
+                
+            if 1 == problem.get_Mission_Mode():
+                Qlist.append(Q)
 
-        if Qlist: 
+    print("Qlist: ", Qlist)
 
-            pmodel.freeTransform()
+    if Qlist: 
 
-            for Q in Qlist:
-                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+        pmodel.freeTransform()
 
-            pmodel.optimize()
-            if "infeasible" == pmodel.getStatus():
-                return False
+        for Q in Qlist:
+            add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+
+        pmodel.optimize()
+        if "infeasible" == pmodel.getStatus():
+            return False
             
-            sol = pmodel.getBestSol()
+        sol = pmodel.getBestSol()
 
-            parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
+        parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
-            subtoursQ = True
+        subtoursQ = True
     
     k += 1
     while subtoursQ:
@@ -416,9 +422,13 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
                 Q = get_Q_from_loops(loops)
                 print("Q: ", Q)
 
-                if len(Q) == 1: raise Exception("STOP")
-
-                Qlist.append(Q)
+                if 0 == problem.get_Mission_Mode():
+                    Qlist = Qlist + get_Subsets_from_Q(Q)
+                
+                if 1 == problem.get_Mission_Mode():
+                    Qlist.append(Q)
+        
+        print("Qlist: ", Qlist)
 
         if Qlist:
 
@@ -1078,6 +1088,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     match mode:
         case 0:
 
+            tooManyUAVSQ = len(puavs.get_List()) > len(list(ptowers.get_Graph().edges()))
+            if tooManyUAVSQ: print("There are less inspection nodes than UAVs. Enabling automatic disabling of UAVs")
+
             # For each edge in the graph assign a Z variable and assign the corresponding weights
             # to its key in the weights dictionaries
             for edge in pgraph.edges():
@@ -1122,7 +1135,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 # Continuity. The UAV that inspects must be the one that exits the segment
                 for uav in puavs:
 
-                    if len(puavs.get_List()) > 2 * len(list(ptowers.get_Graph().edges())):
+                    if tooManyUAVSQ:
 
                         Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
@@ -1170,7 +1183,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 for base in pbases:
                     nodelist.remove(base.get_Name())
 
-                if len(puavs.get_List()) > 2 * len(list(ptowers.get_Graph().edges())):
+                if tooManyUAVSQ:
                     # Base exit constrain
                     pmodel.addCons(
                             SCIP.quicksum(
@@ -1246,6 +1259,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                     )
         
         case 1:
+
+            tooManyUAVSQ = len(puavs.get_List()) > len(list(ptowers.get_Graph().nodes))
+            if tooManyUAVSQ: print("There are less inspection nodes than UAVs. Enabling automatic disabling of UAVs")
             
             # For each edge in the graph assign a Z variable and assign the corresponding weights
             # to its key in the weights dictionaries
@@ -1281,10 +1297,11 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                         == 
                     1.0
                 )
-                
+
                 for uav in puavs:
                     
-                    if len(puavs.get_List()) > len(list(ptowers.get_Graph().nodes)):
+                    if tooManyUAVSQ:
+
                         Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
                         pmodel.addCons(
@@ -1319,7 +1336,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 for base in pbases:
                     nodelist.remove(base.get_Name())
 
-                if len(puavs.get_List()) > len(list(ptowers.get_Graph().nodes)):
+                if tooManyUAVSQ:
                     # Base exit constrain
                     pmodel.addCons(
                             SCIP.quicksum(
@@ -1507,3 +1524,25 @@ def get_Q_from_loops(loops: list) -> list:
                 Q.append(move[1])
 
             return Q
+        
+def get_Subsets_from_Q(Q: list) -> list:
+
+    nodes = []
+    for node in Q:
+        towers = node.split("_")[1]
+        nodes.append("SUP_"+towers)
+        nodes.append("SDOWN_"+towers)
+
+    nodes = list(dict.fromkeys(nodes))
+
+    Qlist = []
+    for subset in list(itertools.chain.from_iterable(itertools.combinations(nodes, r) for r in range(2, len(nodes)+1))):
+        nodes = []
+        for node in subset:
+            towers = node.split("_")[1]
+            nodes.append(towers)
+        
+        if len(nodes) == len(list(dict.fromkeys(nodes))):
+            Qlist.append(list(subset))
+
+    return Qlist
