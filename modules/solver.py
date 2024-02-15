@@ -1086,6 +1086,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     We = nx.get_edge_attributes(pgraph, 'We')
         
     match mode:
+
         case 0:
 
             tooManyUAVSQ = len(puavs.get_List()) > len(list(ptowers.get_Graph().edges()))
@@ -1514,7 +1515,7 @@ def get_Q_from_loops(loops: list) -> list:
         # Check if the current loop contains the base.
         baseQ = False
         for move in loop:
-            if "B" == move[0] or "B" == move[1]: baseQ = True
+            if "B" == move[0][0] or "B" == move[1][0]: baseQ = True
         
         if baseQ: continue
         else:
@@ -1536,7 +1537,12 @@ def get_Subsets_from_Q(Q: list) -> list:
     nodes = list(dict.fromkeys(nodes))
 
     Qlist = []
-    for subset in list(itertools.chain.from_iterable(itertools.combinations(nodes, r) for r in range(2, len(nodes)+1))):
+
+    #subsets = list(itertools.chain.from_iterable(itertools.combinations(nodes, r) for r in range(2, len(nodes) + 1)))# len(nodes) + 1
+
+    subsets = itertools.combinations(nodes, len(Q))
+
+    for subset in subsets: 
         nodes = []
         for node in subset:
             towers = node.split("_")[1]
