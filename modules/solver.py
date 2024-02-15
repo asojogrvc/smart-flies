@@ -354,7 +354,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         print("Route: ", uav.routeAbstract)
         print("Loops: ", loops)
 
-        if len(loops) > 1:
+        if len(loops) > 1 or (1 == len(loops) and not does_Contain_a_BaseQ(loops[0])):
 
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
@@ -364,6 +364,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
                 
             if 1 == problem.get_Mission_Mode():
                 Qlist.append(Q)
+
 
     print("Qlist: ", Qlist)
 
@@ -403,7 +404,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
             loops = list_Loops(uav.routeAbstract)
             print("Loops: ", loops)
 
-            if len(loops) > 1:
+            if len(loops) > 1 or (1 == len(loops) and not does_Contain_a_BaseQ(loops[0])):
 
                 Q = get_Q_from_loops(loops)
                 print("Q: ", Q)
@@ -1538,3 +1539,11 @@ def get_Subsets_from_Q(Q: list) -> list:
             Qlist.append(list(subset))
 
     return Qlist
+
+def does_Contain_a_BaseQ(loop: list) -> bool:
+
+    for edge in loop:
+
+        if "B" == edge[0][0] or "B" == edge[1][0]: return True
+
+    return False
