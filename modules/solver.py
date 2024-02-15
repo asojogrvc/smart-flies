@@ -107,11 +107,11 @@ class Problem():
     def solve(self, which_solver:str) -> bool:
         """
         Solves an existing problem with any of the implement formulations / methods. As of now:
-            - "regular": This formulation uses a direct interpretation of the power line network
-                as a graph. It is simpler but limited. Based on Javi's Matlab PLIP
-            - "abstract": This formulation creates a astraction layer that assigns a graph to the problem which nodes
-                are not the towers but the power line segments that require inspection. It scales faster than
-                "regular" with the size of the problem but it is more general and less limited.
+            - "abstract_DFJ": This formulation creates a abstraction layer that assigns a graph to the problem which nodes
+                are not the towers but the power line segments or towers that require inspection. It uses an adaptation
+                of the DFJ subtour elimination constraints. Too Slow to be used.
+            - "abstract_dynamic_DFJ": It is the same as the previous one but instead of adding all the subtours constraints
+                from the start, it adds them dynamically. It is usually faster but less stable.
         """
 
         # As I store the solution within UAVs, I might just pass a flag with the problem status to avoid
@@ -180,32 +180,18 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
     Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
 
     # --------------------- Subroute DFJ Solution ----------------------------
-    if 0 == problem.get_Mission_Mode():
-        
-        tgraph = ptowers.get_Graph()
     
-        if not nx.is_connected(tgraph):
-            
-            # We first need to compute all subsets Q of the list of nodes with cardinality >= 2.
-            pnodes = list(pgraph.nodes)
-            Qlist = itertools.chain.from_iterable(itertools.combinations(list(pgraph.nodes), r) for r in range(2, len(pnodes)+1))
+    pnodes_B = list(pgraph.nodes)
+    pnodes = [node for node in pnodes_B if ("B" != node[0] and "B" != node[1])]
 
-            # For each Q subset, a constrain is added:
-            for Q in Qlist:
+    #print("Subtour Nodes:", pnodes)
 
-                # So it is feasible at least if 2 < len(Q) and len(Q) < 8. THIS DOESN FIX IT NEITHER
-                
-                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+    Qlist = itertools.chain.from_iterable(list(itertools.combinations(pnodes, r)) for r in range(2, len(pnodes)+1))
 
-    elif 1 == problem.get_Mission_Mode():
-        # We first need to compute all subsets Q of the list of nodes with cardinality >= 2.
-            pnodes = list(pgraph.nodes)
-            Qlist = itertools.chain.from_iterable(itertools.combinations(list(pgraph.nodes), r) for r in range(2, len(pnodes)+1))
-
-            # For each Q subset, a constrain is added:
-            for Q in Qlist:
-
-                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+    # For each Q subset, a constrain is added:
+    for Q in Qlist:
+        print("Adding constraint Q: ", Q)
+        add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
         
 
 
@@ -224,7 +210,7 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
     #pmodel.disablePropagation()                 # Disable solution Propagation
 
     # Write Scipi Problem externally into a human-readable file
-    pmodel.writeProblem('scip_model.cip')
+    # pmodel.writeProblem('scip_model.cip')
             
     pmodel.optimize()
     if "infeasible" == pmodel.getStatus():
