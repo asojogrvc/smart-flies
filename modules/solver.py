@@ -190,7 +190,7 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
 
     # For each Q subset, a constrain is added:
     for Q in Qlist:
-        print("Adding constraint Q: ", Q)
+        #print("Adding constraint Q: ", Q)
         add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
         
 

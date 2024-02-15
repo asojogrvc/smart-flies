@@ -2,10 +2,7 @@
 # The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm"
 
 # TO DO (CRITICAL)
-#   - If there are less inspection structures than UAVs, the problem becomes infeasible. This happens because at least one drone needs to stay at
-#     at base, which is not possible in our models.
-#   - In abstract_DFJ: Some times, a problem is infeasible. It makes no sense. It might be related with unconnected towers islands and how
-#       the subsets Q are generated and selected.
+#   - The fixLoops function does not actually work.
 #  
 # TO DO (MUST)
 #   - Delete SUP and SDOWN names. Instead, use T1->T2 and T2->T1 or similar.
