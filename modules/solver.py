@@ -182,18 +182,18 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
     # --------------------- Subroute DFJ Solution ----------------------------
     
     pnodes_B = list(pgraph.nodes)
-    pnodes = [node for node in pnodes_B if ("B" != node[0] and "B" != node[1])]
 
-    #print("Subtour Nodes:", pnodes)
+    for uav in puavs:
+        pnodes = [node for node in pnodes_B if (uav.missionSettings["Base"] != node)]
 
-    Qlist = itertools.chain.from_iterable(list(itertools.combinations(pnodes, r)) for r in range(2, len(pnodes)+1))
+        #print("Subtour Nodes:", pnodes)
 
-    # For each Q subset, a constrain is added:
-    for Q in Qlist:
-        #print("Adding constraint Q: ", Q)
-        add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
-        
+        Qlist = itertools.chain.from_iterable(list(itertools.combinations(pnodes, r)) for r in range(2, len(pnodes)+1))
 
+        # For each Q subset, a constrain is added:
+        for Q in Qlist:
+            #print("Adding constraint Q: ", Q)
+            add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
 
     # --------------------- Subroute DFJ Solution ----------------------------
     
@@ -264,16 +264,21 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
     tgraph = ptowers.get_Graph()
     
+    # If the towers and not entirely connected, then add some subtour constrains before the first iteration
     if not nx.is_connected(tgraph):
 
-        # If the towers are not connected, then compute a list with the list of towers of each component
+        # Compute a list with the list of towers of each disjoint component
         SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
 
+        # Use case 0
         if 0 == problem.get_Mission_Mode():
 
             subsets = []
+            # For each disjoint component
             for subcomponent in SC:
-
+                
+                # For each connection of towers, add SUP and SDOWN to the subset of nodes
+                # of the corresponding disjoint component
                 subset = []
                 for line_segment in subcomponent.edges():
                     edge_str = line_segment[0]+','+line_segment[1]
@@ -287,20 +292,27 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
                 subsets.append(subset)
 
+        # Use case 1
         elif 1 == problem.get_Mission_Mode():
 
             subsets = []
             for subcomponent in SC:
+                # Each of the subsets contains all towers from each subcomponent
                 subsets.append(list(subcomponent.nodes()))
         
+
         for W in subsets:
+            
+            # To keep thing fast, lets limit the max length of each subset.
+            if len(W) < 10: # This might be adjusted by the user.
+                
+                # We need to compute all possible subsets of each Q
+                Qlist = itertools.chain.from_iterable(itertools.combinations(W, r) for r in range(2, len(W)+1))
 
-                if len(W) < 10: # This might be adjusted by the user.
-
-                    Qlist = itertools.chain.from_iterable(itertools.combinations(W, r) for r in range(2, len(W)+1))
-
-                    for Q in Qlist:
-                        add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
+                # Add the corresponding constraint.
+                for Q in Qlist:
+                    for uav in puavs:
+                        add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
 
 
 
@@ -334,15 +346,15 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
     for uav in puavs:
         print(uav.routeAbstract)
-
-    subtoursQ = False
     
     k = 1
     print("")
     print("Dynamic DFJ Subtour elimination iter: ", k)
     print("----------------------------------------")
-    
-    Qlist = []
+
+   
+    # For each UAV, let's check if there are loops and delete them
+    subtoursQ = False
     for uav in puavs:
 
         print("UAV:", uav.get_ID())
@@ -352,27 +364,27 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         print("Route: ", uav.routeAbstract)
         print("Loops: ", loops)
 
-        if len(loops) > 1 or (1 == len(loops) and not does_Contain_a_BaseQ(loops[0])):
+        # if there are more than one loop or if the only loop does not contain the actual UAV base
+        if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
+
+             # Let's free the problem so we can modify it
+            if not subtoursQ: pmodel.freeTransform()
+    
 
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
 
             if 0 == problem.get_Mission_Mode():
-                Qlist = Qlist + get_Subsets_from_Q(Q)
+                add_DFJ_Subtour_Constraint(get_Subsets_from_Q(Q), Z, uav, pmodel, problem.get_Mission_Mode())
                 
             if 1 == problem.get_Mission_Mode():
-                Qlist.append(Q)
+                add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
 
-
-    print("Qlist: ", Qlist)
-
-    if Qlist: 
-
-        pmodel.freeTransform()
-
-        for Q in Qlist:
-            add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
-
+            subtoursQ = True
+                
+    # If any new constraint is added, compute new solution
+    if subtoursQ: 
+        pmodel.writeProblem('scip_model_DFJ.cip')
         pmodel.optimize()
         if "infeasible" == pmodel.getStatus():
             return False
@@ -381,9 +393,10 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
         parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
-        subtoursQ = True
     
     k += 1
+    # Check for subroutes and find new solution until there are not
+    # Assume that there are subroutes still
     while subtoursQ:
 
         print("")
@@ -391,8 +404,6 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         print("----------------------------------------")
 
         subtoursQ = False
-        Qlist = []
-
         for uav in puavs:
 
             print("UAV:", uav.get_ID())
@@ -402,35 +413,29 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
             loops = list_Loops(uav.routeAbstract)
             print("Loops: ", loops)
 
-            if len(loops) > 1 or (1 == len(loops) and not does_Contain_a_BaseQ(loops[0])):
+            if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
+                
+                if not subtoursQ :pmodel.freeTransform()
 
                 Q = get_Q_from_loops(loops)
                 print("Q: ", Q)
 
                 if 0 == problem.get_Mission_Mode():
-                    Qlist = Qlist + get_Subsets_from_Q(Q)
+                    add_DFJ_Subtour_Constraint(get_Subsets_from_Q(Q), Z, uav, pmodel, problem.get_Mission_Mode())
                 
                 if 1 == problem.get_Mission_Mode():
-                    Qlist.append(Q)
-        
-        print("Qlist: ", Qlist)
+                    add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
 
-        if Qlist:
+                subtoursQ = True
 
-            pmodel.freeTransform()
-
-            for Q in Qlist:
-
-                add_DFJ_Subtour_Constraint(Q, Z, puavs, pmodel, problem.get_Mission_Mode())
-
+        if subtoursQ:
+            pmodel.writeProblem('scip_model_DFJ.cip')
             pmodel.optimize()
             if "infeasible" == pmodel.getStatus():
                 return False
             sol = pmodel.getBestSol()
 
             parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
-
-            subtoursQ = True
 
         k += 1
 
@@ -1186,7 +1191,8 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                             for node in nodelist)
                                 == 
                             Y[uav.get_ID()]
-                    )
+                    )     
+
                 else:
                     pmodel.addCons(
                             SCIP.quicksum(
@@ -1205,6 +1211,28 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                             1
                     )
 
+                for base in pbases:
+                    
+                    if base.get_Name() != uav.missionSettings["Base"]:
+
+                        
+                        # Not assigned base entering prohibition
+                        pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[node+'->'+ base.get_Name() +'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            0.0
+                        )
+
+                        # Not assigned base exit prohibition
+                        pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[base.get_Name() +'->'+ node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            0.0
+                        )
 
                 # Energy constrain
                 pmodel.addCons(
@@ -1359,6 +1387,29 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                             1
                     )
 
+                for base in pbases:
+                    
+                    if base.get_Name() != uav.missionSettings["Base"]:
+
+                        
+                        # Not assigned base entering prohibition
+                        pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[node+'->'+ base.get_Name() +'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            0.0
+                        )
+
+                        # Not assigned base exit prohibition
+                        pmodel.addCons(
+                            SCIP.quicksum(
+                                Z[base.get_Name() +'->'+ node+'|'+uav.get_ID()]
+                            for node in nodelist)
+                                == 
+                            0.0
+                        )
+
 
                 # Energy constrain
                 pmodel.addCons(
@@ -1399,7 +1450,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
     return Z, Y, sigmas, t, e
 
-def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SCIP.Model, mode: int):
+def add_DFJ_Subtour_Constraint(Q: list, Z:dict, uav: UAVS.UAV, pmodel: SCIP.Model, mode: int):
     """
     Adds one of the DFJ subtour elimination constraints for the subset Q. This is used to dynamically add
     subtour constrains if after one unconstrained run, subtours appear.
@@ -1409,6 +1460,10 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SC
 
     # Compute all pair of Q nodes:
     pairs_t = list(itertools.combinations(Q, 2))
+
+    # print("Pairs:", pairs)
+
+    # Each constrain is added for each UAV
     pairs = []
 
     match mode:
@@ -1417,23 +1472,17 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, puavs: UAVS.UAV_Team, pmodel: SC
 
                 if pair[0][0] == "S" and pair[1][0] == "S" and pair[0].split("_")[1] == pair[1].split("_")[1]:
                     continue
-                elif pair[0][0] == "B" and pair[1][0] == "B":   continue
+                elif pair[0][0] == "B" and pair[1][0] == "B": continue
 
                 pairs.append(pair)
 
         case 1:
             for pair in pairs_t:
-                if pair[0][0] == "B" and pair[1][0] == "B":   continue
+                if pair[0][0] == "B" and pair[1][0] == "B": continue
 
                 pairs.append(pair)
 
-    if not pairs: return None
-
-    # print("Pairs:", pairs)
-
-    # Each constrain is added for each UAV
-    for uav in puavs:
-
+    if pairs:
         pmodel.addCons(
             SCIP.quicksum(
                 Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] + Z[edge[1]+'->'+edge[0]+'|'+uav.get_ID()] 
@@ -1497,19 +1546,14 @@ def get_Q_from_loops(loops: list) -> list:
     Q = []
     
     for loop in loops:
-        # Check if the current loop contains the base.
-        baseQ = False
+        Q.append(loop[0][0])
+
         for move in loop:
-            if "B" == move[0][0] or "B" == move[1][0]: baseQ = True
-        
-        if baseQ: continue
-        else:
-            Q.append(loop[0][0])
+            Q.append(move[1])
 
-            for move in loop[:-1]:
-                Q.append(move[1])
+        Q = list(dict.fromkeys(Q))
 
-            return Q
+        return Q
         
 def get_Subsets_from_Q(Q: list) -> list:
 
@@ -1538,10 +1582,10 @@ def get_Subsets_from_Q(Q: list) -> list:
 
     return Qlist
 
-def does_Contain_a_BaseQ(loop: list) -> bool:
+def does_Contain_Node(node: str, loop: list) -> bool:
 
     for edge in loop:
 
-        if "B" == edge[0][0] or "B" == edge[1][0]: return True
+        if node == edge[0] or node == edge[1]: return True
 
     return False
