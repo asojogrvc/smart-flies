@@ -262,8 +262,6 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
     Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
 
-    
-
     tgraph = ptowers.get_Graph()
     
     if not nx.is_connected(tgraph):

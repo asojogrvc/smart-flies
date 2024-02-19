@@ -414,7 +414,7 @@ class UAV():
 
                     for porbit in orbit:
                         
-                        point = np.append(porbit, btH1 + tH + self.missionSettings["Insp. height"])
+                        point = np.append(porbit, btH + tH + self.missionSettings["Insp. height"])
 
                         n_dir = v_dirs[k]
 
