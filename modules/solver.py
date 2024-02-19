@@ -38,6 +38,7 @@ class Problem():
         #   - The progressBar is linked to any progress on the UI to then update it from within the class
         self.__graph = nx.MultiDiGraph()
         self.__scip_model = SCIP.Model("GTSP-MUAV")
+        self.__scip_model.enableReoptimization()
         self.__progressBar = None
 
         return None
@@ -369,17 +370,14 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
 
              # Let's free the problem so we can modify it
-            if not subtoursQ: pmodel.freeTransform()
+            if not subtoursQ: pmodel.freeReoptSolve()
+            #if not subtoursQ: pmodel.freeTransform()
     
-
             Q = get_Q_from_loops(loops)
             print("Q: ", Q)
 
-            if 0 == problem.get_Mission_Mode():
-                add_DFJ_Subtour_Constraint(get_Subsets_from_Q(Q), Z, uav, pmodel, problem.get_Mission_Mode())
-                
-            if 1 == problem.get_Mission_Mode():
-                add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
+            for Q_s in get_Subsets_from_Q(Q, problem.get_Mission_Mode()):
+                add_DFJ_Subtour_Constraint(Q_s, Z, uav, pmodel, problem.get_Mission_Mode())
 
             subtoursQ = True
                 
@@ -416,16 +414,14 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
             if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
                 
-                if not subtoursQ :pmodel.freeTransform()
+                if not subtoursQ: pmodel.freeReoptSolve()
+                #if not subtoursQ: pmodel.freeTransform()
 
                 Q = get_Q_from_loops(loops)
                 print("Q: ", Q)
 
-                if 0 == problem.get_Mission_Mode():
-                    add_DFJ_Subtour_Constraint(get_Subsets_from_Q(Q), Z, uav, pmodel, problem.get_Mission_Mode())
-                
-                if 1 == problem.get_Mission_Mode():
-                    add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
+                for Q_s in get_Subsets_from_Q(Q, problem.get_Mission_Mode()):
+                    add_DFJ_Subtour_Constraint(Q_s, Z, uav, pmodel, problem.get_Mission_Mode())
 
                 subtoursQ = True
 
@@ -1462,7 +1458,7 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, uav: UAVS.UAV, pmodel: SCIP.Mode
     # Compute all pair of Q nodes:
     pairs_t = list(itertools.combinations(Q, 2))
 
-    # print("Pairs:", pairs)
+    #print("Pairs_t:", pairs_t)
 
     # Each constrain is added for each UAV
     pairs = []
@@ -1482,6 +1478,8 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, uav: UAVS.UAV, pmodel: SCIP.Mode
                 if pair[0][0] == "B" and pair[1][0] == "B": continue
 
                 pairs.append(pair)
+
+    #print("Pairs:", pairs)
 
     if pairs:
         pmodel.addCons(
@@ -1556,32 +1554,38 @@ def get_Q_from_loops(loops: list) -> list:
 
         return Q
         
-def get_Subsets_from_Q(Q: list) -> list:
+def get_Subsets_from_Q(Q: list, mode:int) -> list:
 
     nodes = []
-    for node in Q:
-        towers = node.split("_")[1]
-        nodes.append("SUP_"+towers)
-        nodes.append("SDOWN_"+towers)
 
-    nodes = list(dict.fromkeys(nodes))
-
-    Qlist = []
-
-    #subsets = list(itertools.chain.from_iterable(itertools.combinations(nodes, r) for r in range(2, len(nodes) + 1)))# len(nodes) + 1
-
-    subsets = itertools.combinations(nodes, len(Q))
-
-    for subset in subsets: 
-        nodes = []
-        for node in subset:
+    if 0 == mode:
+    
+        for node in Q:
             towers = node.split("_")[1]
-            nodes.append(towers)
-        
-        if len(nodes) == len(list(dict.fromkeys(nodes))):
-            Qlist.append(list(subset))
+            nodes.append("SUP_"+towers)
+            nodes.append("SDOWN_"+towers)
 
-    return Qlist
+        nodes = list(dict.fromkeys(nodes))
+
+        Qlist = []
+
+        #subsets = list(itertools.chain.from_iterable(itertools.combinations(nodes, r) for r in range(2, len(nodes) + 1)))# len(nodes) + 1
+
+        subsets = itertools.combinations(nodes, len(Q))
+
+        for subset in subsets: 
+            nodes = []
+            for node in subset:
+                towers = node.split("_")[1]
+                nodes.append(towers)
+        
+            if len(nodes) == len(list(dict.fromkeys(nodes))):
+                Qlist.append(list(subset))
+
+        return Qlist
+    
+    if 1 == mode:
+        return itertools.combinations(Q, len(Q))
 
 def does_Contain_Node(node: str, loop: list) -> bool:
 

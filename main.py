@@ -2,10 +2,6 @@
 # The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm"
 
 # TO DO (CRITICAL)
-#   - For both solvers, nothing prevents UAV from apearing at other bases. 
-#      * In the non dynamic, the constrain allow any subloop with any base for all UAVs, not the corresponding base
-#      * In the dynamic, the loops does not check for the loop with the base corresponding to the UAV, just if there is a base.
-#        Therefore, what should be a loop added to the constraints, is seem as None.
 #   - The fixLoops function does not actually work.
 #  
 # TO DO (MUST)
