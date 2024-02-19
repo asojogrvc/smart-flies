@@ -226,7 +226,7 @@ class UAV():
         match mode:
 
             case 0:
-
+                
                 if len(self.route) == 1:
                     return None
 
@@ -368,7 +368,7 @@ class UAV():
 
                 if len(self.route) == 1:
                     return None
-
+                
                 # Gimbal is fixed beforehand
                 gimbal = - float(self.missionSettings["Cam. angle"])
 
@@ -395,11 +395,14 @@ class UAV():
                 m = 0
                 for move in self.routeUTM[0:-1]: 
 
-                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], coords_dict[self.route[0:-1][m][0]]
-                                                                         , self.missionSettings["Insp. horizontal offset"], 5)
+                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], coords_dict[self.route[0:-1][m][0]],
+                                                                          self.missionSettings["Insp. horizontal offset"], 5)
 
                     # Above the first orbital point
-                    point = np.append(orbit[0], tH + dH)
+
+                    btH = coords_dict[self.route[0:-1][m][1]][2] - bH   # base of tower with respect to the uav base
+
+                    point = np.append(orbit[0], tH + dH + btH)
                     yaw = np.rad2deg(np.arccos(n_dir[1]))
                     if n_dir[0] < 0: yaw = -yaw
                     actions = {"gimbal": gimbal, "yaw": yaw}
@@ -408,8 +411,6 @@ class UAV():
                     
                     # Get down, orbit and inspect
                     k = 0
-
-                    btH1 = coords_dict[self.route[0:-1][m][1]][2] - bH   # base of tower 1 with respect to the uav base
 
                     for porbit in orbit:
                         
@@ -425,7 +426,7 @@ class UAV():
                         k += 1
 
                     # Above the last orbital point
-                    point = np.append(orbit[-1], tH + dH)
+                    point = np.append(orbit[-1], tH + dH + btH)
 
                     n_dir = self.routeUTM[m+1][1][:2]-orbit[-1]
                     n_dir = n_dir / np.linalg.norm(n_dir)
