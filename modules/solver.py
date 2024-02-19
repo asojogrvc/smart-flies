@@ -345,7 +345,8 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
     parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
     for uav in puavs:
-        print(uav.routeAbstract)
+        print("UAV:", uav.get_ID())
+        print("Route: ", uav.routeAbstract)
     
     k = 1
     print("")
