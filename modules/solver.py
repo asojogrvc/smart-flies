@@ -1571,7 +1571,7 @@ def list_Loops(abstract_Route: list, route_modes:list) -> tuple[list, list]:
     modes_list = []
 
     if not(abstract_Route):
-        return []
+        return [], []
 
     loop, left, loop_modes, left_modes = find_Loop(abstract_Route, route_modes)
 
