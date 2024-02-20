@@ -233,8 +233,12 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
     for uav in puavs:
         print('NO = ', uav.route)
         uav.route, uav.routeModes = order_Route(uav.missionSettings['Base'], uav.route, uav.routeModes)
-        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
         print('O = ', uav.route)
+        uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
+        print('OF = ', uav.route)
+        
+        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
+        
         print(uav.routeModes)
 
     return True
@@ -361,7 +365,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
         print("UAV:", uav.get_ID())
 
-        loops = list_Loops(uav.routeAbstract)
+        loops, _ = list_Loops(uav.routeAbstract, [])
 
         print("Route: ", uav.routeAbstract)
         print("Loops: ", loops)
@@ -409,7 +413,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
             print("Route: ", uav.routeAbstract)
 
-            loops = list_Loops(uav.routeAbstract)
+            loops, _ = list_Loops(uav.routeAbstract, [])
             print("Loops: ", loops)
 
             if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
@@ -444,16 +448,18 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
     for uav in puavs:
 
-        loops = list_Loops(uav.routeAbstract)
+        loops, _ = list_Loops(uav.routeAbstract, [])
 
         print("Loops List: ", loops)
 
         print('NO = ', uav.route)
         uav.route, uav.routeModes = order_Route(uav.missionSettings['Base'], uav.route, uav.routeModes)
         print('O = ', uav.route)
-        #uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
-        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
+        uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
         print('OF = ', uav.route)
+
+        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
+        
         print(uav.routeModes)
 
     return True
@@ -529,24 +535,54 @@ def order_Route(start: str, edge_list: list, mode_list:list) -> tuple[list, list
     # the initial route
     return orderedRoute, orderedModes
 
-def fix_Route_Valid_Subloops(ordered_route: list, ordered_modes:list) -> tuple[list, list]:
+def fix_Route_Valid_Subloops(ordered_route: list, ordered_modes:list):
     """
     If a route has subloops but are joint by exactly one node, them the route is valid and should be ordered correctly.
     This function takes an ordered route and fixes the ordering so the UAV covers the entire route before
     getting back to the base loop. By now, it supports just two loops.
     """
 
-    loops = list_Loops(ordered_route)
+    fixed_route = ordered_route
+    fixed_modes = ordered_modes
 
-    # Find the loop with the base
-    for loop in loops:
-        for edge in loop:
-            if "B" == edge[0][0]: 
-                first_loop = loop
+    loops, loops_modes = list_Loops(fixed_route, fixed_modes)
+
+    while len(loops) > 1:
+
+        # Find the loop with the base
+        k = 0
+        for loop in loops:
+            for edge in loop:
+                if "B" == edge[0][0]: 
+                    first_loop = loop
+                    rest_loops = loops[:k] + loops[(k + 1):]
+        
+            k += 1
+
+        # Find the common node of the first loop and the next
+        for loop in rest_loops:
+            foundQ, node, f_k, loop_k = find_common_node(first_loop, loop)
+
+            if foundQ: 
+                fixed_route = first_loop[:f_k+1]+loop[loop_k:]+loop[:loop_k]+first_loop[(f_k+1):]
+                break
+
+        loops, loops_modes = list_Loops(fixed_route, fixed_modes)
     
-    # Find the common node of the first loop and any of the other
-    return first_loop
+    return fixed_route, fixed_modes
 
+def find_common_node(route1: list, route2: list) -> tuple[bool, str, int, int]:
+
+    k1 = 0 
+    for edge1 in route1:
+        k2 = 0
+        for edge2 in route2:
+            if edge1[1] == edge2[0]: return True, edge1[1], k1, k2
+            k2 += 1
+        
+        k1 +=1
+    
+    return False, "",  float('NaN'), float('NaN')
 
 def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     """
@@ -1477,15 +1513,26 @@ def add_DFJ_Subtour_Constraint(Q: list, Z:dict, uav: UAVS.UAV, pmodel: SCIP.Mode
 
     return None
 
-def find_Loop(abstract_Route: list):
+def find_Loop(abstract_Route: list, route_modes: list) -> tuple[list, list, list, list]:
+
+    modesQ = len(route_modes) > 1
 
     starting_move = abstract_Route[0]
+    if modesQ: starting_mode = route_modes[0]
 
     loop = [starting_move, ]
+    if modesQ: modes_loop = [starting_mode, ]
+    else: modes_loop = []
 
     unlisted_moves = abstract_Route.copy()
     del unlisted_moves[abstract_Route.index(starting_move)]
+
+    if modesQ: unlisted_modes = route_modes.copy()
+    else: unlisted_modes = []
+    if modesQ: del unlisted_modes[route_modes.index(starting_mode)]
+
     checklist = unlisted_moves.copy()
+    if modesQ: checklist_modes = unlisted_modes.copy()
 
     foundQ = True
 
@@ -1495,35 +1542,51 @@ def find_Loop(abstract_Route: list):
 
         for move in checklist:
             if starting_move[1] == move[0]: #The next point of the loop is found
+
+                if modesQ: mode = checklist_modes[checklist.index(move)]
+
                 loop.append(move)
+                if modesQ: modes_loop.append(mode)
+
                 starting_move = move
+                if modesQ: starting_mode = mode
+
                 del unlisted_moves[checklist.index(move)]
+                if modesQ: del unlisted_modes[checklist_modes.index(mode)]
+
                 foundQ = True
                 break
 
         if foundQ:
             checklist = unlisted_moves.copy()
+            if modesQ: checklist_modes = unlisted_modes.copy()
     
-    return loop, unlisted_moves
+    return loop, unlisted_moves, modes_loop, unlisted_modes
 
-def list_Loops(abstract_Route: list) -> list:
+def list_Loops(abstract_Route: list, route_modes:list) -> tuple[list, list]:
+
+    modesQ = len(route_modes) > 1
 
     loop_list = []
+    modes_list = []
 
     if not(abstract_Route):
         return []
 
-    loop,left = find_Loop(abstract_Route)
+    loop, left, loop_modes, left_modes = find_Loop(abstract_Route, route_modes)
+
     loop_list.append(loop)
+    if modesQ: modes_list.append(loop_modes)
 
     while left:
 
-        loop, left = find_Loop(left)
+        loop, left, loop_modes, left_modes = find_Loop(left, left_modes)
 
         if not left:
             loop_list.append(loop)
+            if modesQ: modes_list.append(loop_modes)
 
-    return loop_list
+    return loop_list, modes_list
 
 def get_Q_from_loops(loops: list) -> list:
 
