@@ -166,7 +166,7 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
 
     return wps
 
-def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int]:
+def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int, dict]:
     """
     Loads the bases, towers, uavs and weather from a YAML input file.
     """
@@ -249,9 +249,13 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
 
     towers.load_from_Arrays(paths, True)
 
-    return bases, towers, uavs, weather, mission_init["settings"]["type"]
+    # This dict handle extra parameters that might be mode dependant.
+    # This is then loaded into the problem with **kwargs as Parameters
+    mode_parameters = {}
 
-def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int, str]:
+    return bases, towers, uavs, weather, mission_init["settings"]["type"], mode_parameters
+
+def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, WT.Weather, int, str, dict]:
     """
     Loads the bases, towers, uavs and weather from a JSON object.
 
@@ -328,4 +332,8 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 
     towers.load_from_Arrays(paths, True)
 
-    return bases, towers, uavs, weather, json_obj["objetivo"], json_obj["id"]
+    # This dict handle extra parameters that might be mode dependant.
+    # This is then loaded into the problem with **kwargs as Parameters
+    mode_parameters = {}
+
+    return bases, towers, uavs, weather, json_obj["objetivo"], json_obj["id"], mode_parameters

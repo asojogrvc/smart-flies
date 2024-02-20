@@ -199,9 +199,9 @@ def planner(mission_json):
     print(mission_json)
 
     try: 
-        bases, towers, uavs, weather, mode, id = iYAML.load_data_from_JSON(mission_json)
+        bases, towers, uavs, weather, mode, id, parameters = iYAML.load_data_from_JSON(mission_json)
 
-        problem = SO.Problem(str(id), towers, bases, uavs, weather, mode)
+        problem = SO.Problem(str(id), towers, bases, uavs, weather, mode, Parameters = parameters)
 
         status = problem.solve("")
 

@@ -67,6 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.location_LatLon = [37.411669, -6.0016236] # [Latitude, Longitud] GRVC Lab as default
         self.problem_graph = None
         self.mission_mode = 0
+        self.problem_parameters = {}
 
         # Window settings --------------------------------
 
@@ -674,7 +675,7 @@ def load_data_from_YAML(ui: MainWindow):
     if "" == filename[0]:
         return None
 
-    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode = YAML.load_data_from_YAML(filename[0])
+    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode, ui.problem_parameters = YAML.load_data_from_YAML(filename[0])
 
     # Update with new data
     updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())
@@ -764,7 +765,7 @@ def load_data_from_JSON(ui: MainWindow):
     f = open(filename[0])
     json_obj = json.load(f)
     f.close()
-    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode, _ = YAML.load_data_from_JSON(json_obj)
+    ui.bases, ui.towers, ui.uavs, _ , ui.mission_mode, _, _ = YAML.load_data_from_JSON(json_obj)
 
     # Update with new data
     updatePlot(ui.sc, ui.bases, ui.towers, ui.satellitalCheckBox.isChecked())
