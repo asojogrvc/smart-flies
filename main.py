@@ -1,6 +1,6 @@
 # Smart Flies Planner
-# The entire thing can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm"
-
+# The UI part can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm".
+#
 # TO DO (CRITICAL)
 #   - The fixLoops function does not actually work.
 #  

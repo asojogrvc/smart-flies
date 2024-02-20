@@ -536,32 +536,8 @@ def fix_Route_Valid_Subloops(ordered_route: list, ordered_modes:list) -> tuple[l
     getting back to the base loop. By now, it supports just two loops.
     """
 
-    start_nodes = [edge[0] for edge in ordered_route]
-    end_nodes = [edge[1] for edge in ordered_route]
-
-    # Let's take the first element, which should be the base in most cases and find the next instance.
-    first_node = start_nodes[0]
-
-    first_loop_ending = end_nodes.index(first_node)
-
-    if  len(ordered_modes) == first_loop_ending+1:
-        print("Either the rotue is not valid or is just one loop")
-        return ordered_route, ordered_modes
-
-    # The next node will be the start of the next loop.
-    new_loop_start = start_nodes[first_loop_ending+1]
-
-    second_loop = copy.deepcopy(ordered_route[first_loop_ending+1:])
-    second_loop_modes = copy.deepcopy(ordered_modes[first_loop_ending+1:])
-
-    # We need to find the the start of such loop at the base loop
-
-    repeated_node = start_nodes[:first_loop_ending].index(new_loop_start)
-
-    route = copy.deepcopy(ordered_route[:repeated_node-1] + second_loop + ordered_route[repeated_node:first_loop_ending])
-    modes = copy.deepcopy(ordered_modes[:repeated_node-1] + second_loop_modes + ordered_modes[repeated_node:first_loop_ending])
-
-    return route, modes
+    loops = list_Loops(ordered_route)
+    
 
 def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     """
