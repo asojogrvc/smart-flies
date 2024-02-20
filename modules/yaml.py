@@ -63,7 +63,7 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     file.write("    wp:\n")
 
     if not uav.waypoints.get_Points_List():
-        file.write("[]")
+        file.write("      []\n")
 
     for wp in uav.waypoints:
 
