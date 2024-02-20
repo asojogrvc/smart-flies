@@ -537,7 +537,16 @@ def fix_Route_Valid_Subloops(ordered_route: list, ordered_modes:list) -> tuple[l
     """
 
     loops = list_Loops(ordered_route)
+
+    # Find the loop with the base
+    for loop in loops:
+        for edge in loop:
+            if "B" == edge[0][0]: 
+                first_loop = loop
     
+    # Find the common node of the first loop and any of the other
+    return first_loop
+
 
 def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     """

@@ -67,7 +67,7 @@ class UAV():
         self.routeUTM = []
         self.routeModes = []
         self.waypoints = WP.Waypoints()
-        self.missionSettings = {'Base': 'B1', 'Nav. speed': 15, 'Insp. speed': 7, 'Landing Mode': 'None',
+        self.missionSettings = {'Base': 'B1', 'Nav. speed': 15, 'Insp. speed': 7, 'Landing Mode': 'Auto',
                                  "Insp. height": 5, "Insp. horizontal offset": 0, "Cam. angle": 90, "Tower distance": 5}
         self.sim_trajectory = None
         self.sim_angles = None
