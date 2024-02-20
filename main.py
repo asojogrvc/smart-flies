@@ -2,7 +2,8 @@
 # The UI part can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm".
 #
 # TO DO (CRITICAL)
-#   - The fixLoops function does not actually work.
+#   - If a UAV is too far from the towers, maybe consider not using them. This can be done by allowing the solver
+#    not to use UAV automatically or by reducing the Team based on certain criteria
 #  
 # TO DO (MUST)
 #   - Delete SUP and SDOWN names. Instead, use T1->T2 and T2->T1 or similar.
