@@ -62,9 +62,6 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     file.write("    uav: \""+uav.get_ID()+"\"\n")
     file.write("    wp:\n")
 
-    if not uav.waypoints.get_Points_List():
-        file.write("      []\n")
-
     for wp in uav.waypoints:
 
         latlon = CO.utm2latlon(wp[0], utmZone)
@@ -140,6 +137,8 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
     route_list = []
 
     for uav in uavs:
+
+        if not uav.waypoints.get_Points_List(): continue
 
         route_dict = {}
 
