@@ -275,6 +275,16 @@ class UAV():
                 actions = {"gimbal": gimbal, "yaw": yaw}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
+                # -----
+                ipoints = CO.get_Path_Points(self.routeUTM[0][0], preMoves[0][0], 200)
+                CO.update_UTM_Height_Online(ipoints, utmZone)
+                CO.update_Height(ipoints, tH + dH - bH)
+                    
+                if len(ipoints) > 1:
+                    for ipoint in ipoints[:-1]:
+                        self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
+                # -----
+
                 btH = coords_dict[self.route[0][1]][2] - bH # base of tower with respect to the uav base
 
                 point = np.append(preMoves[0][0], btH + tH + dH)
@@ -339,6 +349,16 @@ class UAV():
 
 
                     self.waypoints.add_Waypoint(point1, actions1, mode1)
+                    # -----
+                    if "Navigation" == self.routeModes[1:-1][k]:
+                        ipoints = CO.get_Path_Points(point1, point2, 200)
+                        CO.update_UTM_Height_Online(ipoints, utmZone)
+                        CO.update_Height(ipoints, tH + dH - bH)
+                    
+                        if len(ipoints) > 1:
+                            for ipoint in ipoints[:-1]:
+                                self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
+                    # -----
                     self.waypoints.add_Waypoint(point2, actions1, mode1)
 
                     k += 1
@@ -355,6 +375,16 @@ class UAV():
                 
                 point2 = np.append(pmove[1], btH2 + tH + dH)
                 self.waypoints.add_Waypoint(point2, actions, "Navigation")
+
+                # -----
+                ipoints = CO.get_Path_Points(point2, self.routeUTM[-1][1], 200)
+                CO.update_UTM_Height_Online(ipoints, utmZone)
+                CO.update_Height(ipoints, tH + dH - bH)
+                    
+                if len(ipoints) > 1:
+                    for ipoint in ipoints[:-1]:
+                        self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
+                # -----
 
                 # Get back to base
                 point = np.append(self.routeUTM[-1][1][:2], tH + dH)
