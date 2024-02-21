@@ -351,7 +351,7 @@ class UAV():
                 if n_dir[0] < 0: yaw = -yaw
                 actions = {"gimbal": gimbal, "yaw": yaw}
                 
-                point2 = np.append(pmove[1], btH2 + tH + dH + self.missionSettings["Insp. height"])
+                point2 = np.append(pmove[1], btH2 + tH + dH)
                 self.waypoints.add_Waypoint(point2, actions, "Navigation")
 
                 # Get back to base
