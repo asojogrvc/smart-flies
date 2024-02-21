@@ -286,7 +286,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
         uav.missionSettings["Base"] = "B"+str(k)
         uav.missionSettings["Nav. speed"] = uav_dict["devices"]["speed_navegation"]
         uav.missionSettings["Insp. speed"] = uav_dict["devices"]["speed_mission"]
-        uav.missionSettings["Landing Mode"] = int_to_Landing_Mode(0)
+        uav.missionSettings["Landing Mode"] = int_to_Landing_Mode(2)
         geom = json_obj["settings"][k]["mission"]
         uav.missionSettings["Insp. height"] = geom["height"]
         uav.missionSettings["Insp. horizontal offset"] = geom["offset"]
