@@ -3,64 +3,19 @@ frame_id: /gps
 id: 0
 description: ""
 route:
-  - name: "Inspection_0_B0"
-    uav: "0"
-    wp:
-    attributes:
-
-      mode_landing: 0
-
-      mode_yaw: 2
-
-      mode_gimbal: 0
-
-      idle_vel: 5.0
-
-
-
   - name: "Inspection_1_B1"
     uav: "1"
     wp:
       - {pos: [38.13749084, -3.18053287,  5.        ], action: {'video_start': 0, 'gimbal': -45.0, 'yaw': -138.90186695485835}}
-      - {pos: [38.13749084, -3.18053287, 25.        ], action: {'gimbal': -45.0, 'yaw': -138.90186695485835}}
-      - {pos: [38.13569787, -3.18250527, 19.10418701], action: {'gimbal': -45.0, 'yaw': -138.90186695485835}}
-      - {pos: [38.13569787, -3.18250527,  9.10418701], action: {'gimbal': -45.0, 'yaw': 167.08779357777, 'photo': True}}
-      - {pos: [38.13546156, -3.18379862,  4.68045044], action: {'gimbal': -45.0, 'yaw': 167.08779357777, 'photo': True}}
-      - {pos: [38.13546172, -3.18379774,  4.68045044], action: {'gimbal': -45.0, 'yaw': 167.5446299176422, 'photo': True}}
-      - {pos: [38.13520158, -3.1852749 ,  2.21795654], action: {'gimbal': -45.0, 'yaw': 167.5446299176422, 'photo': True}}
-      - {pos: [38.13520158, -3.1852749 , 22.21795654], action: {'gimbal': -45.0, 'yaw': 58.67857508852268}}
-      - {pos: [38.13749084, -3.18053287, 25.        ], action: {'gimbal': -45.0, 'yaw': 58.67857508852268}}
+      - {pos: [38.13749084, -3.18053287, 30.        ], action: {'gimbal': -45.0, 'yaw': -138.90186695485835}}
+      - {pos: [38.13569787, -3.18250527, 24.10418701], action: {'gimbal': -45.0, 'yaw': -138.90186695485835}}
+      - {pos: [38.13569787, -3.18250527, 14.10418701], action: {'gimbal': -45.0, 'yaw': 167.08779357777, 'photo': True}}
+      - {pos: [38.13546156, -3.18379862,  9.68045044], action: {'gimbal': -45.0, 'yaw': 167.08779357777, 'photo': True}}
+      - {pos: [38.13546172, -3.18379774,  9.68045044], action: {'gimbal': -45.0, 'yaw': 167.5446299176422, 'photo': True}}
+      - {pos: [38.13520158, -3.1852749 ,  7.21795654], action: {'gimbal': -45.0, 'yaw': 167.5446299176422, 'photo': True}}
+      - {pos: [38.13520158, -3.1852749 , 27.21795654], action: {'gimbal': -45.0, 'yaw': 58.67857508852268}}
+      - {pos: [38.13749084, -3.18053287, 30.        ], action: {'gimbal': -45.0, 'yaw': 58.67857508852268}}
       - {pos: [38.13749084, -3.18053287,  5.        ], action: {'video_stop': 0, 'gimbal': -45.0, 'yaw': 58.67857508852268}}
-    attributes:
-
-      mode_landing: 0
-
-      mode_yaw: 2
-
-      mode_gimbal: 0
-
-      idle_vel: 5.0
-
-
-
-  - name: "Inspection_2_B2"
-    uav: "2"
-    wp:
-    attributes:
-
-      mode_landing: 0
-
-      mode_yaw: 2
-
-      mode_gimbal: 0
-
-      idle_vel: 5.0
-
-
-
-  - name: "Inspection_3_B3"
-    uav: "3"
-    wp:
     attributes:
 
       mode_landing: 0

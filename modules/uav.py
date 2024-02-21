@@ -69,6 +69,7 @@ class UAV():
         self.waypoints = WP.Waypoints()
         self.missionSettings = {'Base': 'B1', 'Nav. speed': 15, 'Insp. speed': 7, 'Landing Mode': 'Auto',
                                  "Insp. height": 5, "Insp. horizontal offset": 0, "Cam. angle": 90, "Tower distance": 5}
+        self.extra_parameters = {}
         self.sim_trajectory = None
         self.sim_angles = None
         self.sim_plot = None
@@ -145,10 +146,6 @@ class UAV():
 
         return out
         
-    
-
-
-
     # Add units
     def print(self):
         """
@@ -216,7 +213,12 @@ class UAV():
 
         dH = 20 # Security height offset for navigation
         fH = 5 # first height First and last height.
-        tH = 5 # Tower height, this should be a external parameter
+
+        # Tower height, this should be a external parameter
+        if "Tower Height" in self.extra_parameters:
+            tH = self.extra_parameters["Tower Height"]
+        else:
+            tH = 5 
 
         # Precompute the coordinates into a dict. THIS COULD SIMNPLIFY STUFF IF I SAVED DIRECTLY INTO THE UI
         coords_dict = towers.get_DictCoordinates()
@@ -395,8 +397,14 @@ class UAV():
                 m = 0
                 for move in self.routeUTM[0:-1]: 
 
+                    # Tower height, this should be a external parameter
+                    if "Orbital Points" in self.extra_parameters:
+                        n_points = self.extra_parameters["Orbital Points"]
+                    else:
+                        n_points = 5 
+
                     orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], coords_dict[self.route[0:-1][m][0]],
-                                                                          self.missionSettings["Insp. horizontal offset"], 5)
+                                                                          self.missionSettings["Insp. horizontal offset"], n_points)
 
                     # Above the first orbital point
 

@@ -87,6 +87,8 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
     file.write("route:\n")
 
     for uav in uavs:
+        if not uav.waypoints.get_Points_List(): 
+            continue
         print_Route(file, uav, utmZone)
         file.write("\n\n")
 
@@ -138,7 +140,8 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
 
     for uav in uavs:
 
-        if not uav.waypoints.get_Points_List(): continue
+        if not uav.waypoints.get_Points_List(): 
+            continue
 
         route_dict = {}
 
@@ -187,8 +190,6 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
 
     print(mission_init)
 
-    tower_height = mission_init["settings"]["mission"][0]["tower"]
-
     # Load the UAVs
     k = 0
     for uav_dict in mission_init["settings"]["devices"]:
@@ -202,7 +203,7 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
         geom = mission_init["settings"]["mission"][k]
         uav.missionSettings["Insp. height"] = geom["height"]
         uav.missionSettings["Insp. horizontal offset"] = geom["offset"]
-
+        
         # Update from the other pair
         uav.missionSettings['Tower distance'] = float(np.sqrt(
             uav.missionSettings['Insp. height']**2 + uav.missionSettings['Insp. horizontal offset']**2))
@@ -213,6 +214,11 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
         else:
             uav.missionSettings['Cam. angle'] = float(np.rad2deg(np.arctan(
                 uav.missionSettings['Insp. height'] / temp)))
+        
+        uav.extra_parameters["Tower Height"] = geom["tower"]
+
+        if 1 == mission_init["settings"]["type"]:
+            uav.extra_parameters["Orbital Points"] = 5 # This is supossed to come in the json or yaml file]
 
         uavs.add_UAV(copy.deepcopy(uav))
 
@@ -271,8 +277,6 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
      # If a YAML is loaded twice, it crashed. This fixes it
     uavs.empty()
 
-    tower_height = json_obj["settings"][0]["mission"]["tower"]
-
     # Load the UAVs
     k = 0
     for uav_dict in json_obj["settings"]:
@@ -297,6 +301,10 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
         else:
             uav.missionSettings['Cam. angle'] = float(np.rad2deg(np.arctan(
                 uav.missionSettings['Insp. height'] / temp)))
+            
+        uav.extra_parameters["Tower Height"] = geom["tower"]
+        if 1 == json_obj["objetivo"]:
+            uav.extra_parameters["Orbital Points"] = 5 # This is supossed to come in the json or yaml file]
 
         uavs.add_UAV(copy.deepcopy(uav))
 
