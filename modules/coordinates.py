@@ -173,6 +173,66 @@ def update_Height_Online(coords: np.ndarray):
 
     return None
 
+def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
+    """
+    Function to update a point's or list of points height using the online opentopodata.org API
+    It takes an Nx3 array and updates the third component of each row.
+    It assumes that the points are given in UTM Coordinates.
+
+    It does not output the array, it updates it inplace.
+    """
+
+    url = 'https://api.opentopodata.org/v1/eudem25m?locations='
+
+    coordslatlot = utm2latlon(coords, utmZone)
+
+    # Check shape to determine if it is a single point or more
+    # If it 2D, leave it as it is
+    if coords.shape == (3,):
+        # If it is a point 3D, then update the height
+
+        # request url
+        request = url + f"{coordslatlot[0]}"+','+f"{coordslatlot[1]}"+'|'
+        # get response from the api
+        #print(request)
+        response = requests.get(request, timeout=10.0)
+        
+        # if the response is positive, update, if not, don't
+        if response.status_code == 200:
+            coords[2] = response.json()["results"][0]["elevation"]
+
+    # Several points
+    else:
+
+        # If they are 2D, leave them as they are
+        if coords.shape[1] == 3:
+            
+            # Sends the entire array points in one single request to speed things up
+            towers_string = ""
+            for col in coordslatlot:
+                towers_string = towers_string+f"{col[0]}"+','+f"{col[1]}"+'|'
+
+            # request url
+            request = url + towers_string
+            #print(request)
+            response = requests.get(request, timeout=10.0)
+
+            # if the response is positive, store heights in "elevation"
+            elevations = np.zeros(len(coords))
+            if response.status_code == 200:
+                for k in range(len(coords)):
+                    elevations[k] = response.json()["results"][k]["elevation"]
+
+            # and update the original array
+            coords[:,2] = elevations
+            
+
+    return None
+
+def update_Height(coords: np.ndarray, height: float):
+    for point in coords:
+        point[2] += height
+
 def compute_Parallel_Trajectory(current_pos: np.ndarray, segment: tuple, offset: float) -> tuple[tuple, np.ndarray, np.ndarray]:
     """
     Given the current position and the a pair of points (as 2D or 3D vectors), it compute the waypoints for the closest parallel inspection trajectory at horizontal offset
@@ -261,6 +321,30 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
 
     return orbit, n_dir, v_dirs
     
+def get_Path_Points(pos_i: np.ndarray, pos_f: np.ndarray, dx: float) -> np.ndarray:
+    """
+    Divides the a segment defined by two points pos_f and pos_i based onto n_points. Outputs the corresponding coordinates
+    as an Nx3 or Nx2 array
+    """
+
+    delta_pos = pos_f - pos_i
+    d = np.linalg.norm(delta_pos)
+
+    # If the initial and final point are too close, just return the final point
+    if d <= dx:
+        return np.array([pos_f])
+
+    # Get the number of point as the maximum number of dx length that fit within d
+    n_points = int(np.floor(np.linalg.norm(delta_pos) / dx))
+
+    # Return an array with all the points corresponding to taking n_points step of length dx along the segment
+    # DOES NOT contain the initial point
+
+    #print(np.array([pos_i + (i+1) * dx*delta_pos/d for i in range(n_points)]))
+    #print(np.array([pos_f]))
+
+    return np.concatenate((np.array([pos_i + (i+1) * dx*delta_pos/d for i in range(n_points)]), np.array([pos_f])))
+
 
 # -------------------------  Plotting functions ---------------------------------------
 
@@ -346,6 +430,4 @@ def plot_Satellital_Map(axes: plt.Axes, image: np.ndarray, latlon1: np.ndarray, 
     axes.imshow(image, extent = [utm1[0], utm2[0], utm2[1], utm1[1]], alpha = 0.7)
 
     return None
-
-
 

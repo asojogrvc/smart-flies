@@ -220,6 +220,8 @@ class UAV():
         else:
             tH = 5 
 
+        utmZone = towers.get_UTM_Zone()
+
         # Precompute the coordinates into a dict. THIS COULD SIMNPLIFY STUFF IF I SAVED DIRECTLY INTO THE UI
         coords_dict = towers.get_DictCoordinates()
         coords_dict[self.missionSettings["Base"]] = bases.get_Base(self.missionSettings["Base"]).get_Coordinates()
@@ -407,6 +409,15 @@ class UAV():
                                                                           self.missionSettings["Insp. horizontal offset"], n_points)
 
                     # Above the first orbital point
+
+                    
+                    ipoints = CO.get_Path_Points(move[0], np.append(orbit[0], 0), 200)
+                    CO.update_UTM_Height_Online(ipoints, utmZone)
+                    CO.update_Height(ipoints, tH + dH - bH)
+                    
+                    if len(ipoints) > 1:
+                        for ipoint in ipoints[:-1]:
+                            self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
 
                     btH = coords_dict[self.route[0:-1][m][1]][2] - bH   # base of tower with respect to the uav base
 
