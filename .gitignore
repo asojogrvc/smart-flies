@@ -6,6 +6,7 @@
 /modules/__pycache__
 /.VSCodeCounter
 /.venv
+/target
 PLI_NOGUI.spec
 PLI.spec
 kml_Tower_Testing.ipynb
