@@ -23,6 +23,7 @@ dji_M210_noetic:
 
   speed_mission: 7
   speed_navegation: 15
+  compatible_cases: [0, 1]
 
 dji_M210_melodic:
   mass: 7.2 #kg
@@ -48,6 +49,8 @@ dji_M210_melodic:
     voltage_per_cell: 3.9 # v/cell
   speed_mission: 7
   speed_navegation: 15
+  compatible_cases: [1, ]
+
 dji_M300:
   mass: 7.2 #kg
   number_of_rotors: 4

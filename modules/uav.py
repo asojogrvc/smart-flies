@@ -78,13 +78,18 @@ class UAV():
 
     # ------------------------ Setting parameter functions ---------------------------
         
-    def load_from_Model(self, model: str, id:str):
+    def load_from_Model(self, model: str, id:str, case: int) -> bool:
 
         # It might be a good not load the entire database each time
         f = open("./files/devices.yaml", "r")
         data = load(f, Loader=Loader)[model]
         f.close()
-
+        
+        try:
+            if case not in data["compatible_cases"]: return False
+        except:
+            print(f"No compatible_cases attribute for model: {model}. Assuming all")
+  
         
         self.__name             = model
         self.__id               = id
@@ -106,7 +111,7 @@ class UAV():
                                                 data['battery']['voltage_per_cell'],
                                                 )
 
-        return None
+        return True
         
 
     # ----------------------------- Getting parameter functions -------------------------------

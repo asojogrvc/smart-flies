@@ -195,7 +195,14 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
     for uav_dict in mission_init["settings"]["devices"]:
 
         uav = UAVS.UAV()
-        uav.load_from_Model(uav_dict["device_category"], str(uav_dict["device_id"]))
+        compatibleQ = uav.load_from_Model(uav_dict["devices"]["category"],
+                                           str(uav_dict["devices"]["deviceId"]), mission_init["settings"]["type"])
+
+        # If the model is not compatible with current use case.
+        if not compatibleQ: 
+            print(f"UAV {uav_dict['devices']['category']} is not compatible with use case {mission_init['settings']['type']}")
+            continue
+
         uav.missionSettings["Base"] = "B"+str(k)
         uav.missionSettings["Nav. speed"] = uav_dict["speed_navegation"]
         uav.missionSettings["Insp. speed"] = uav_dict["speed_mission"]
@@ -282,7 +289,13 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
     for uav_dict in json_obj["settings"]:
 
         uav = UAVS.UAV()
-        uav.load_from_Model(uav_dict["devices"]["category"], str(uav_dict["devices"]["deviceId"]))
+        compatibleQ = uav.load_from_Model(uav_dict["devices"]["category"], str(uav_dict["devices"]["deviceId"]), json_obj["objetivo"])
+
+        # If the model is not compatible with current use case.
+        if not compatibleQ: 
+            print(f"UAV {uav_dict['devices']['category']} is not compatible with use case {json_obj['objetivo']}")
+            continue
+
         uav.missionSettings["Base"] = "B"+str(k)
         uav.missionSettings["Nav. speed"] = uav_dict["devices"]["speed_navegation"]
         uav.missionSettings["Insp. speed"] = uav_dict["devices"]["speed_mission"]
