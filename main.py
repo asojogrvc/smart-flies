@@ -2,8 +2,9 @@
 # The UI part can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm".
 #
 # TO DO (CRITICAL)
-#   - If a UAV is too far from the towers, maybe consider not using them. This can be done by allowing the solver
-#    not to use UAV automatically or by reducing the Team based on certain criteria
+#   - Add limitations for fixed-wings
+#       * https://docs.deltaquad.com/deltaquad-pro-operations-manual-v2/
+#       * https://docs.qgroundcontrol.com/master/en/qgc-user-guide/index.html
 #  
 # TO DO (MUST)
 #   - Delete SUP and SDOWN names. Instead, use T1->T2 and T2->T1 or similar.
