@@ -1096,6 +1096,18 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
     Wt = nx.get_edge_attributes(pgraph, 'Wt')
     We = nx.get_edge_attributes(pgraph, 'We')
+
+    
+
+    tgraph = ptowers.get_Graph()
+
+    distance_threshold = 1000 # in meters
+    # This detects if UAVs are too far to any of the groups of towers and allows deactivating them.
+    SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
+    distant_subgraphsQ = any([np.linalg.norm(list(dict(subset.nodes(data="UTM")).values())[0] - base.get_Coordinates()) > distance_threshold
+                                  for subset in SC for base in pbases])
+
+    if distant_subgraphsQ: print("Subgroup of towers might be too far from some of the UAVs bases. Allowing automatic disabling")
         
     match mode:
 
@@ -1148,7 +1160,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 # Continuity. The UAV that inspects must be the one that exits the segment
                 for uav in puavs:
 
-                    if tooManyUAVSQ:
+                    if tooManyUAVSQ or distant_subgraphsQ:
 
                         Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
@@ -1196,7 +1208,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 for base in pbases:
                     nodelist.remove(base.get_Name())
 
-                if tooManyUAVSQ:
+                if tooManyUAVSQ or distant_subgraphsQ:
                     # Base exit constrain
                     pmodel.addCons(
                             SCIP.quicksum(
@@ -1336,7 +1348,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
                 for uav in puavs:
                     
-                    if tooManyUAVSQ:
+                    if tooManyUAVSQ or distant_subgraphsQ:
 
                         Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
@@ -1372,7 +1384,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 for base in pbases:
                     nodelist.remove(base.get_Name())
 
-                if tooManyUAVSQ:
+                if tooManyUAVSQ or distant_subgraphsQ:
                     # Base exit constrain
                     pmodel.addCons(
                             SCIP.quicksum(
