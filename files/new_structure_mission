@@ -1,0 +1,20 @@
+mission:
+    id:
+    name:
+    description:
+    case:
+    locations:
+
+    devices:
+      - id: 0
+        category: 'dji_M300'
+        settings:
+            base: [lat, long]
+            inspection_speed: 7
+            navigation_speed: 15
+            landing_mode: 0
+            vertical_offset: 10
+            horizontal_offset: 7
+            tower_height: 10
+            security_height: 10
+            orbital_points: 5

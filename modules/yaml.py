@@ -281,28 +281,27 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
     uavs = UAVS.UAV_Team()
     weather = WT.Weather()
 
-     # If a YAML is loaded twice, it crashed. This fixes it
+    # If a YAML is loaded twice, it crashed. This fixes it
     uavs.empty()
 
     # Load the UAVs
     k = 0
-    for uav_dict in json_obj["settings"]:
+    for uav_dict in json_obj["devices"]:
 
         uav = UAVS.UAV()
-        compatibleQ = uav.load_from_Model(uav_dict["devices"]["category"], str(uav_dict["devices"]["deviceId"]), json_obj["objetivo"])
+        compatibleQ = uav.load_from_Model(uav_dict["category"], str(uav_dict["id"]), json_obj["case"])
 
         # If the model is not compatible with current use case.
         if not compatibleQ: 
-            print(f"UAV {uav_dict['devices']['category']} is not compatible with use case {json_obj['objetivo']}")
+            print(f"UAV {uav_dict["category"]} is not compatible with use case {json_obj["case"]}")
             continue
 
         uav.missionSettings["Base"] = "B"+str(k)
-        uav.missionSettings["Nav. speed"] = uav_dict["devices"]["speed_navegation"]
-        uav.missionSettings["Insp. speed"] = uav_dict["devices"]["speed_mission"]
-        uav.missionSettings["Landing Mode"] = int_to_Landing_Mode(2)
-        geom = json_obj["settings"][k]["mission"]
-        uav.missionSettings["Insp. height"] = geom["height"]
-        uav.missionSettings["Insp. horizontal offset"] = geom["offset"]
+        uav.missionSettings["Nav. speed"] = uav_dict["settings"]["navigation_speed"]
+        uav.missionSettings["Insp. speed"] = uav_dict["settings"]["inspection_speed"]
+        uav.missionSettings["Landing Mode"] = int_to_Landing_Mode(uav_dict["settings"]["landing_mode"])
+        uav.missionSettings["Insp. height"] = uav_dict["settings"]["vertical_offset"]
+        uav.missionSettings["Insp. horizontal offset"] = uav_dict["settings"]["horizontal_offset"]
 
         # Update from the other pair
         uav.missionSettings['Tower distance'] = float(np.sqrt(
@@ -315,13 +314,14 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
             uav.missionSettings['Cam. angle'] = float(np.rad2deg(np.arctan(
                 uav.missionSettings['Insp. height'] / temp)))
             
-        uav.extra_parameters["Tower Height"] = geom["tower"]
-        if 1 == json_obj["objetivo"]:
-            uav.extra_parameters["Orbital Points"] = 5 # This is supossed to come in the json or yaml file]
+        uav.extra_parameters["Tower Height"] = uav_dict["settings"]["tower_height"]
+        if 1 == json_obj["case"]:
+            uav.extra_parameters["Orbital Points"] = uav_dict["settings"]["orbital_points"]
+            uav.extra_parameters["Security Height"] = uav_dict["settings"]["security_height"]
 
         uavs.add_UAV(copy.deepcopy(uav))
 
-        coords = np.array([json_obj["bases"][k]["latitude"], json_obj["bases"][k]["longitude"], 0])
+        coords = np.array([uav_dict["settings"]["base"][0], uav_dict["settings"]["base"][1], 0])
         CO.update_Height_Online(coords)
         coords = CO.latlon2utm(coords)
 
@@ -338,7 +338,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 
     paths = []
 
-    for loc in json_obj["loc"]:
+    for loc in json_obj["locations"]:
         firstQ = True
         for point in loc["items"]:
 
@@ -357,4 +357,4 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
     # This is then loaded into the problem with **kwargs as Parameters
     mode_parameters = {}
 
-    return bases, towers, uavs, weather, json_obj["objetivo"], json_obj["id"], mode_parameters
+    return bases, towers, uavs, weather, json_obj["case"], json_obj["id"], mode_parameters

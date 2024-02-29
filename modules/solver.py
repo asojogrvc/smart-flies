@@ -125,12 +125,6 @@ class Problem():
         # Depending on the selection, exec one of the solvers
         match which_solver:
 
-            # case "regular":  # Javi's
-                # regular_Solver(self)
-
-            # case "abstract": # Alvaro's
-            #    abstract_Solver(self)
-
             case "abstract_DFJ":
                 status = abstract_DFJ_Solver(self)
             case "abstract_dynamic_DFJ":
