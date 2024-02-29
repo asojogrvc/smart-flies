@@ -83,7 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.solverType = "abstract_dynamic_DFJ"
 
         menu0 = menubar.addMenu('File')
-        db_action01 = menu0.addAction("Load YAML Mission Initialization")
+        db_action01 = menu0.addAction("Load YAML Mission Initialization (Deprecated)")
         db_action01.setStatusTip("Load a YAML file for the problem definition")
         db_action01.triggered.connect(lambda: load_data_from_YAML(self))
 
