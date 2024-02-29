@@ -293,7 +293,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 
         # If the model is not compatible with current use case.
         if not compatibleQ: 
-            print(f"UAV {uav_dict["category"]} is not compatible with use case {json_obj["case"]}")
+            print(f"UAV {uav_dict['category']} is not compatible with use case {json_obj['case']}")
             continue
 
         uav.missionSettings["Base"] = "B"+str(k)

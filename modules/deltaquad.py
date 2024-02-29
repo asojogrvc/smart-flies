@@ -49,8 +49,18 @@ def px4_route_to_Plan(uav: UAVS.UAV):
     }
     item_list = []
 
-    for wp in uav.waypoints:
-        
+    # This suposses that the waypoints are already valid for the px4 physical limitations
+    for point, actions, mode in uav.waypoints:
+        # wp = (point_vector, actions_dict, mode_str)
+
+        simple_item = {
+            "type": "SimpleItem",
+            "AMSLAltAboveTerrain": "null",
+            "Altitude": point[2],
+            "autoContinue": True,
+            "command": 16,  # 16 FOR WAYPOINTS,  
+        }
+
         None                         
 
     # Add waypoints item to the mission and it to the plan
