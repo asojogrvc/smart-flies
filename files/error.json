@@ -1,0 +1,58 @@
+{
+  "id": "16773912",
+  "name": " safsad",
+  "case": 1,
+  "meteo": [],
+  "locations": [
+    {
+      "name": "Elements",
+      "items": [
+        {
+          "latitude": 37.19659039937363,
+          "longitude": -6.697808274660645
+        }
+      ]
+    },
+    {
+      "name": "Elements",
+      "items": [
+        {
+          "latitude": 37.193076579446355,
+          "longitude": -6.699234422344688
+        }
+      ]
+    }
+  ],
+  "devices": [
+    {
+      "settings": {
+        "base": [37.1924429277657, -6.701819776777597],
+        "inspection_speed": 7,
+        "navigation_speed": 15,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 6,
+        "landing_mode": 2
+      },
+      "id": "uav_2",
+      "category": "dji_M210_noetic"
+    },
+    {
+      "settings": {
+        "base": [37.194047476854806, -6.704610054459408],
+        "inspection_speed": 7,
+        "navigation_speed": 15,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 6,
+        "landing_mode": 2
+      },
+      "id": "uav_1",
+      "category": "dji_M210_melodic"
+    }
+  ]
+}

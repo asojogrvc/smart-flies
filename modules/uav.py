@@ -441,15 +441,16 @@ class UAV():
                         n_points = self.extra_parameters["Orbital Points"]
                     else:
                         n_points = 5 
-
+                    
+                    # fix move[0] as last orbital point
                     orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], coords_dict[self.route[0:-1][m][0]],
                                                                           self.missionSettings["Insp. horizontal offset"], n_points)
 
                     # Above the first orbital point
-
                     
                     ipoints = CO.get_Path_Points(move[0], np.append(orbit[0], 0), 200)
                     CO.update_UTM_Height_Online(ipoints, utmZone)
+                    print("tH + dH - bH: ", tH + dH - bH) # AQUI TAMOS
                     CO.update_Height(ipoints, tH + dH - bH)
                     
                     if len(ipoints) > 1:

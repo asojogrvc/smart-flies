@@ -144,6 +144,7 @@ def update_Height_Online(coords: np.ndarray):
         # if the response is positive, update, if not, don't
         if response.status_code == 200:
             coords[2] = response.json()["results"][0]["elevation"]
+        else: print("Height Online Update failed!")
 
     # Several points
     else:
@@ -166,6 +167,7 @@ def update_Height_Online(coords: np.ndarray):
             if response.status_code == 200:
                 for k in range(len(coords)):
                     elevations[k] = response.json()["results"][k]["elevation"]
+            else: print("Height Online Update failed!")
 
             # and update the original array
             coords[:,2] = elevations
@@ -200,6 +202,7 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
         # if the response is positive, update, if not, don't
         if response.status_code == 200:
             coords[2] = response.json()["results"][0]["elevation"]
+
         else: print("Height Online Update failed!")
 
     # Several points
@@ -223,6 +226,7 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
             if response.status_code == 200:
                 for k in range(len(coords)):
                     elevations[k] = response.json()["results"][k]["elevation"]
+            else: print("Height Online Update failed!")
 
             # and update the original array
             coords[:,2] = elevations
