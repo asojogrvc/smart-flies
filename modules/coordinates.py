@@ -7,6 +7,7 @@ from urllib.request import urlopen
 from io import BytesIO
 from PIL import Image
 import matplotlib.pyplot as plt
+import time
 
 # ------------------------- Coordinates transformations ---------------------------------------
 
@@ -127,7 +128,7 @@ def update_Height_Online(coords: np.ndarray):
 
     It does not output the array, it updates it inplace.
     """
-
+    time.sleep(1)
     url = 'https://api.opentopodata.org/v1/eudem25m?locations='
 
     # Check shape to determine if it is a single point or more
@@ -142,7 +143,7 @@ def update_Height_Online(coords: np.ndarray):
         response = requests.get(request, timeout=10.0)
         
         # if the response is positive, update, if not, don't
-        if response.status_code == 200:
+        if 200 == response.status_code and "error" not in response.json():
             coords[2] = response.json()["results"][0]["elevation"]
         else: print("Height Online Update failed!")
 
@@ -164,7 +165,7 @@ def update_Height_Online(coords: np.ndarray):
 
             # if the response is positive, store heights in "elevation"
             elevations = np.zeros(len(coords))
-            if response.status_code == 200:
+            if 200 == response.status_code and "error" not in response.json():
                 for k in range(len(coords)):
                     elevations[k] = response.json()["results"][k]["elevation"]
             else: print("Height Online Update failed!")
@@ -183,6 +184,7 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
 
     It does not output the array, it updates it inplace.
     """
+    time.sleep(1)
 
     url = 'https://api.opentopodata.org/v1/eudem25m?locations='
 
@@ -200,7 +202,7 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
         response = requests.get(request, timeout=10.0)
         
         # if the response is positive, update, if not, don't
-        if response.status_code == 200:
+        if 200 == response.status_code and "error" not in response.json():
             coords[2] = response.json()["results"][0]["elevation"]
 
         else: print("Height Online Update failed!")
@@ -223,7 +225,7 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
 
             # if the response is positive, store heights in "elevation"
             elevations = np.zeros(len(coords))
-            if response.status_code == 200:
+            if 200 == response.status_code and "error" not in response.json():
                 for k in range(len(coords)):
                     elevations[k] = response.json()["results"][k]["elevation"]
             else: print("Height Online Update failed!")
@@ -231,8 +233,39 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
             # and update the original array
             coords[:,2] = elevations
             
-
+    print(response.json())
     return None
+
+def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, utmZone: tuple, distance: float) -> list:
+    """
+    It uses the opentopodata API to sample the heights of a path given by point1 and point2. distance is the maximum distance
+    between to sampling points.
+    """
+    time.sleep(1)
+
+    url = 'https://api.opentopodata.org/v1/eudem25m?locations='
+
+    n_points = int(np.floor(np.linalg.norm(point2_UTM-point1_UTM) / distance) + 2) # Intermediate points + start and ending
+
+    p1 = utm2latlon(point1_UTM, utmZone)
+    p2 = utm2latlon(point2_UTM, utmZone)
+
+    # request url
+    request = url + f"{p1[0]}"+','+f"{p1[1]}"+'|'+f"{p2[0]}"+','+f"{p2[1]}"+f"&samples={n_points}"
+    # get response from the api
+    #print(request)
+    response = requests.get(request, timeout=10.0)
+    print(request)
+    print(response.json())
+    path = []
+    # if the response is positive, update, if not, don't
+    if 200 == response.status_code and "error" not in response.json():
+        for point in response.json()["results"]:
+            latlonz = np.array([point["location"]["lat"], point["location"]["lng"], point["elevation"]])
+            path.append(latlon2utm(latlonz)[0])
+
+    else: print("Height Online Update failed!")
+    return path
 
 def update_Height(coords: np.ndarray, height: float):
     for point in coords:

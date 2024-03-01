@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from yaml import load, Loader
 import copy
+import time
 
 from modules import waypoints as WP, coordinates as CO, towers as TW, bases as BA
 
@@ -217,7 +218,7 @@ class UAV():
         self.waypoints.reset()
 
         dH = 20 # Security height offset for navigation
-        fH = 5 # first height First and last height.
+        fH = 5  # first height First and last height.
 
         # Tower height, this should be a external parameter
         if "Tower Height" in self.extra_parameters:
@@ -227,7 +228,7 @@ class UAV():
 
         utmZone = towers.get_UTM_Zone()
 
-        # Precompute the coordinates into a dict. THIS COULD SIMNPLIFY STUFF IF I SAVED DIRECTLY INTO THE UI
+        # Precompute the coordinates into a dict.
         coords_dict = towers.get_DictCoordinates()
         coords_dict[self.missionSettings["Base"]] = bases.get_Base(self.missionSettings["Base"]).get_Coordinates()
         bH = coords_dict[self.missionSettings["Base"]][2]
@@ -281,8 +282,7 @@ class UAV():
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 # -----
-                ipoints = CO.get_Path_Points(self.routeUTM[0][0], np.append(preMoves[0][0], 0), 200)
-                CO.update_UTM_Height_Online(ipoints, utmZone)
+                ipoints = CO.get_Path_Online_Elevations(self.routeUTM[0][0], np.append(preMoves[0][0], 0), towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                 CO.update_Height(ipoints, tH + dH - bH)
                     
                 if len(ipoints) > 1:
@@ -356,10 +356,7 @@ class UAV():
                     self.waypoints.add_Waypoint(point1, actions1, mode1)
                     # -----
                     if "Navigation" == mode1:
-                        ipoints = CO.get_Path_Points(point1, point2, 200)
-                        print("before: ", ipoints)
-                        CO.update_UTM_Height_Online(ipoints, utmZone)
-                        print("after: ", ipoints)
+                        ipoints = CO.get_Path_Online_Elevations(point1, point2, towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                         CO.update_Height(ipoints, tH + dH - bH)
                     
                         if len(ipoints) > 1:
@@ -384,8 +381,7 @@ class UAV():
                 self.waypoints.add_Waypoint(point2, actions, "Navigation")
 
                 # -----
-                ipoints = CO.get_Path_Points(point2, self.routeUTM[-1][1], 200)
-                CO.update_UTM_Height_Online(ipoints, utmZone)
+                ipoints = CO.get_Path_Online_Elevations(point2, self.routeUTM[-1][1], 200)[1:] # Delete the first point as it is already in
                 CO.update_Height(ipoints, tH + dH - bH)
                     
                 if len(ipoints) > 1:
@@ -434,6 +430,7 @@ class UAV():
 
 
                 m = 0
+                last_point = self.routeUTM[0:-1][0][0]
                 for move in self.routeUTM[0:-1]: 
 
                     # Tower height, this should be a external parameter
@@ -442,29 +439,31 @@ class UAV():
                     else:
                         n_points = 5 
                     
-                    # fix move[0] as last orbital point
-                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], coords_dict[self.route[0:-1][m][0]],
+                    orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], self.routeUTM[0:][m+1][0],
                                                                           self.missionSettings["Insp. horizontal offset"], n_points)
+                    
+                    #ipoints = CO.get_Path_Points(move[0], np.append(orbit[0], 0), 200)
+                    #CO.update_UTM_Height_Online(ipoints, utmZone)
+                    #print("tH + dH - bH: ", tH + dH - bH)
+                    #CO.update_Height(ipoints, tH + dH - bH)
 
-                    # Above the first orbital point
-                    
-                    ipoints = CO.get_Path_Points(move[0], np.append(orbit[0], 0), 200)
-                    CO.update_UTM_Height_Online(ipoints, utmZone)
-                    print("tH + dH - bH: ", tH + dH - bH) # AQUI TAMOS
+                    ipoints = CO.get_Path_Online_Elevations(last_point, np.append(orbit[0], 0), towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                     CO.update_Height(ipoints, tH + dH - bH)
-                    
+
+                    last_point =  np.append(orbit[-1], 0)
+
                     if len(ipoints) > 1:
                         for ipoint in ipoints[:-1]:
                             self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
 
-                    btH = coords_dict[self.route[0:-1][m][1]][2] - bH   # base of tower with respect to the uav base
-
+                    # Above the first orbital point
+                    btH =  move[1][2] - bH   # base of tower with respect to the uav base
+                    print("bth: ", btH)
                     point = np.append(orbit[0], tH + dH + btH)
                     yaw = np.rad2deg(np.arccos(n_dir[1]))
                     if n_dir[0] < 0: yaw = -yaw
                     actions = {"gimbal": gimbal, "yaw": yaw}
                     self.waypoints.add_Waypoint(point, actions, "Navigation")
-
                     
                     # Get down, orbit and inspect
                     k = 0
@@ -662,6 +661,7 @@ class UAV_Team():
 
         for uav in self:
             uav.compute_Waypoints(mode, towers, bases)
+            
 
         return None
     

@@ -111,7 +111,7 @@ def save_Mission(file_path, mission_id: str, uavs: UAVS.UAV_Team, utmZone: tuple
     """
 
     if os.path.isfile(file_path):
-        print("File already exists. Overwritting")
+        print("File already exists. Overwriting")
 
     with open(file_path, 'w') as f:
 
