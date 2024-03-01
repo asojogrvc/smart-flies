@@ -218,7 +218,7 @@ class UAV():
 
         # Special case for the px4 model
         if "px4" == self.get_Name():
-            px4_compute_Waypoints(self)
+            px4_compute_Waypoints(self, towers.get_UTM_Zone())
             return None
 
         dH = 20 # Security height offset for navigation
@@ -522,7 +522,7 @@ class UAV():
 
         return None
 
-def px4_compute_Waypoints(uav: UAV):
+def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
 
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
@@ -533,9 +533,10 @@ def px4_compute_Waypoints(uav: UAV):
 
     # Take off at least
     point = uav.routeUTM[0][0]
+    latlon = CO.utm2latlon(point, utmZone)
     actions = {
         "command": 84, # MAV_CMD_NAV_VTOL_TAKEOFF
-        "params": [0, 1, 0, None, point[0], point[1], takeoff_altitude]
+        "params": [0, 1, 0, None, latlon[0], latlon[1], takeoff_altitude]
                 # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
     }
     uav.waypoints.add_Waypoint(np.append(point[:2], takeoff_altitude), actions, "Taking off")
@@ -545,13 +546,14 @@ def px4_compute_Waypoints(uav: UAV):
     for move in uav.routeUTM[1:-1]:
         mode = uav.routeModes[1:-1][m]
         point = move[0]
+        latlon = CO.utm2latlon(point, utmZone)
 
         if "Navigation" == mode:  wp_altitude = 60
         else:  wp_altitude = 10
         
         actions = {
             "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-             "params": [0, 0, 0, None, point[0], point[1], wp_altitude]
+             "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
         uav.waypoints.add_Waypoint(np.append(point[:2], wp_altitude), actions, mode)
@@ -562,9 +564,10 @@ def px4_compute_Waypoints(uav: UAV):
     # Landing
         
     point = uav.routeUTM[-1][1]
-        
-    actions["Landing Point"] = np.append(point[:2], 0)
-    actions["Approach Point"] = np.append(point[:2], landing_altitude)
+    latlon = CO.utm2latlon(point, utmZone)
+
+    actions["Landing Point"] = np.append(latlon[:2], 0)
+    actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
     actions["Loiter Clockwise"] = True
     actions["Loiter Radius"] = 50
     

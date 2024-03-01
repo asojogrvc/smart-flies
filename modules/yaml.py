@@ -97,10 +97,6 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
     file.write("route:\n")
 
     for uav in uavs:
-        if "px4" == uav.get_Name:
-            print(PX4.route_to_Plan(uav))
-            continue
-        
         if not uav.waypoints.get_Points_List(): 
             continue
         print_Route(file, uav, utmZone)
@@ -404,6 +400,8 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
         },
     }
 
+    base_latlon = CO.utm2latlon(uav.routeUTM[0][0], utmZone)
+
     # Fixed data within the mission item of the .plan
     mission = {
         "version": 2,                                      # Current version
@@ -415,8 +413,8 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
         "cruiseSpeed": uav.missionSettings["Nav. speed"],  # Ask about speeds
         "hoverSpeed": 5,
         "plannedHomePosition": [                           # Base coordinates 
-            uav.routeUTM[0][0][0],
-            uav.routeUTM[0][0][1],
+            base_latlon[0],
+            base_latlon[1],
             0 
         ]
     }
