@@ -99,6 +99,7 @@ px4:
 
   speed_mission: 7
   speed_navegation: 15
+  compatible_cases: [0]
 
 fuvex:
   mass: 7.2 #kg

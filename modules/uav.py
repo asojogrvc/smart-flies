@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from yaml import load, Loader
 import copy
-import time
 
 from modules import waypoints as WP, coordinates as CO, towers as TW, bases as BA
 
@@ -216,6 +215,11 @@ class UAV():
 
         # Reset waypoints first
         self.waypoints.reset()
+
+        # Special case for the px4 model
+        if "px4" == self.get_Name():
+            px4_compute_Waypoints(self)
+            return None
 
         dH = 20 # Security height offset for navigation
         fH = 5  # first height First and last height.
@@ -517,7 +521,57 @@ class UAV():
                 return None
 
         return None
-            
+
+def px4_compute_Waypoints(uav: UAV):
+
+    if "px4" != uav.get_Name():
+        print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
+        return None
+
+    takeoff_altitude = 60     # Relative to base
+    landing_altitude = 60     # Relative to base
+
+    # Take off at least
+    point = uav.routeUTM[0][0]
+    actions = {
+        "command": 84, # MAV_CMD_NAV_VTOL_TAKEOFF
+        "params": [0, 1, 0, None, point[0], point[1], takeoff_altitude]
+                # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+    }
+    uav.waypoints.add_Waypoint(np.append(point[:2], takeoff_altitude), actions, "Taking off")
+
+    m = 0
+    # Waypoints
+    for move in uav.routeUTM[1:-1]:
+        mode = uav.routeModes[1:-1][m]
+        point = move[0]
+
+        if "Navigation" == mode:  wp_altitude = 60
+        else:  wp_altitude = 10
+        
+        actions = {
+            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+             "params": [0, 0, 0, None, point[0], point[1], wp_altitude]
+                    # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+            }
+        uav.waypoints.add_Waypoint(np.append(point[:2], wp_altitude), actions, mode)
+
+        
+        m += 1
+    
+    # Landing
+        
+    point = uav.routeUTM[-1][1]
+        
+    actions["Landing Point"] = np.append(point[:2], 0)
+    actions["Approach Point"] = np.append(point[:2], landing_altitude)
+    actions["Loiter Clockwise"] = True
+    actions["Loiter Radius"] = 50
+    
+    uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
+
+    return None
+    
 class UAV_Team():
     # It always initializes as an empty list to avoid adding non UAV instances to the list
     def __init__(self, _list:list = []):
@@ -662,7 +716,6 @@ class UAV_Team():
         for uav in self:
             uav.compute_Waypoints(mode, towers, bases)
             
-
         return None
     
     def get_Waypoints(self):

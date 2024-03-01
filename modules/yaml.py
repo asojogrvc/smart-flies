@@ -2,7 +2,13 @@
 
 import numpy as np, os, yaml, copy, json
 
-from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, coordinates as CO, solver as SO
+from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, coordinates as CO
+
+class NumpyArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 def landing_Mode_to_Int(mode: str) -> int:
     """
@@ -27,7 +33,6 @@ def int_to_Landing_Mode(mode_int: int) -> str:
             return "Auto"
         case _:
             return "None"
-
 
 yaml_version = 3
 f_id = "/gps"
@@ -58,6 +63,11 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     Writes the route of one UAV to a file
     """
     
+    if "px4" == uav.get_Name():
+        with open('./mission_px4.plan', 'w') as f:
+            json.dump(px4_route_to_Plan(uav, utmZone), f, cls=NumpyArrayEncoder)
+        return None
+
     file.write("  - name: \"Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]+"\"\n")
     file.write("    uav: \""+uav.get_ID()+"\"\n")
     file.write("    wp:\n")
@@ -87,6 +97,10 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
     file.write("route:\n")
 
     for uav in uavs:
+        if "px4" == uav.get_Name:
+            print(PX4.route_to_Plan(uav))
+            continue
+        
         if not uav.waypoints.get_Points_List(): 
             continue
         print_Route(file, uav, utmZone)
@@ -358,3 +372,93 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
     mode_parameters = {}
 
     return bases, towers, uavs, weather, json_obj["case"], json_obj["id"], mode_parameters
+
+# This still uses the generic waypoint system to allow the implementation of YAMLs 
+# for px4 in the future
+
+def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
+    """
+    Transform a regular px4 route into a .plan-compatible format.
+
+    Ref: https://docs.qgroundcontrol.com/master/en/qgc-dev-guide/file_formats/plan.html
+    """
+
+    # First check if the category is correct
+    if "px4" != uav.get_Name():
+        print("px4_route_to_Plan: This UAV is not a valid px4 or DeltaQuad. Ignoring")
+        return None
+
+    # Fixed data within the .plan
+    plan = {
+        "fileType": "Plan",                  # Must be "Plan" always
+        "groundStation": "smart-flies@GRVC", # Can be changed
+        "version": 1,                        # Current version
+        "geoFence": {                        # Leave as it is
+            "circles": [],
+            "polygons": [],
+            "version": 2
+        },
+        "rallyPoints": {                     # Leave as it is
+            "points": [],
+            "version": 2
+        },
+    }
+
+    # Fixed data within the mission item of the .plan
+    mission = {
+        "version": 2,                                      # Current version
+        "firmwareType": 12,                                # 12 refers to the PX4 Autopilot firmware
+        "globalPlanAltitudeMode": 0,                       # This is the default reference mode for height
+                                                           # for points without "AltitudeMode".
+                                                           # 0 -> Altitude respect to base; 1 -> Altitude respect to sea level
+        "vehicleType": 20,                                 # 20 = MAV_TYPE_VTOL_TAILSITTER_QUADROTOR
+        "cruiseSpeed": uav.missionSettings["Nav. speed"],  # Ask about speeds
+        "hoverSpeed": 5,
+        "plannedHomePosition": [                           # Base coordinates 
+            uav.routeUTM[0][0][0],
+            uav.routeUTM[0][0][1],
+            0 
+        ]
+    }
+    item_list = []
+
+    # This suposses that the waypoints are already valid for the px4 physical limitations
+    k = 1
+    for point, actions, mode in uav.waypoints:
+        # wp = (point_vector, actions_dict, mode_str)
+
+        if "Landing" == mode: # Complex_Item
+            item = {
+                "altitudesAreRelative": True,
+                "complexItemType": "vtolLandingPattern",
+                "landCoordinate": actions["Landing Point"],
+                "landingApproachCoordinate": actions["Approach Point"],
+                "loiterClockwise": actions["Loiter Clockwise"],
+                "loiterRadius": actions["Loiter Radius"],
+                "stopTakingPhotos": True,
+                "stopVideoPhotos": True,
+                "type": "ComplexItem",
+                "useLoiterToAlt": True,
+                "version": 1
+            }
+        else:                 # Simple_Item
+            item = {
+                "type": "SimpleItem",
+                "AMSLAltAboveTerrain": None,
+                "AltitudeMode": 0,
+                "Altitude": point[2],
+                "autoContinue": True,
+                "command": actions["command"], # 16 for waypoints, 84 for Take off
+                "doJumpId": k,
+                "frame": 3,                    # For relative global altitude
+                "params": actions["params"]    # Params depend on the command (MAV_CMD)
+            }
+            k += 1
+
+        item_list.append(item)
+           
+    # Add waypoints item to the mission and it to the plan
+    mission["items"] = item_list
+    plan["mission"] = mission
+
+    return plan
