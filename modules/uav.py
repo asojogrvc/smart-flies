@@ -437,7 +437,6 @@ class UAV():
                 last_point = self.routeUTM[0:-1][0][0]
                 for move in self.routeUTM[0:-1]: 
 
-                    # Tower height, this should be a external parameter
                     if "Orbital Points" in self.extra_parameters:
                         n_points = self.extra_parameters["Orbital Points"]
                     else:
@@ -446,11 +445,6 @@ class UAV():
                     orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], self.routeUTM[0:][m+1][0],
                                                                           self.missionSettings["Insp. horizontal offset"], n_points)
                     
-                    #ipoints = CO.get_Path_Points(move[0], np.append(orbit[0], 0), 200)
-                    #CO.update_UTM_Height_Online(ipoints, utmZone)
-                    #print("tH + dH - bH: ", tH + dH - bH)
-                    #CO.update_Height(ipoints, tH + dH - bH)
-
                     ipoints = CO.get_Path_Online_Elevations(last_point, np.append(orbit[0], 0), towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                     CO.update_Height(ipoints, tH + dH - bH)
 
