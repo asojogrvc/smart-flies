@@ -266,6 +266,8 @@ def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, u
             latlonz = np.array([point["location"]["lat"], point["location"]["lng"], point["elevation"]])
             path.append(latlon2utm(latlonz)[0])
 
+            print("API Response: ", response)
+
     else: print("Height Online Update failed!")
     return path
 
