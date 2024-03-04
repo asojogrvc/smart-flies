@@ -430,10 +430,10 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
             item = {
                 "altitudesAreRelative": True,
                 "complexItemType": "vtolLandingPattern",
-                "landCoordinate": actions["Landing Point"],
-                "landingApproachCoordinate": actions["Approach Point"],
-                "loiterClockwise": actions["Loiter Clockwise"],
-                "loiterRadius": actions["Loiter Radius"],
+                "landCoordinate": actions["plan_parameters"]["Landing Point"],
+                "landingApproachCoordinate": actions["plan_parameters"]["Approach Point"],
+                "loiterClockwise": actions["plan_parameters"]["Loiter Clockwise"],
+                "loiterRadius": actions["plan_parameters"]["Loiter Radius"],
                 "stopTakingPhotos": True,
                 "stopVideoPhotos": True,
                 "type": "ComplexItem",
@@ -447,10 +447,10 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
                 "AltitudeMode": 0,
                 "Altitude": point[2],
                 "autoContinue": True,
-                "command": actions["command"], # 16 for waypoints, 84 for Take off
+                "command": actions["plan_parameters"]["command"], # 16 for waypoints, 84 for Take off
                 "doJumpId": k,
-                "frame": 3,                    # For relative global altitude
-                "params": actions["params"]    # Params depend on the command (MAV_CMD)
+                "frame": 3,                                       # For relative global altitude
+                "params": actions["plan_parameters"]["params"]    # Params depend on the command (MAV_CMD)
             }
             k += 1
 

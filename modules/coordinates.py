@@ -9,6 +9,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import time
 
+wait_time = 0.1  # Wait time in between API Request. This is too much brute force
+
 # ------------------------- Coordinates transformations ---------------------------------------
 
 def latlon2utm(latlon: np.ndarray) -> tuple[np.ndarray, tuple]:
@@ -128,7 +130,7 @@ def update_Height_Online(coords: np.ndarray):
 
     It does not output the array, it updates it inplace.
     """
-    time.sleep(1)
+    time.sleep(wait_time)
     url = 'https://api.opentopodata.org/v1/eudem25m?locations='
 
     # Check shape to determine if it is a single point or more
@@ -184,7 +186,7 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
 
     It does not output the array, it updates it inplace.
     """
-    time.sleep(1)
+    time.sleep(wait_time)
 
     url = 'https://api.opentopodata.org/v1/eudem25m?locations='
 
@@ -241,7 +243,7 @@ def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, u
     It uses the opentopodata API to sample the heights of a path given by point1 and point2. distance is the maximum distance
     between to sampling points.
     """
-    time.sleep(1)
+    time.sleep(wait_time)
 
     url = 'https://api.opentopodata.org/v1/eudem25m?locations='
 
