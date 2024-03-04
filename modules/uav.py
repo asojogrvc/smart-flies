@@ -578,18 +578,26 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         m += 1
     
     # Landing
+    
+    
         
-    point = uav.routeUTM[-1][1]
-    latlon = CO.utm2latlon(point, utmZone)
+    pointl = uav.routeUTM[-1][1]
+    latlon = CO.utm2latlon(pointl, utmZone)
 
     actions["Landing Point"] = np.append(latlon[:2], 0)
 
     # Must be at least 250m in the counterdirection of the wind
-    point = uav.routeUTM[-1][1] - 300 * np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir)),0])
-    latlon = CO.utm2latlon(point, utmZone)
+    pointap = uav.routeUTM[-1][1] - 300 * np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir)),0])
+    latlon = CO.utm2latlon(pointap, utmZone)
 
     actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
-    actions["Loiter Clockwise"] = False
+
+    # Check for numerical error if too close to zero
+    clkwiseQ = np.sign((pointl[0] - pointap[0]) * (point2[1] - pointap[1])
+                        - (pointl[1] - pointap[1]) * (point2[0] - pointap[0])) == -1
+    
+    actions["Loiter Clockwise"] = clkwiseQ
+
     actions["Loiter Radius"] = 100
     uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
 
