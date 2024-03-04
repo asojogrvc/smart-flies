@@ -540,12 +540,11 @@ def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
     # Take off at least
     point = uav.routeUTM[0][0]
     latlon = CO.utm2latlon(point, utmZone)
-    plan_params = {
+    actions = {
         "command": 84, # MAV_CMD_NAV_VTOL_TAKEOFF
         "params": [0, 1, 0, None, latlon[0], latlon[1], takeoff_altitude]
                 # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
     }
-    actions = {"plan_parameters": plan_params}
     uav.waypoints.add_Waypoint(np.append(point[:2], takeoff_altitude), actions, "Taking off")
 
     m = 0
@@ -558,12 +557,11 @@ def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
         if "Navigation" == mode:  wp_altitude = 60
         else:  wp_altitude = 10
         
-        plan_params = {
+        actions = {
             "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
              "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
-        actions = {"plan_parameters": plan_params}
         uav.waypoints.add_Waypoint(np.append(point[:2], wp_altitude), actions, mode)
 
         
@@ -574,11 +572,10 @@ def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
     point = uav.routeUTM[-1][1]
     latlon = CO.utm2latlon(point, utmZone)
 
-    plan_params["Landing Point"] = np.append(latlon[:2], 0)
-    plan_params["Approach Point"] = np.append(latlon[:2], landing_altitude)
-    plan_params["Loiter Clockwise"] = True
-    plan_params["Loiter Radius"] = 50
-    actions = {"plan_parameters": plan_params}
+    actions["Landing Point"] = np.append(latlon[:2], 0)
+    actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
+    actions["Loiter Clockwise"] = True
+    actions["Loiter Radius"] = 50
     uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
 
     return None
