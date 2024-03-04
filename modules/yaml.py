@@ -85,7 +85,8 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     file.write("      mode_landing: " + landing_Mode_to_Int(uav.missionSettings["Landing Mode"])+ "\n\n")
     file.write("      mode_yaw: "+str(mode_yaw)+ "\n\n")
     file.write("      mode_gimbal: "+str(mode_gimbal)+ "\n\n")
-    file.write("      idle_vel: "+str(idle_vel)+ "\n\n")
+    file.write("      idle_vel: "+str(uav.missionSettings["Insp. speed"])+ "\n\n")
+    file.write("      nav_vel: "+str(uav.missionSettings["Nav. speed"])+ "\n\n")
 
     return None
 

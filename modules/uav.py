@@ -164,7 +164,7 @@ class UAV():
         print("|--> Rotor radius: ", self.__rotor_Radius)
         print("|--> Blade chord: ", self.__blade_Chord)
         print("|--> Lift Coefficient: ", self.__lift_Coefficient)
-        print("|--> Drag Coefficient: ", self.__drag_Coefficient) 
+        print("|--> Drag Coefficient: ", seInsplf.__drag_Coefficient) 
         print("|--> kappa: ", self.__kappa)
         print("|--> eta: ", self.__eta)
         print("|--> K_mu: ", self.__K_mu)
@@ -203,7 +203,7 @@ class UAV():
 
     # ----------------------------- General functions -------------------------------
 
-    def compute_Waypoints(self, mode: int, towers: TW.Towers, bases: BA.Bases):
+    def compute_Waypoints(self, mode: int, towers: TW.Towers, bases: BA.Bases, wind_dir: float):
         """
         Computes the corresponding waypoints and actions for the UAV depending on the use case (mode) and
         mission settings
@@ -218,7 +218,7 @@ class UAV():
 
         # Special case for the px4 model
         if "px4" == self.get_Name():
-            px4_compute_Waypoints(self, towers.get_UTM_Zone())
+            px4_compute_Waypoints(self, wind_dir, towers.get_UTM_Zone())
             return None
 
         dH = 20 # Security height offset for navigation
@@ -277,12 +277,12 @@ class UAV():
                 yaw = np.rad2deg(np.arccos(n_dir[1]))
                 if n_dir[0] < 0: yaw = -yaw
 
-                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw}
+                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 # The next point is at the same place but at Z = fH + dH
                 point = np.append(self.routeUTM[0][0][:2], tH + dH)
-                actions = {"gimbal": gimbal, "yaw": yaw}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 # -----
@@ -297,7 +297,7 @@ class UAV():
                 btH = coords_dict[self.route[0][1]][2] - bH # base of tower with respect to the uav base
 
                 point = np.append(preMoves[0][0], btH + tH + dH)
-                actions = {"gimbal": gimbal, "yaw": yaw}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 1}
                 self.waypoints.add_Waypoint(point, actions, "Inspection")
 
                 # It is the same loop as before. Maybe join them
@@ -319,7 +319,7 @@ class UAV():
                         # Point towards movement
                         yaw = np.rad2deg(np.arccos(preNdirs[k][1]))
                         if preNdirs[k][0] < 0: yaw = -yaw
-                        actions1 = {"gimbal": gimbal, "yaw": yaw}
+                        actions1 = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
 
                         # Point towards movement, which is a point in the next pmove
                         
@@ -353,7 +353,7 @@ class UAV():
                             if n_dir[0] < 0: yaw = -yaw
 
 
-                        actions1 = {"gimbal": gimbal, "yaw": yaw, "photo": True}
+                        actions1 = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
                         mode1 = "Inspection"
 
 
@@ -379,7 +379,7 @@ class UAV():
 
                 yaw = np.rad2deg(np.arccos(n_dir[1]))
                 if n_dir[0] < 0: yaw = -yaw
-                actions = {"gimbal": gimbal, "yaw": yaw}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 
                 point2 = np.append(pmove[1], btH2 + tH + dH)
                 self.waypoints.add_Waypoint(point2, actions, "Navigation")
@@ -395,11 +395,11 @@ class UAV():
 
                 # Get back to base
                 point = np.append(self.routeUTM[-1][1][:2], tH + dH)
-                actions = {"gimbal": gimbal, "yaw": yaw}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 point = np.append(self.routeUTM[-1][1][:2], fH)
-                actions = {"video_stop": 0, "gimbal": gimbal, "yaw": yaw}
+                actions = {"video_stop": 0, "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 print(self.__name+":")
@@ -424,12 +424,12 @@ class UAV():
                 yaw = np.rad2deg(np.arccos(n_dir[1]))
                 if n_dir[0] < 0: yaw = -yaw
 
-                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw}
+                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 # The next point is at the same place but at Z = fH + dH
                 point = np.append(self.routeUTM[0][0][:2], tH + dH)
-                actions = {"gimbal": gimbal, "yaw": yaw}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
 
@@ -447,7 +447,7 @@ class UAV():
                     
                     ipoints = CO.get_Path_Online_Elevations(last_point, np.append(orbit[0], 0), towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                     CO.update_Height(ipoints, tH + dH - bH)
-
+                    actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                     last_point =  np.append(orbit[-1], 0)
 
                     if len(ipoints) > 1:
@@ -460,7 +460,7 @@ class UAV():
                     point = np.append(orbit[0], tH + dH + btH)
                     yaw = np.rad2deg(np.arccos(n_dir[1]))
                     if n_dir[0] < 0: yaw = -yaw
-                    actions = {"gimbal": gimbal, "yaw": yaw}
+                    actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                     self.waypoints.add_Waypoint(point, actions, "Navigation")
                     
                     # Get down, orbit and inspect
@@ -474,7 +474,7 @@ class UAV():
 
                         yaw = np.rad2deg(np.arccos(n_dir[1]))
                         if n_dir[0] < 0: yaw = -yaw
-                        actions = {"gimbal": gimbal, "yaw": yaw, "photo": True}
+                        actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
 
                         self.waypoints.add_Waypoint(point, actions, "Inspection")
                         k += 1
@@ -487,7 +487,7 @@ class UAV():
 
                     yaw = np.rad2deg(np.arccos(n_dir[1]))
                     if n_dir[0] < 0: yaw = -yaw
-                    actions = {"gimbal": gimbal, "yaw": yaw}
+                    actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                     self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                     m += 1
@@ -495,7 +495,7 @@ class UAV():
                 ipoints = CO.get_Path_Online_Elevations(np.append(orbit[-1], 0),
                                                          self.routeUTM[0][0], towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                 CO.update_Height(ipoints, tH + dH - bH)
-
+                ctions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 if len(ipoints) > 1:
                     for ipoint in ipoints[:-1]:
                         self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
@@ -508,12 +508,12 @@ class UAV():
                 yaw = np.rad2deg(np.arccos(n_dir[1]))
                 if n_dir[0] < 0: yaw = -yaw
 
-                actions = {"gimbal": gimbal, "yaw": yaw}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 point = np.append(self.routeUTM[0][0][:2], fH)
 
-                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw}
+                actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
                 
             case _ :
@@ -522,17 +522,19 @@ class UAV():
 
         return None
 
-def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
+def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
         return None
+    
+    print(wind_dir)
 
     takeoff_altitude = 60     # Relative to base
-    landing_altitude = 60     # Relative to base
+    landing_altitude = 20     # Relative to base
 
-    # Take off at least
-    point = uav.routeUTM[0][0]
+    # Take off. This point actually gives the transition point. It must be at least 300m in the direction of wind 
+    point = uav.routeUTM[0][0] + 310 * np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir)),0])
     latlon = CO.utm2latlon(point, utmZone)
     actions = {
         "command": 84, # MAV_CMD_NAV_VTOL_TAKEOFF
@@ -545,26 +547,32 @@ def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
     # Waypoints
     for move in uav.routeUTM[1:-1]:
         mode = uav.routeModes[1:-1][m]
+        next_mode = uav.routeModes[1:][m+1]
+
         point1 = move[0]
         point2 = move[1]
         latlon1 = CO.utm2latlon(point1, utmZone)
         latlon2 = CO.utm2latlon(point2, utmZone)
 
-        if "Navigation" == mode:  wp_altitude = 60
-        else:  wp_altitude = 10
+        if "Navigation" == mode:  
+            wp_altitude1 = 150 + move[0][2]
+            wp_altitude2 = 150 + move[1][2]
+        else:  
+            wp_altitude1 = uav.missionSettings["Insp. height"] + move[0][2]
+            wp_altitude2 = uav.missionSettings["Insp. height"] + move[1][2]
         
         actions = {
             "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-             "params": [0, 0, 0, None, latlon1[0], latlon1[1], wp_altitude]
+             "params": [0, 0, 0, None, latlon1[0], latlon1[1], wp_altitude1]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
-        uav.waypoints.add_Waypoint(np.append(point1[:2], wp_altitude), actions, mode)
+        uav.waypoints.add_Waypoint(np.append(point1[:2], wp_altitude1), actions, mode)
         actions = {
             "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-             "params": [0, 0, 0, None, latlon2[0], latlon2[1], wp_altitude]
+             "params": [0, 0, 0, None, latlon2[0], latlon2[1], wp_altitude2]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
-        uav.waypoints.add_Waypoint(np.append(point2[:2], wp_altitude), actions, mode)
+        uav.waypoints.add_Waypoint(np.append(point2[:2], wp_altitude2), actions, mode)
 
         
         m += 1
@@ -575,9 +583,14 @@ def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
     latlon = CO.utm2latlon(point, utmZone)
 
     actions["Landing Point"] = np.append(latlon[:2], 0)
+
+    # Must be at least 250m in the counterdirection of the wind
+    point = uav.routeUTM[-1][1] - 300 * np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir)),0])
+    latlon = CO.utm2latlon(point, utmZone)
+
     actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
-    actions["Loiter Clockwise"] = True
-    actions["Loiter Radius"] = 50
+    actions["Loiter Clockwise"] = False
+    actions["Loiter Radius"] = 100
     uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
 
     return None
@@ -712,7 +725,7 @@ class UAV_Team():
         """
         return self.__list[which]
     
-    def compute_Team_Waypoints(self, mode: int, towers: TW.Towers, bases: BA.Bases):
+    def compute_Team_Waypoints(self, mode: int, towers: TW.Towers, bases: BA.Bases, wind_dir: float):
         """
         Computes the corresponding waypoints and actions of the entire team depending on the use case (mode) and
         mission settings
@@ -724,7 +737,7 @@ class UAV_Team():
         """
 
         for uav in self:
-            uav.compute_Waypoints(mode, towers, bases)
+            uav.compute_Waypoints(mode, towers, bases, wind_dir)
             
         return None
     

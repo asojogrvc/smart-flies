@@ -14,7 +14,16 @@
         {
           "latitude": 37.193076579446355,
           "longitude": -6.699234422344688
+        },
+        {
+          "latitude": 37.19059039937363,
+          "longitude": -6.701808274660645
+        },
+        {
+          "latitude": 37.187076579446355,
+          "longitude": -6.703234422344688
         }
+        
       ]
     }
   ],
@@ -24,7 +33,7 @@
         "base": [37.194047476854806, -6.704610054459408],
         "inspection_speed": 7,
         "navigation_speed": 15,
-        "vertical_offset": 10,
+        "vertical_offset": 100,
         "horizontal_offset": 10,
         "tower_height": 10,
         "security_height": 10,

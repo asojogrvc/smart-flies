@@ -101,6 +101,16 @@ class Weather():
 
         return self.__wind_vector
     
+    def get_Wind_Direction(self) -> float:
+        """
+        Outputs the wind direction measured respect to the north in degrees (-180º to +180º).
+        """
+
+        dir = np.rad2deg(np.arccos(self.__wind_vector[1] / np.linalg.norm(self.__wind_vector)))
+        if self.__wind_vector[0] < 0: dir = -dir
+
+        return dir
+    
     def get_Temperature(self) -> float:
         """
         Gets the temperature (ºC) of an existing weather status

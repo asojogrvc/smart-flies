@@ -2,7 +2,7 @@
 
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
 from flask_cors import CORS
-import os, glob, json, yaml, threading
+import os, glob, json, yaml, threading, numpy as np
 
 
 # Projects internal modules imports
@@ -211,7 +211,10 @@ def planner(mission_json):
             app.set_Status("inactive")
             iYAML.save_Dict_to_File({str(id): "Planner failed: infeasibility"}, file_path)
 
-        problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(), problem.get_Towers(), problem.get_Bases())
+        problem.get_UAV_Team().compute_Team_Waypoints(problem.get_Mission_Mode(),
+                                                       problem.get_Towers(),
+                                                         problem.get_Bases(),
+                                                         weather.get_Wind_Direction())
         base0 = problem.get_Bases().get_Base("B0")
         
         iYAML.save_Mission(file_path, str(id), problem.get_UAV_Team(), base0.get_UTM_Zone())
