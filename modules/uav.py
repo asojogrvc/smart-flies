@@ -164,7 +164,7 @@ class UAV():
         print("|--> Rotor radius: ", self.__rotor_Radius)
         print("|--> Blade chord: ", self.__blade_Chord)
         print("|--> Lift Coefficient: ", self.__lift_Coefficient)
-        print("|--> Drag Coefficient: ", seInsplf.__drag_Coefficient) 
+        print("|--> Drag Coefficient: ", self.__drag_Coefficient) 
         print("|--> kappa: ", self.__kappa)
         print("|--> eta: ", self.__eta)
         print("|--> K_mu: ", self.__K_mu)
@@ -576,10 +576,13 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
         
         m += 1
+
+    # Max angle change fix. If the change of direction is too high, take a tangent circle and exit it in the corrent
+    # new direction.
+        
+    
     
     # Landing
-    
-    
         
     pointl = uav.routeUTM[-1][1]
     latlon = CO.utm2latlon(pointl, utmZone)
@@ -590,11 +593,15 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     pointap = uav.routeUTM[-1][1] - 300 * np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir)),0])
     latlon = CO.utm2latlon(pointap, utmZone)
 
+    print(pointap)
+
     actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
 
-    # Check for numerical error if too close to zero
-    clkwiseQ = np.sign((pointl[0] - pointap[0]) * (point2[1] - pointap[1])
-                        - (pointl[1] - pointap[1]) * (point2[0] - pointap[0])) == -1
+    # Check if it is better to loiter clockwise or not
+    clkwiseQ = bool(1+np.sign(
+        (pointl[0] - pointap[0]) * (point2[1] - pointap[1])
+        - (pointl[1] - pointap[1]) * (point2[0] - pointap[0])
+                        ))
     
     actions["Loiter Clockwise"] = clkwiseQ
 
