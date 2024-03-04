@@ -66,7 +66,7 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     if "px4" == uav.get_Name():
         with open('./mission_px4.plan', 'w') as f:
             json.dump(px4_route_to_Plan(uav, utmZone), f, cls=NumpyArrayEncoder)
-        return None
+        # return None
 
     file.write("  - name: \"Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]+"\"\n")
     file.write("    uav: \""+uav.get_ID()+"\"\n")

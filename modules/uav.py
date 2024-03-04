@@ -498,8 +498,15 @@ class UAV():
 
                     m += 1
 
+                ipoints = CO.get_Path_Online_Elevations(np.append(orbit[-1], 0),
+                                                         self.routeUTM[0][0], towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
+                CO.update_Height(ipoints, tH + dH - bH)
 
-                n_dir = self.routeUTM[-1][1][:2]-self.routeUTM[-1][0][:2]
+                if len(ipoints) > 1:
+                    for ipoint in ipoints[:-1]:
+                        self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
+
+                n_dir = self.routeUTM[0][0][:2]-orbit[-1]
                 n_dir = n_dir / np.linalg.norm(n_dir)
 
                 point = np.append(self.routeUTM[0][0][:2], tH + dH)
