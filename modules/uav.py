@@ -551,18 +551,26 @@ def px4_compute_Waypoints(uav: UAV, utmZone: tuple):
     # Waypoints
     for move in uav.routeUTM[1:-1]:
         mode = uav.routeModes[1:-1][m]
-        point = move[0]
-        latlon = CO.utm2latlon(point, utmZone)
+        point1 = move[0]
+        point2 = move[1]
+        latlon1 = CO.utm2latlon(point1, utmZone)
+        latlon2 = CO.utm2latlon(point2, utmZone)
 
         if "Navigation" == mode:  wp_altitude = 60
         else:  wp_altitude = 10
         
         actions = {
             "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-             "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude]
+             "params": [0, 0, 0, None, latlon1[0], latlon1[1], wp_altitude]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
-        uav.waypoints.add_Waypoint(np.append(point[:2], wp_altitude), actions, mode)
+        uav.waypoints.add_Waypoint(np.append(point1[:2], wp_altitude), actions, mode)
+        actions = {
+            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+             "params": [0, 0, 0, None, latlon2[0], latlon2[1], wp_altitude]
+                    # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+            }
+        uav.waypoints.add_Waypoint(np.append(point2[:2], wp_altitude), actions, mode)
 
         
         m += 1

@@ -7,8 +7,9 @@ route:
     uav: "uav_1"
     wp:
       - {pos: [37.1940475 , -6.70461005, 60.        ], action: {'command': 84, 'params': [0, 1, 0, None, 37.19404749578935, -6.704610053881294, 60]}}
-      - {pos: [37.19659042, -6.69780827, 10.        ], action: {'command': 16, 'params': [0, 0, 0, None, 37.19659041864592, -6.697808274070432, 10], 'Landing Point': array([37.1940475 , -6.70461005,  0.        ]), 'Approach Point': array([37.1940475 , -6.70461005, 60.        ]), 'Loiter Clockwise': True, 'Loiter Radius': 50}}
-      - {pos: [37.1940475 , -6.70461005, 60.        ], action: {'command': 16, 'params': [0, 0, 0, None, 37.19659041864592, -6.697808274070432, 10], 'Landing Point': array([37.1940475 , -6.70461005,  0.        ]), 'Approach Point': array([37.1940475 , -6.70461005, 60.        ]), 'Loiter Clockwise': True, 'Loiter Radius': 50}}
+      - {pos: [37.19659042, -6.69780827, 10.        ], action: {'command': 16, 'params': [0, 0, 0, None, 37.19659041864592, -6.697808274070432, 10]}}
+      - {pos: [37.1930766 , -6.69923442, 10.        ], action: {'command': 16, 'params': [0, 0, 0, None, 37.1930765986481, -6.6992344217571125, 10], 'Landing Point': array([37.1940475 , -6.70461005,  0.        ]), 'Approach Point': array([37.1940475 , -6.70461005, 60.        ]), 'Loiter Clockwise': True, 'Loiter Radius': 50}}
+      - {pos: [37.1940475 , -6.70461005, 60.        ], action: {'command': 16, 'params': [0, 0, 0, None, 37.1930765986481, -6.6992344217571125, 10], 'Landing Point': array([37.1940475 , -6.70461005,  0.        ]), 'Approach Point': array([37.1940475 , -6.70461005, 60.        ]), 'Loiter Clockwise': True, 'Loiter Radius': 50}}
     attributes:
 
       mode_landing: 2

@@ -62,10 +62,10 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     """
     Writes the route of one UAV to a file
     """
-    
+
     if "px4" == uav.get_Name():
         with open('./mission_px4.plan', 'w') as f:
-            json.dump(px4_route_to_Plan(uav, utmZone), f, cls=NumpyArrayEncoder)
+            json.dump(px4_route_to_Plan(uav, utmZone), f, cls=NumpyArrayEncoder, indent=4)
         # return None
 
     file.write("  - name: \"Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]+"\"\n")
@@ -407,9 +407,9 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
     mission = {
         "version": 2,                                      # Current version
         "firmwareType": 12,                                # 12 refers to the PX4 Autopilot firmware
-        "globalPlanAltitudeMode": 0,                       # This is the default reference mode for height
+        "globalPlanAltitudeMode": 1,                       # This is the default reference mode for height
                                                            # for points without "AltitudeMode".
-                                                           # 0 -> Altitude respect to base; 1 -> Altitude respect to sea level
+                                                           # 1 -> Altitude respect to base; 0 -> Altitude respect to sea level
         "vehicleType": 20,                                 # 20 = MAV_TYPE_VTOL_TAILSITTER_QUADROTOR
         "cruiseSpeed": uav.missionSettings["Nav. speed"],  # Ask about speeds
         "hoverSpeed": 5,
@@ -444,12 +444,12 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
             item = {
                 "type": "SimpleItem",
                 "AMSLAltAboveTerrain": None,
-                "AltitudeMode": 0,
+                "AltitudeMode": 1,
                 "Altitude": point[2],
                 "autoContinue": True,
                 "command": actions["command"], # 16 for waypoints, 84 for Take off
                 "doJumpId": k,
-                "frame": 3,                                       # For relative global altitude
+                "frame": 3,                    # For relative global altitude
                 "params": actions["params"]    # Params depend on the command (MAV_CMD)
             }
             k += 1

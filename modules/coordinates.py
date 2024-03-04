@@ -9,7 +9,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import time
 
-wait_time = 0.1  # Wait time in between API Request. This is too much brute force
+wait_time = 1  # Wait time in between API Request. This is too much brute force
 
 # ------------------------- Coordinates transformations ---------------------------------------
 
