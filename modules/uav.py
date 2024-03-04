@@ -385,7 +385,7 @@ class UAV():
                 self.waypoints.add_Waypoint(point2, actions, "Navigation")
 
                 # -----
-                ipoints = CO.get_Path_Online_Elevations(point2, self.routeUTM[-1][1], 200)[1:] # Delete the first point as it is already in
+                ipoints = CO.get_Path_Online_Elevations(point2, self.routeUTM[-1][1], towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                 CO.update_Height(ipoints, tH + dH - bH)
                     
                 if len(ipoints) > 1:

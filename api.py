@@ -269,6 +269,6 @@ def json_output():
         output["status"] = [app.get_Status(), "OK"]
         output["description"] = "Everything went OK"
 
-    
+    print(output)
 
     return output

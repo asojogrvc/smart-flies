@@ -99,6 +99,7 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
     for uav in uavs:
         if not uav.waypoints.get_Points_List(): 
             continue
+
         print_Route(file, uav, utmZone)
         file.write("\n\n")
 
@@ -107,7 +108,7 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
 def save_Dict_to_File(data: dict, file_path: str):
 
     if os.path.isfile(file_path):
-        print("File already exists. Overwritting")
+        print("File already exists. Overwriting")
 
     f = open(file_path, 'w')
     yaml.dump(data, f)
