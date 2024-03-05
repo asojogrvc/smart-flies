@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from yaml import load, Loader
 import copy
 
-from modules import waypoints as WP, coordinates as CO, towers as TW, bases as BA
+from modules import waypoints as WP, coordinates as CO, towers as TW, bases as BA, dubins as DB
 
 class UAV_Battery():
     def __init__(self, Type: str = " ", Cap: float = 0.0, Cells: int = 0, VpC: float = 0.0):
@@ -524,6 +524,9 @@ class UAV():
 
 def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
+    max_angle = np.deg2rad(30) # Max angle to start the dubins path
+    min_radius = 50            # Minimum Curvature radius [m]
+
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
         return None
@@ -577,24 +580,52 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         
         m += 1
 
-    # Max angle change fix. If the change of direction is too high, take a tangent circle and exit it in the corrent
-    # new direction.
-        
-    
-    
-    # Landing
-        
-    pointl = uav.routeUTM[-1][1]
-    latlon = CO.utm2latlon(pointl, utmZone)
-
-    actions["Landing Point"] = np.append(latlon[:2], 0)
-
     # Must be at least 250m in the counterdirection of the wind
     pointap = uav.routeUTM[-1][1] - 300 * np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir)),0])
+    # Landing  
+    pointl = uav.routeUTM[-1][1]
+
+    # Max angle change fix. If the change of direction is too high, do the optimal dubins path
+    
+    print(uav.routeUTM)
+    p1 = uav.routeUTM[1:-1][-1][1][:2]
+    print(p1)
+    n1 = uav.routeUTM[1:-1][-1][1][:2] - uav.routeUTM[1:-1][-1][0][:2]
+    n1 = n1 / np.linalg.norm(n1)
+
+    p2 = pointap[:2]
+    n2 = pointl[:2]-pointap[:2]
+    n2 = n2 / np.linalg.norm(n2)
+
+    # max_angle < np.arccos(np.dot(n1,n2))
+
+    if True:
+        points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = 0.5)
+        print(points[:,1])
+        plt.plot(points[:,0], points[:,1], 'o')
+        plt.plot(p1[0], p1[1], 'o')
+        plt.plot(p2[0], p2[1], 'o')
+        plt.show()
+        exit()
+
+        for point in points:
+
+            latlon = CO.utm2latlon(point, utmZone)
+
+            actions = {
+            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+             "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude2]
+                    # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+            }
+            uav.waypoints.add_Waypoint(np.append(point, wp_altitude2), actions, "Navigation")
+
+    
+    
+    actions = {}
+    latlon = CO.utm2latlon(pointl, utmZone)
+    actions["Landing Point"] = np.append(latlon[:2], 0)
     latlon = CO.utm2latlon(pointap, utmZone)
-
     print(pointap)
-
     actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
 
     # Check if it is better to loiter clockwise or not

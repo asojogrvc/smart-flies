@@ -8,7 +8,7 @@ p2 = np.array([-1,0])
 n2 = np.array([0,-1])
 
 
-points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, 1)
+points, _, _, _ = DB.plan_dubins_path(p1, n1, p1, n2, 1)
 
 plt.axline((p1[0], p1[1]), slope= n1[1] / n1[0])
 plt.axline((p2[0], p2[1]), slope= n2[1] / n2[0])
