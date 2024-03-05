@@ -8,6 +8,7 @@ from io import BytesIO
 from PIL import Image
 import matplotlib.pyplot as plt
 import time
+import copy
 
 wait_time = 1  # Wait time in between API Request. This is too much brute force
 
@@ -362,6 +363,58 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
         k += 1
 
     return orbit, n_dir, v_dirs
+
+def get_Safe_Turn(p1: np.ndarray, n1: np.ndarray, p2:np.ndarray, n2:np.ndarray, R:float):
+
+    # Check that n1 and n2 are normalized
+
+    n1 = n1 / np.linalg.norm(n1)
+    n2 = n2 / np.linalg.norm(n2)
+
+    # Compute the angle:
+    alpha = np.arccos(-np.dot(n1, n2))  # Take into account the direction of n2
+
+    
+
+        # Get the intersection S of the two lines:
+
+    mu = np.linalg.solve(np.column_stack((n1,n2)), p2 - p1)
+    s = p1 + mu[0] * n1
+
+    # Get the distance to the initial tangent point and the center
+    # of the circle
+    x = R / np.tan(alpha / 2)
+    d = np.sqrt(x*x + R*R)
+
+    # Get such points
+    t1 = s + x * n1
+    c = s + d * (n1-n2) / np.linalg.norm(n1-n2)
+
+
+    # Compute the circle vector that needs to be rotated
+    phi = np.pi + alpha
+    path = []
+
+    n_points = 50
+    for i in range(n_points + 1):
+        path.append(rotation_2D(t1, c, -phi * i / n_points))
+
+    path = np.array(path)
+
+    return path
+
+
+def rotation_2D(point: np.ndarray, rot_point: np.ndarray, angle: float) -> np.ndarray:
+    """
+    Rotates the 2D "point" and "angle" through the "rot_point"
+    """
+
+    R = np.array([[np.cos(angle) , np.sin(angle)]
+                 ,[-np.sin(angle), np.cos(angle)]])
+    
+    return copy.deepcopy(np.matmul(R, (point-rot_point))+rot_point)
+    
+
     
 def get_Path_Points(pos_i: np.ndarray, pos_f: np.ndarray, dx: float) -> np.ndarray:
     """
