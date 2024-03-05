@@ -136,7 +136,7 @@ def plan_dubins_path(p1: np.ndarray, n1: np.ndarray, p2: np.ndarray, n2:np.ndarr
 
     # Modified this so is it simpler for me ----------------
     s_x = p1[0]
-    s_y = p2[1]
+    s_y = p1[1]
 
     s_yaw = np.arccos(n1[0]/np.linalg.norm(n1))
     if n1[1] < 0: s_yaw = -s_yaw

@@ -106,7 +106,12 @@ class Weather():
         Outputs the wind direction measured respect to the north in degrees (-180º to +180º).
         """
 
-        dir = np.rad2deg(np.arccos(self.__wind_vector[1] / np.linalg.norm(self.__wind_vector)))
+        speed = np.linalg.norm(self.__wind_vector)
+
+        if 0.0 == speed:
+            return 0.0
+
+        dir = np.rad2deg(np.arccos(self.__wind_vector[1] / speed))
         if self.__wind_vector[0] < 0: dir = -dir
 
         return dir
