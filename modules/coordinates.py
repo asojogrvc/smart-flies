@@ -1,6 +1,7 @@
 # This file contains several functions related to coordinates and their representation
 
 import numpy as np
+import sympy
 import requests
 import utm
 from urllib.request import urlopen
@@ -402,6 +403,70 @@ def get_Safe_Turn(p1: np.ndarray, n1: np.ndarray, p2:np.ndarray, n2:np.ndarray, 
     path = np.array(path)
 
     return path
+
+def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray, loiter_radius:float, turning_radius:float):
+
+    # https://observablehq.com/@donghaoren/common-tangent-lines-for-two-circles
+
+    # Define the rotation circle center
+    c = p + turning_radius * np.array([n[1], -n[0]])
+
+    
+
+    return None
+
+def find_Tangents_to_2Circles(p1:np.ndarray, r1: float, p2:np.ndarray, r2:float) -> list:
+    """
+    Finds all possible tangent point for two circles with straight lines. It outputs a list of tuples each
+    of which contains the tangent points of the each line with the circles.  
+    """
+
+    # From here below, it is unused code.
+
+    # Define all intermediate parameters:
+    dplus = np.linalg.norm(p1-p2)**2 - (r1+r2)**2
+    dminus = np.linalg.norm(p1-p2)**2 - (r1-r2)**2
+    d1 = r1 * ( np.linalg.norm(p2)**2 - np.dot(p1, p2) )
+    d2 = r2 * ( np.linalg.norm(p2)**2 - np.dot(p1, p2) )
+    q = p1[0] * p2[1] - p1[1] * p2[0]
+
+    # Different cases:
+
+    if 0 > dplus and 0 > dminus:
+        # No tangent lines
+        # One circle is smaller than the other and totally inside the other
+        return []
+    
+    if 0 > dplus and 0 == dminus:
+        # 1 tangent lines
+        # One circle is smaller than the other is inside the other and has a common point
+
+        # Just one point
+        return [((r2 * p1 + r1 * p2) / (r1+r2),)]
+    
+    if 0 > dplus and 0 < dminus:
+        # 2 tangents lines
+        # The two circles overlap and therefore no internal tangent lines
+    
+    if 0 == dplus and 0 < dminus:
+        # 3 tangents lines 
+        # The two circles share a common point
+
+
+    else:
+        # 4 tangents lines
+
+
+
+    list_points = []
+    for solution in sympy.solve([eq1, eq2, eq3, eq4]):
+
+        point1 = np.array([solution[x1].evalf(), solution[y1].evalf()], dtype=float)
+        point2 = np.array([solution[x2].evalf(), solution[y2].evalf()], dtype=float)
+
+        list_points.append((point1, point2))
+        
+    return list_points
 
 
 def rotation_2D(point: np.ndarray, rot_point: np.ndarray, angle: float) -> np.ndarray:
