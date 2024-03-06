@@ -1,7 +1,6 @@
 # This file contains several functions related to coordinates and their representation
 
 import numpy as np
-import sympy
 import requests
 import utm
 from urllib.request import urlopen
@@ -408,12 +407,51 @@ def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray,
 
     # https://observablehq.com/@donghaoren/common-tangent-lines-for-two-circles
 
-    # Define the rotation circle center
-    c = p + turning_radius * np.array([n[1], -n[0]])
+    # Define the rotation circle center. First check which is closer
+    c1 = p + turning_radius * np.array([n[1], -n[0]])
+    c2 = p - turning_radius * np.array([n[1], -n[0]])
 
+    if np.linalg.norm(c1-p_loiter) < np.linalg.norm(c2-p_loiter): c = c1
+    else: c = c2
+
+    # AQUI HAY QUE ELIMINAR LAS TANGENTES QUE QUEDEN DETRAS DEL UAV
+    list_all = find_Tangents_to_2Circles(c, turning_radius, p_loiter, loiter_radius)
+
+    costs = [np.linalg.norm(pair[0] - pair[1]) for pair in list_all]
+
+    index_min = min(range(len(costs)), key=costs.__getitem__)
+
+    t = list_all[index_min][0] # tangent point at turning circle
+
+    #return np.array([t]), False
+
+    print(np.linalg.norm(t-c))
+
+    alpha = np.arccos(np.dot(t-c, np.array([n[1], -n[0]])) / turning_radius)
+
+    path = []
+
+    n_points = 50
+    for i in range(n_points + 1):
+        path.append(rotation_2D(p, c1, alpha * i / n_points))
+
+    path = np.array(path)
     
+    clkwiseQ = check_CLKWISE_or_CCLKWISE(p, c, t)
+    return path, clkwiseQ
 
-    return None
+def check_CLKWISE_or_CCLKWISE(starting_point: np.ndarray, circle_center: np.ndarray, tangent_point:np.ndarray) -> bool:
+    """
+    Uses the vectorial product to check whether the next circular turn needs to be done clockwise or counterclockwise
+    """
+    r = tangent_point - circle_center
+    app_dir = tangent_point - starting_point
+
+    # third component of the vectorial product
+    z = r[0] * app_dir[1] - r[1] * app_dir[0]
+
+    if z > 0 : return False
+    else : return True
 
 def find_Tangents_to_2Circles(p1:np.ndarray, r1: float, p2:np.ndarray, r2:float) -> list:
     """
@@ -447,26 +485,120 @@ def find_Tangents_to_2Circles(p1:np.ndarray, r1: float, p2:np.ndarray, r2:float)
     if 0 > dplus and 0 < dminus:
         # 2 tangents lines
         # The two circles overlap and therefore no internal tangent lines
+
+        # Only externals
+        # Intersection
+
+        
+        if r1 == r2: # Intersection is at infinity, compute another way
+            
+            n = p2-p1
+            n = n / np.linalg.norm(n)
+            n_perp = np.array([n[1], -n[0]])
+
+            t1p = p1 + r1 * n_perp
+            t1m = p1 - r1 * n_perp
+            t2p = p2 + r2 * n_perp
+            t2m = p2 - r2 * n_perp 
+    
+        else: # intersection point is bound
+            s = ( r1 * p2 - r2 * p1 ) / (r1 - r2)
+
+            dp1s = np.linalg.norm(s-p1)
+            n = (p1-s) / dp1s
+
+            alpha = np.arcsin(r1 / dp1s)
+            x1 = np.sqrt(dp1s**2-r1**2)
+            x2 = np.sqrt(np.linalg.norm(s-p2)**2-r2**2)
+
+            t1p = s + x1 * rotation_2D(n, [0,0], alpha)
+            t1m = s + x1 * rotation_2D(n, [0,0], -alpha)
+            t2p = s + x2 * rotation_2D(n, [0,0], alpha)
+            t2m = s + x2 * rotation_2D(n, [0,0], -alpha)
+
+        return [(t1p, t2p), (t1m, t2m)]
     
     if 0 == dplus and 0 < dminus:
         # 3 tangents lines 
         # The two circles share a common point
 
+        # External lines
+        if r1 == r2: # Intersection is at infinity, compute another way
+            
+            n = p2-p1
+            n = n / np.linalg.norm(n)
+            n_perp = np.array([n[1], -n[0]])
+
+            t1p = p1 + r1 * n_perp
+            t1m = p1 - r1 * n_perp
+            t2p = p2 + r2 * n_perp
+            t2m = p2 - r2 * n_perp
+    
+        else: # intersection point is bound
+            s = ( r1 * p2 - r2 * p1 ) / (r1 - r2)
+
+            dp1s = np.linalg.norm(s-p1)
+            n = (p1-s) / dp1s
+
+            alpha = np.arcsin(r1 / dp1s)
+            x1 = np.sqrt(dp1s**2-r1**2)
+            x2 = np.sqrt(np.linalg.norm(s-p2)**2-r2**2)
+
+            t1p = s + x1 * rotation_2D(n, [0,0], alpha)
+            t1m = s + x1 * rotation_2D(n, [0,0], -alpha)
+            t2p = s + x2 * rotation_2D(n, [0,0], alpha)
+            t2m = s + x2 * rotation_2D(n, [0,0], -alpha) 
+
+        # Add the only internal one
+
+        return [(t1p, t2p), (t1m, t2m), ((r2 * p1 + r1 * p2) / (r1+r2), )]
 
     else:
         # 4 tangents lines
 
+        # External lines
+        if r1 == r2: # Intersection is at infinity, compute another way
+            
+            n = p2-p1
+            n = n / np.linalg.norm(n)
+            n_perp = np.array([n[1], -n[0]])
 
+            t1p = p1 + r1 * n_perp
+            t1m = p1 - r1 * n_perp
+            t2p = p2 + r2 * n_perp
+            t2m = p2 - r2 * n_perp
+    
+        else: # intersection point is bound
+            s = ( r1 * p2 - r2 * p1 ) / (r1 - r2)
 
-    list_points = []
-    for solution in sympy.solve([eq1, eq2, eq3, eq4]):
+            dp1s = np.linalg.norm(s-p1)
+            n = (p1-s) / dp1s
 
-        point1 = np.array([solution[x1].evalf(), solution[y1].evalf()], dtype=float)
-        point2 = np.array([solution[x2].evalf(), solution[y2].evalf()], dtype=float)
+            alpha = np.arcsin(r1 / dp1s)
+            x1 = np.sqrt(dp1s**2-r1**2)
+            x2 = np.sqrt(np.linalg.norm(s-p2)**2-r2**2)
 
-        list_points.append((point1, point2))
-        
-    return list_points
+            t1p = s + x1 * rotation_2D(n, [0,0], alpha)
+            t1m = s + x1 * rotation_2D(n, [0,0], -alpha)
+            t2p = s + x2 * rotation_2D(n, [0,0], alpha)
+            t2m = s + x2 * rotation_2D(n, [0,0], -alpha) 
+
+        # Internals
+
+        dp1p2 = np.linalg.norm(p2-p1)
+        n = (p2-p1) / dp1p2   
+        d1 = r1 / (r1+r2) * dp1p2
+        d2 = r2 / (r1+r2) * dp1p2
+
+        alpha1 = np.arccos(r1 / d1)
+        alpha2 = np.arccos(r2 / d2)
+            
+        t1p_i = p1 + r1 * rotation_2D(n, [0,0], alpha1)
+        t1m_i = p1 + r1 * rotation_2D(n, [0,0], -alpha1)
+        t2p_i = p2 + r2 * rotation_2D(-n, [0,0], alpha2)
+        t2m_i = p2 + r2 * rotation_2D(-n, [0,0], -alpha2) 
+
+        return [(t1p, t2p), (t1m, t2m), (t1p_i, t2p_i), (t1m_i, t2m_i)]
 
 
 def rotation_2D(point: np.ndarray, rot_point: np.ndarray, angle: float) -> np.ndarray:
