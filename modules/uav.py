@@ -535,6 +535,14 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     loiter_radius = 76
     steps = 50                # [m]
 
+    try:
+        dH = uav.extra_parameters["security_height"]
+    except:
+        dH = 0
+    
+    # by now 
+    dH = 0
+
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
         return None
@@ -594,8 +602,8 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         latlon2 = CO.utm2latlon(point2, utmZone)
 
         if "Navigation" == mode:  
-            wp_altitude1 = 150 + move[0][2]
-            wp_altitude2 = 150 + move[1][2]
+            wp_altitude1 = uav.missionSettings["Insp. height"] + dH + move[0][2]
+            wp_altitude2 = uav.missionSettings["Insp. height"] + dH + move[1][2]
         else:  
             wp_altitude1 = uav.missionSettings["Insp. height"] + move[0][2]
             wp_altitude2 = uav.missionSettings["Insp. height"] + move[1][2]
@@ -613,6 +621,23 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
             }
         uav.waypoints.add_Waypoint(np.append(point2[:2], wp_altitude2), actions, mode)
 
+        # Dubins intermediate transition
+        p1 = point2[:2]
+        p2 = uav.routeUTM[1:][m+1][0]
+        n1 = point2[:2] - point1[:2]
+        n2 = uav.routeUTM[1:][m+1][1][:2] - uav.routeUTM[1:][m+1][0][:2]
+        points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
+        for i, point in enumerate(points):
+
+            latlon = CO.utm2latlon(point, utmZone)
+            height = wp_altitude2
+
+            actions = {
+                "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+                "params": [0, 0, 0, None, latlon[0], latlon[1], height]
+                        # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+            }
+            uav.waypoints.add_Waypoint(np.append(point, height), actions, "Navigation")
         
         m += 1
 
