@@ -12,6 +12,18 @@ import copy
 
 wait_time = 1  # Wait time in between API Request. This is too much brute force
 
+def angle_to_x(v:np.ndarray):
+    """
+    Computes the angle (o to 2pi) that the vector v forms with x. Clockwise is positive
+    """
+
+    alpha = np.arccos(v[0] / np.linalg.norm(v))
+
+    if v[1] < 0:
+        alpha = 2 * np.pi - alpha
+
+    return alpha
+
 # ------------------------- Coordinates transformations ---------------------------------------
 
 def latlon2utm(latlon: np.ndarray) -> tuple[np.ndarray, tuple]:
@@ -403,45 +415,76 @@ def get_Safe_Turn(p1: np.ndarray, n1: np.ndarray, p2:np.ndarray, n2:np.ndarray, 
 
     return path
 
-def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray, loiter_radius:float, turning_radius:float):
+def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray,
+                               loiter_radius:float, turning_radius:float, **kwargs):
 
     # https://observablehq.com/@donghaoren/common-tangent-lines-for-two-circles
+
+    try:
+        steps = kwargs["step_size"]
+    except:
+        steps = 0.5
 
     # Define the rotation circle center. First check which is closer
     c1 = p + turning_radius * np.array([n[1], -n[0]])
     c2 = p - turning_radius * np.array([n[1], -n[0]])
 
-    if np.linalg.norm(c1-p_loiter) < np.linalg.norm(c2-p_loiter): c = c1
-    else: c = c2
+    if np.linalg.norm(c1-p_loiter) < np.linalg.norm(c2-p_loiter): 
+        c = c1
+        sign = +1
+    else: 
+        c = c2
+        sign = -1
 
-    # AQUI HAY QUE ELIMINAR LAS TANGENTES QUE QUEDEN DETRAS DEL UAV
     list_all = find_Tangents_to_2Circles(c, turning_radius, p_loiter, loiter_radius)
 
-    costs = [np.linalg.norm(pair[0] - pair[1]) for pair in list_all]
 
-    index_min = min(range(len(costs)), key=costs.__getitem__)
+    alphas = []
+    for pair in list_all:
 
-    t = list_all[index_min][0] # tangent point at turning circle
+        alpha1 = angle_to_x(- sign * np.array([n[1], -n[0]]))
+        alpha2 = angle_to_x(pair[0] - c)
 
-    #return np.array([t]), False
+        print("p", pair[0], "a1", alpha1, "a2", alpha2)
 
-    print(np.linalg.norm(t-c))
+        dalpha = alpha2 - alpha1
 
-    alpha = np.arccos(np.dot(t-c, np.array([n[1], -n[0]])) / turning_radius)
+        if -1 == sign:
+            if alpha2 < alpha1:
+                phi = 2 * np.pi + dalpha
+            else:
+                phi = dalpha
+        else:
+            if alpha2 < alpha1:
+                phi = -dalpha
+            else:
+                phi = 2 * np.pi - dalpha
+
+        alphas.append(phi)
+
+    print(sign)
+    print(alphas)
+
+    index_min = min(range(len(alphas)), key=alphas.__getitem__)
+    alpha = alphas[index_min]
+
+    print(alpha)
+
 
     path = []
 
-    n_points = 50
+    n_points = int(np.floor(2 * np.pi * turning_radius / steps))
     for i in range(n_points + 1):
-        path.append(rotation_2D(p, c1, alpha * i / n_points))
+        path.append(rotation_2D(p, c, sign * alpha * i / n_points))
 
     path = np.array(path)
     
-    clkwiseQ = check_CLKWISE_or_CCLKWISE(p, c, t)
-    return path, clkwiseQ
+    #clkwiseQ = check_CLKWISE_or_CCLKWISE(p, c, t)
+    return path, sign == 1, list_all
 
 def check_CLKWISE_or_CCLKWISE(starting_point: np.ndarray, circle_center: np.ndarray, tangent_point:np.ndarray) -> bool:
     """
+    (BROKEN)
     Uses the vectorial product to check whether the next circular turn needs to be done clockwise or counterclockwise
     """
     r = tangent_point - circle_center

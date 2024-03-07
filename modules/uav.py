@@ -221,8 +221,15 @@ class UAV():
             px4_compute_Waypoints(self, wind_dir, towers.get_UTM_Zone())
             return None
 
-        dH = 20 # Security height offset for navigation
-        fH = 5  # first height First and last height.
+        try:
+            dH = self.extra_parameters["Security Height"]
+        except:
+            dH = 20
+
+        try:
+            fH = self.extra_parameters["First Height"]
+        except:
+            fH = 5
 
         # Tower height, this should be a external parameter
         if "Tower Height" in self.extra_parameters:
@@ -525,6 +532,8 @@ class UAV():
 def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
     min_radius = 50            # Minimum Curvature radius [m]
+    loiter_radius = 76
+    steps = 50                # [m]
 
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
@@ -556,7 +565,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     n2 = uav.routeUTM[1][1]-uav.routeUTM[1][0]
     n2 = n2 / np.linalg.norm(n2)
 
-    points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = 0.5)
+    points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
     for i, point in enumerate(points):
 
         latlon = CO.utm2latlon(point, utmZone)
@@ -624,7 +633,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     n2 = pointl[:2]-pointap[:2]
     n2 = n2 / np.linalg.norm(n2)
 
-    points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = 0.5)
+    points, clkwiseQ, _ = CO.get_Safe_Loiter_Alignment(p1, n1, p2, loiter_radius, min_radius, step_size = steps)
 
     for point in points:
 
@@ -646,14 +655,14 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
 
     # Check if it is better to loiter clockwise or not
-    clkwiseQ = bool(1+np.sign(
-        (pointl[0] - pointap[0]) * (point2[1] - pointap[1])
-        - (pointl[1] - pointap[1]) * (point2[0] - pointap[0])
-                        ))
+    # clkwiseQ = bool(1+np.sign(
+    #    (pointl[0] - pointap[0]) * (point2[1] - pointap[1])
+    #    - (pointl[1] - pointap[1]) * (point2[0] - pointap[0])
+    #                    ))
     
     actions["Loiter Clockwise"] = clkwiseQ
 
-    actions["Loiter Radius"] = 100
+    actions["Loiter Radius"] = loiter_radius
     uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
 
     return None
