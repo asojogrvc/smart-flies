@@ -401,7 +401,8 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
     g = (p2[2]-p1[2]) / compute_Path_Length(points2D) # The dubins function return lengths, but meh.
 
     if np.abs(g) <= g_max: # Safe
-        heights = p1[2] + () / len(points2D[:,0])
+        n_points = len(points2D[:,0])
+        heights = p1[2] + (p2[2] - p1[2]) * (range(n_points + 1)) / n_points
         return np.column_stack((points2D, heights))
     else:                  # Too step
     
