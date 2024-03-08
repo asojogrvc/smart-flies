@@ -9,6 +9,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import time
 import copy
+from modules import dubins as DB
 
 wait_time = 1  # Wait time in between API Request. This is too much brute force
 
@@ -376,6 +377,45 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
 
     return orbit, n_dir, v_dirs
 
+def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a:np.ndarray,
+                             min_turning_radius:float, g_max:float, **kwargs) -> np.ndarray:
+    """
+    Use Dubins paths to find a valid path to transition from the 3D-point p1 in the 2D-direction
+    n1a to p2 in direction n2a. It checks for maximum height change and min turning radius 
+    
+    Outputs a NumPy array.
+    """
+    # Normalize direction in case they are not
+    n1 = n1a / np.linalg.norm(n1a)
+    n2 = n2a / np.linalg.norm(n2a)
+
+    try:
+        step_size = kwargs["step_size"]
+    except:
+        step_size = 1
+
+    # Let's first try a regular dubins path with linear interpolation of height
+    points2D, _, _, _  = DB.plan_dubins_path(p1[:2], n1, p2[:2], n2, min_turning_radius, step_size = step_size)
+
+    # Check gradient
+    g = (p2[2]-p1[2]) / compute_Path_Length(points2D) # The dubins function return lengths, but meh.
+
+    if np.abs(g) <= g_max: # Safe
+        heights = p1[2] + () / len(points2D[:,0])
+        return np.column_stack((points2D, heights))
+    else:                  # Too step
+    
+
+def compute_Path_Length(points:np.ndarray)->float:
+    """
+    Computes the aproximate length a discretized path given by points
+    """
+    length = 0
+    for i in range(len(points[:,0])-1):
+        length = length + np.linalg.norm(points[i]-points[i+1])
+
+    return length
+
 def get_Safe_Turn(p1: np.ndarray, n1: np.ndarray, p2:np.ndarray, n2:np.ndarray, R:float):
 
     # Check that n1 and n2 are normalized
@@ -386,10 +426,7 @@ def get_Safe_Turn(p1: np.ndarray, n1: np.ndarray, p2:np.ndarray, n2:np.ndarray, 
     # Compute the angle:
     alpha = np.arccos(-np.dot(n1, n2))  # Take into account the direction of n2
 
-    
-
-        # Get the intersection S of the two lines:
-
+    # Get the intersection S of the two lines:
     mu = np.linalg.solve(np.column_stack((n1,n2)), p2 - p1)
     s = p1 + mu[0] * n1
 
@@ -437,7 +474,6 @@ def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray,
         sign = -1
 
     list_all = find_Tangents_to_2Circles(c, turning_radius, p_loiter, loiter_radius)
-
 
     alphas = []
     for pair in list_all:
@@ -643,6 +679,45 @@ def find_Tangents_to_2Circles(p1:np.ndarray, r1: float, p2:np.ndarray, r2:float)
 
         return [(t1p, t2p), (t1m, t2m), (t1p_i, t2p_i), (t1m_i, t2m_i)]
 
+def get_3D_Spiral_Path(init_point: np.ndarray, radius_vector: np.ndarray, clkwiseQ: bool,
+                        n_rev: float, dheight: float, **kwargs) -> np.ndarray:
+    """
+    Creates an spiral trajectory based on certain parameters. The initial point is not included in the output
+    """
+    try:
+        steps = kwargs["step_size"]
+    except:
+        steps = 1
+
+    sign = (-1)**(1+clkwiseQ)
+
+    points = []
+
+    n_points = int(np.floor(2 * np.pi * np.linalg.norm(radius_vector) * n_rev / steps))
+    for i in range(n_points):
+        point = rotation_2D(init_point[:2], init_point[:2] - radius_vector, sign * n_rev * 2*np.pi *(i+1)/n_points)
+        height = init_point[2] + dheight * (i+1) / n_points
+        points.append(np.append(point, height))
+
+    points = np.array(points)
+
+    return points
+
+def safe_Height_Change(p1: np.ndarray, p2: np.ndarray, g_max: float):
+
+    # Check whether the height difference between p1 and p2 is too much
+    d = np.linalg.norm(p1[:2]-p2[:2])
+    g = p2[2]-p1[2] / d
+
+    # if the difference if too much, change the altitude the maximum allowed
+    # by g_max
+
+    if np.abs(g) > g_max:
+        points = [p1, np.append(p2[:2], g * d + p2[2])]
+    else:
+        points = [p1, p2]
+
+    return points
 
 def rotation_2D(point: np.ndarray, rot_point: np.ndarray, angle: float) -> np.ndarray:
     """
@@ -653,8 +728,6 @@ def rotation_2D(point: np.ndarray, rot_point: np.ndarray, angle: float) -> np.nd
                  ,[-np.sin(angle), np.cos(angle)]])
     
     return copy.deepcopy(np.matmul(R, (point-rot_point))+rot_point)
-    
-
     
 def get_Path_Points(pos_i: np.ndarray, pos_f: np.ndarray, dx: float) -> np.ndarray:
     """
