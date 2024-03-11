@@ -533,7 +533,8 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
     min_radius = 50            # Minimum Curvature radius [m]
     loiter_radius = 76
-    steps = 50                # [m]
+    g_max = np.arcsin(13 / 180 * np.pi)
+    steps = 50                 # [m]
 
     try:
         dH = uav.extra_parameters["security_height"]
@@ -622,22 +623,25 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         uav.waypoints.add_Waypoint(np.append(point2[:2], wp_altitude2), actions, mode)
 
         # Dubins intermediate transition
+
+        height = wp_altitude2
+
         p1 = point2[:2]
         p2 = uav.routeUTM[1:][m+1][0]
         n1 = point2[:2] - point1[:2]
         n2 = uav.routeUTM[1:][m+1][1][:2] - uav.routeUTM[1:][m+1][0][:2]
-        points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
+        points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1, height), n1, np.append(p2, height),
+                                                      n2, min_radius, g_max, step_size = steps / 50)
         for i, point in enumerate(points):
 
             latlon = CO.utm2latlon(point, utmZone)
-            height = wp_altitude2
-
+        
             actions = {
                 "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-                "params": [0, 0, 0, None, latlon[0], latlon[1], height]
+                "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
                         # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
-            uav.waypoints.add_Waypoint(np.append(point, height), actions, "Navigation")
+            uav.waypoints.add_Waypoint(point, actions, "Navigation")
         
         m += 1
 

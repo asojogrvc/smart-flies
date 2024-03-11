@@ -1,20 +1,22 @@
-from modules import dubins as DB
+from modules import dubins as DB, coordinates as CO
 import numpy as np
 import matplotlib.pyplot as plt
 
-p1 = np.array([0, 0])
-n1 = np.array([1, 1]) / np.sqrt(2)
-p2 = np.array([703677.30627948-704326.32917323, 4118571.33377804 - 4119163.59411945])
-n2 = np.array([0,-1])
+p1 = np.array([0, 0, 0])
+n1 = np.array([1, 0, 0])
+p2 = np.array([-5, 5, 0])
+n2 = np.array([1, 0, 0])
 
+radius = 2
+g = 20 / 100
 
-points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, 50, step_size=0.5)
+points, _ = CO.get_Safe_Dubins_3D_Path(p1, n1, p2, n2, radius, g, step_size=0.5)
 
-print(points)
-
-#plt.axline((p1[0], p1[1]), slope= n1[1] / n1[0])
-#plt.axline((p2[0], p2[1]), slope= n2[1] / n2[0])
-plt.plot(points[:,0], points[:,1], 'o')
-plt.plot(p1[0], p1[1], 'o')
-plt.plot(p2[0], p2[1], 'o')
+ax = plt.figure().add_subplot(projection='3d')
+ax.plot(points[:,0], points[:,1], points[:,2], 'o')
+ax.plot(p1[0], p1[1], p1[2], 'o')
+ax.plot(p2[0], p2[1], p2[2], 'o')
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.set_zlabel("z")
 plt.show()

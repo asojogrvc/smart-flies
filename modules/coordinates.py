@@ -383,8 +383,11 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
     Use Dubins paths to find a valid path to transition from the 3D-point p1 in the 2D-direction
     n1a to p2 in direction n2a. It checks for maximum height change and min turning radius 
     
-    Outputs a NumPy array.
+    Outputs a NumPy array with the path and a boolean that is true if the maximum gradient is needed.
     """
+
+    threshold = 1
+
     # Normalize direction in case they are not
     n1 = n1a / np.linalg.norm(n1a)
     n2 = n2a / np.linalg.norm(n2a)
@@ -398,14 +401,37 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
     points2D, _, _, _  = DB.plan_dubins_path(p1[:2], n1, p2[:2], n2, min_turning_radius, step_size = step_size)
 
     # Check gradient
-    g = (p2[2]-p1[2]) / compute_Path_Length(points2D) # The dubins function return lengths, but meh.
-
-    if np.abs(g) <= g_max: # Safe
-        n_points = len(points2D[:,0])
-        heights = p1[2] + (p2[2] - p1[2]) * (range(n_points + 1)) / n_points
-        return np.column_stack((points2D, heights))
-    else:                  # Too step
+    d = compute_Path_Length(points2D) # The dubins function return lengths, but meh.
     
+    dh_1 = p2[2]-p1[2]
+    g = (dh_1) / d
+
+    n_points = len(points2D[:,0])
+
+    max_gradQ = np.abs(g) > g_max
+
+    if not max_gradQ: # Safe
+
+        heights = p1[2] + dh_1 * (np.array((range(n_points))) + 1) / n_points
+        
+    else:             # Too step
+
+        dh_2 = g_max*d * np.sign(p2[2]- p1[2])
+        heights = p1[2] + dh_2 * (np.array((range(n_points))) + 1) / n_points
+
+        if dh_2 > threshold:
+
+            # If its is way too step, add an spiral
+            h_diff = p2[2] - heights[-1]
+            n_rev = int(np.ceil( h_diff / ( g_max * 2 * np.pi * min_turning_radius)))
+
+            points3D = get_3D_Spiral_Path(np.append(points2D[-1], heights[-1]), n2, min_turning_radius, 
+                                           True, n_rev, h_diff, step_size = step_size)
+
+            points2D = np.concatenate((points2D, points3D[:,:2]))
+            heights = np.concatenate((heights, points3D[:,2]))  
+
+    return np.column_stack((points2D, heights)), max_gradQ
 
 def compute_Path_Length(points:np.ndarray)->float:
     """
@@ -680,7 +706,7 @@ def find_Tangents_to_2Circles(p1:np.ndarray, r1: float, p2:np.ndarray, r2:float)
 
         return [(t1p, t2p), (t1m, t2m), (t1p_i, t2p_i), (t1m_i, t2m_i)]
 
-def get_3D_Spiral_Path(init_point: np.ndarray, radius_vector: np.ndarray, clkwiseQ: bool,
+def get_3D_Spiral_Path(init_point: np.ndarray, n: np.ndarray, radius: float, clkwiseQ: bool,
                         n_rev: float, dheight: float, **kwargs) -> np.ndarray:
     """
     Creates an spiral trajectory based on certain parameters. The initial point is not included in the output
@@ -690,13 +716,15 @@ def get_3D_Spiral_Path(init_point: np.ndarray, radius_vector: np.ndarray, clkwis
     except:
         steps = 1
 
+    n_perp = np.array([n[1], -n[0]]) / np.linalg.norm(n)
+
     sign = (-1)**(1+clkwiseQ)
 
     points = []
 
-    n_points = int(np.floor(2 * np.pi * np.linalg.norm(radius_vector) * n_rev / steps))
+    n_points = int(np.floor(2 * np.pi * radius* n_rev / steps))
     for i in range(n_points):
-        point = rotation_2D(init_point[:2], init_point[:2] - radius_vector, sign * n_rev * 2*np.pi *(i+1)/n_points)
+        point = rotation_2D(init_point[:2], init_point[:2] + sign * radius * n_perp, sign * n_rev * 2*np.pi *(i+1)/n_points)
         height = init_point[2] + dheight * (i+1) / n_points
         points.append(np.append(point, height))
 
