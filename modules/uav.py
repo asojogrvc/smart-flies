@@ -630,8 +630,8 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         p2 = uav.routeUTM[1:][m+1][0]
         n1 = point2[:2] - point1[:2]
         n2 = uav.routeUTM[1:][m+1][1][:2] - uav.routeUTM[1:][m+1][0][:2]
-        points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1, height), n1, np.append(p2, height),
-                                                      n2, min_radius, g_max, step_size = steps / 50)
+        points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1, height), n1, np.append(p2[:2], height),
+                                                      n2, min_radius, g_max, step_size = steps / 100)
         for i, point in enumerate(points):
 
             latlon = CO.utm2latlon(point, utmZone)
