@@ -2,9 +2,10 @@
 # The UI part can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm".
 #
 # TO DO (CRITICAL)
-#   - Add limitations for fixed-wings
+#   - Add limitations for fixed-wings. PATHS ARE DONE. WE NEED ONLY NEED TO IMPLEMENT IT INTO THE SOLVER.
 #       * https://docs.deltaquad.com/deltaquad-pro-operations-manual-v2/
 #       * https://docs.qgroundcontrol.com/master/en/qgc-user-guide/index.html
+#     As of now, no battery of movement model is allowed. I might ask for the allowance to develop it.
 #  
 # TO DO (MUST)
 #   - Delete SUP and SDOWN names. Instead, use T1->T2 and T2->T1 or similar.
