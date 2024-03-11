@@ -73,6 +73,7 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     file.write("    wp:\n")
 
     for wp in uav.waypoints:
+        print(wp[0])
 
         latlon = CO.utm2latlon(wp[0], utmZone)
         #latlon[0], latlon[1] = latlon[1], latlon[0] 

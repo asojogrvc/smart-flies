@@ -574,28 +574,29 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     n2 = uav.routeUTM[1][1]-uav.routeUTM[1][0]
     n2 = n2 / np.linalg.norm(n2)
 
-    points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
-    for i, point in enumerate(points):
+    #points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
+    height = uav.missionSettings["Insp. height"] + uav.routeUTM[1][0][2]
+    points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1[:2], takeoff_altitude), n1, np.append(p2[:2], height), n2, min_radius, g_max, step_size = steps / 100)
+
+    print(points)
+    for point in points[1:-1]:
 
         latlon = CO.utm2latlon(point, utmZone)
-        height = takeoff_altitude + (uav.missionSettings["Insp. height"]
-                                      + uav.routeUTM[1][0][2] - takeoff_altitude) * (i + 1) / (len(points)+1)
-                                 # too slow maybe
-
-        print(height)
+        
+                                # too slow maybe
 
         actions = {
             "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-             "params": [0, 0, 0, None, latlon[0], latlon[1], height]
+             "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
         }
-        uav.waypoints.add_Waypoint(np.append(point, height), actions, "Navigation")
+        uav.waypoints.add_Waypoint(point, actions, "Navigation")
 
     m = 0
     # Waypoints
     for move in uav.routeUTM[1:-1]:
         mode = uav.routeModes[1:-1][m]
-        next_mode = uav.routeModes[1:][m+1]
+        #next_mode = uav.routeModes[1:][m+1]
 
         point1 = move[0]
         point2 = move[1]
@@ -632,7 +633,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         n2 = uav.routeUTM[1:][m+1][1][:2] - uav.routeUTM[1:][m+1][0][:2]
         points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1, height), n1, np.append(p2[:2], height),
                                                       n2, min_radius, g_max, step_size = steps / 100)
-        for i, point in enumerate(points):
+        for i, point in enumerate(points[1:-1]):
 
             latlon = CO.utm2latlon(point, utmZone)
         

@@ -386,7 +386,7 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
     Outputs a NumPy array with the path and a boolean that is true if the maximum gradient is needed.
     """
 
-    threshold = 25
+    threshold = 1E9 # To deactivate it by now
 
     # Normalize direction in case they are not
     n1 = n1a / np.linalg.norm(n1a)
@@ -415,14 +415,14 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
 
     if not max_gradQ: # Safe
 
-        heights = p1[2] + dh_1 * (np.array((range(n_points))) + 1) / n_points
+        heights = p1[2] + dh_1 * (np.array((range(n_points)))) / n_points
 
         print("hey")
         
     else:             # Too step
 
         dh_2 = g_max*d * np.sign(p2[2]- p1[2])
-        heights = p1[2] + dh_2 * (np.array((range(n_points))) + 1) / n_points
+        heights = p1[2] + dh_2 * (np.array((range(n_points)))) / n_points
 
         if dh_2 > threshold:
 
