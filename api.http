@@ -2,131 +2,90 @@
 GET http://localhost:8004/status
 
 ### Get output
-GET http://localhost:8004/get_plan?IDs=1234
+GET http://localhost:8004/get_plan?IDs=17877706
 
 ### Send input data as JSON
 POST http://localhost:8004//mission_request
 Content-Type: application/json
 
 {
-  "id": 1234,
-  "name": "no mission",
-  "settings": [
-    {
-      "devices": {
-        "deviceId": "0",
-        "category": "dji_M210_noetic",
-        "speed_mission": 7,
-        "speed_navegation": 15
-      },
-      "mission": {
-        "height": 10,
-        "offset": 10,
-        "tower": 10
-      }
-    },
-    {
-      "devices": {
-        "deviceId": "1",
-        "category": "dji_M210_noetic",
-        "speed_mission": 7,
-        "speed_navegation": 15
-      },
-      "mission": {
-        "height": 10,
-        "offset": 10,
-        "tower": 10
-      }
-    },
-    {
-      "devices": {
-        "deviceId": "2",
-        "category": "dji_M210_noetic",
-        "speed_mission": 7,
-        "speed_navegation": 15
-      },
-      "mission": {
-        "height": 10,
-        "offset": 10,
-        "tower": 10
-      }
-    },
-    {
-      "devices": {
-        "deviceId": "3",
-        "category": "dji_M210_noetic",
-        "speed_mission": 7,
-        "speed_navegation": 15
-      },
-      "mission": {
-        "height": 10,
-        "offset": 10,
-        "tower": 10
-      }
-    }
-  ],
-  "objetivo": 1,
-  "bases": [
-    {
-      "latitude": 38.1385113182596,
-      "longitude": -3.176305522392061
-    },
-    {
-      "latitude": 38.13749084416372,
-      "longitude": -3.1805328708085483
-    },
-    {
-      "latitude": 38.13410070943499,
-      "longitude": -3.1754686621366375
-    },
-    {
-      "latitude": 38.136321847002336,
-      "longitude": -3.1697317913580036
-    }
-  ],
-  "meteo": [],
-  "loc": [
-    {
-      "name": "Elements",
-      "items": [
+    "id": "17877706",
+    "case": 0,
+    "meteo": [],
+    "locations": [
         {
-          "latitude": 38.13966793639006,
-          "longitude": -3.168728594889372
-        },
-        {
-          "latitude": 38.13996830736248,
-          "longitude": -3.16762589340327
-        },
-        {
-          "latitude": 38.1402766196862,
-          "longitude": -3.166505577905428
-        },
-        {
-          "latitude": 38.14062040853257,
-          "longitude": -3.165611516354345
+            "name": "Elements",
+            "items": [
+                {
+                    "latitude": 37.19280537019709,
+                    "longitude": -6.701476542699256
+                },
+                {
+                    "latitude": 37.19180205683976,
+                    "longitude": -6.700406884589779
+                },
+                {
+                    "latitude": 37.19081728890979,
+                    "longitude": -6.699351377246051
+                },
+                {
+                    "latitude": 37.1902109849165,
+                    "longitude": -6.697038132129983
+                },
+                {
+                    "latitude": 37.18885913037757,
+                    "longitude": -6.691927682393742
+                },
+                {
+                    "latitude": 37.18856460482592,
+                    "longitude": -6.690783628112483
+                },
+                {
+                    "latitude": 37.18783174444962,
+                    "longitude": -6.689078467764072
+                },
+                {
+                    "latitude": 37.18708715290754,
+                    "longitude": -6.687400977589006
+                }
+            ]
         }
-      ]
-    },
-    {
-      "name": "Elements",
-      "items": [
+    ],
+    "devices": [
         {
-          "latitude": 38.13601387107713,
-          "longitude": -3.17853735196563
+            "settings": {
+                "base": [
+                    37.19356001,
+                    -6.702515,
+                    "base"
+                ],
+                "inspection_speed": 7,
+                "navigation_speed": 15,
+                "vertical_offset": 10,
+                "horizontal_offset": 10,
+                "tower_height": 10,
+                "security_height": 10,
+                "landing_mode": 2
+            },
+            "id": "uav_3",
+            "category": "px4"
         },
         {
-          "latitude": 38.13611084052413,
-          "longitude": -3.176610125243361
-        },
-        {
-          "latitude": 38.13624534697013,
-          "longitude": -3.174186980324723
-        },
-        {
-          "latitude": 38.13527642840854,
-          "longitude": -3.172451298169662
+            "settings": {
+                "base": [
+                    37.192693983510594,
+                    -6.685214567680305
+                ],
+                "inspection_speed": 7,
+                "navigation_speed": 15,
+                "vertical_offset": 10,
+                "horizontal_offset": 10,
+                "tower_height": 10,
+                "security_height": 10,
+                "landing_mode": 2
+            },
+            "id": "uav_14",
+            "category": "dji_M300"
         }
-      ]
-    }
-  ]
+    ]
 }

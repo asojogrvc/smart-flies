@@ -2,6 +2,8 @@
 # The UI part can be packaged into an binary using "pyinstaller main.py  --icon="ico.png" --name smart-flies --noconfirm".
 #
 # TO DO (CRITICAL)
+#   - px4 json is not correctly parsed on the API
+#   - distant_subgraphsQ = False   # This is a patch. I need to fix some other things
 #   - Add limitations for fixed-wings. PATHS ARE DONE. WE NEED ONLY NEED TO IMPLEMENT IT INTO THE SOLVER.
 #       * https://docs.deltaquad.com/deltaquad-pro-operations-manual-v2/
 #       * https://docs.qgroundcontrol.com/master/en/qgc-user-guide/index.html
