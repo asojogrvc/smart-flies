@@ -691,7 +691,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     #                    ))
     
     actions["Loiter Clockwise"] = clkwiseQ
-
+    actions["command"] = 85
     actions["Loiter Radius"] = loiter_radius
     uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
 
