@@ -1100,6 +1100,8 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
     distant_subgraphsQ = any([np.linalg.norm(list(dict(subset.nodes(data="UTM")).values())[0] - base.get_Coordinates()) > distance_threshold
                                   for subset in SC for base in pbases])
+    
+    distant_subgraphsQ = False   # This is a patch. I need to fix some other things
 
     if distant_subgraphsQ: print("Subgroup of towers might be too far from some of the UAVs bases. Allowing automatic disabling")
         
