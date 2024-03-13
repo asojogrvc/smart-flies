@@ -371,7 +371,8 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         loops = delete_Loops_with_Base(loopsp, uav.missionSettings["Base"])
 
         # if there are more than one loop or if the only loop does not contain the actual UAV base
-        if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
+        if loops:
+        # if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
 
              # Let's free the problem so we can modify it
             if not subtoursQ: pmodel.freeReoptSolve()
@@ -418,8 +419,8 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
             loops = delete_Loops_with_Base(loopsp, uav.missionSettings["Base"])
 
-            if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
-                
+            # if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
+            if loops:    
                 if not subtoursQ: pmodel.freeReoptSolve()
                 #if not subtoursQ: pmodel.freeTransform()
 
