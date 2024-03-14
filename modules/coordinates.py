@@ -410,14 +410,14 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
 
     max_gradQ = np.abs(g) > g_max
 
-    print("gmax:", g_max)
-    print("g:", g)
+    #print("gmax:", g_max)
+    #print("g:", g)
 
     if not max_gradQ: # Safe
 
         heights = p1[2] + dh_1 * (np.array((range(n_points)))) / n_points
 
-        print("hey")
+        #print("hey")
         
     else:             # Too step
 

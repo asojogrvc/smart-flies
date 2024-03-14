@@ -363,13 +363,16 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
         print("UAV:", uav.get_ID())
 
-        loops, _ = list_Loops(uav.routeAbstract, [])
+        loopsp, _ = list_Loops(uav.routeAbstract, [])
 
         print("Route: ", uav.routeAbstract)
-        print("Loops: ", loops)
+        print("Loops: ", loopsp)
+
+        loops = delete_Loops_with_Base(loopsp, uav.missionSettings["Base"])
 
         # if there are more than one loop or if the only loop does not contain the actual UAV base
-        if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
+        if loops:
+        # if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
 
              # Let's free the problem so we can modify it
             if not subtoursQ: pmodel.freeReoptSolve()
@@ -411,11 +414,13 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
             print("Route: ", uav.routeAbstract)
 
-            loops, _ = list_Loops(uav.routeAbstract, [])
-            print("Loops: ", loops)
+            loopsp, _ = list_Loops(uav.routeAbstract, [])
+            print("Loops: ", loopsp)
 
-            if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
-                
+            loops = delete_Loops_with_Base(loopsp, uav.missionSettings["Base"])
+
+            # if len(loops) > 1 or (1 == len(loops) and not does_Contain_Node(uav.missionSettings["Base"], loops[0])):
+            if loops:    
                 if not subtoursQ: pmodel.freeReoptSolve()
                 #if not subtoursQ: pmodel.freeTransform()
 
@@ -469,7 +474,16 @@ def GRASP_Solver():
     # TBD
     return None
 
-# -------------------------------------- Auxiliary Functions --------------------------------------------- 
+# -------------------------------------- Auxiliary Functions ---------------------------------------------
+
+def delete_Loops_with_Base(loops: list, base: str) -> list:
+
+    loops_no_base = []
+
+    for loop in loops:
+        if not does_Contain_Node(base, loop): loops_no_base.append(loop)
+
+    return loops_no_base
 
 def order_Route(start: str, edge_list: list, mode_list:list) -> tuple[list, list]:
     """
@@ -1101,7 +1115,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     distant_subgraphsQ = any([np.linalg.norm(list(dict(subset.nodes(data="UTM")).values())[0] - base.get_Coordinates()) > distance_threshold
                                   for subset in SC for base in pbases])
     
-    distant_subgraphsQ = False   # This is a patch. I need to fix some other things
+    # distant_subgraphsQ = False   # This is a patch. I need to fix some other things
 
     if distant_subgraphsQ: print("Subgroup of towers might be too far from some of the UAVs bases. Allowing automatic disabling")
         
@@ -1221,7 +1235,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                             for node in nodelist)
                                 == 
                             Y[uav.get_ID()]
-                    )     
+                    )
 
                 else:
                     pmodel.addCons(

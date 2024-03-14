@@ -80,7 +80,10 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
 
         point_str = np.array2string(latlon, separator=", ")
         # This should flip to the correct latlon.
-        file.write("      - {pos: "+point_str+", action: "+str(wp[1])+"}\n")
+        if "px4" == uav.get_Name():
+            file.write("      - {pos: "+point_str+", action: { command: "+str(wp[1]["command"])+"} }\n")
+        else:
+            file.write("      - {pos: "+point_str+", action: "+str(wp[1])+"}\n")
 
     file.write("    attributes:\n\n")
     file.write("      mode_landing: " + landing_Mode_to_Int(uav.missionSettings["Landing Mode"])+ "\n\n")
