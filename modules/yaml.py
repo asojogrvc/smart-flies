@@ -328,6 +328,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
                 uav.missionSettings['Insp. height'] / temp)))
             
         uav.extra_parameters["Tower Height"] = uav_dict["settings"]["tower_height"]
+        uav.extra_parameters["Take Off Height"] = uav_dict["settings"]["takeoff_height"]
         if 1 == json_obj["case"]:
             uav.extra_parameters["Orbital Points"] = uav_dict["settings"]["orbital_points"]
             uav.extra_parameters["Security Height"] = uav_dict["settings"]["security_height"]
