@@ -336,15 +336,27 @@ def _generate_local_course(lengths, modes, max_curvature, step_size):
 
         # set origin state
         origin_x, origin_y, origin_yaw = p_x[-1], p_y[-1], p_yaw[-1]
-
         current_length = step_size
-        while abs(current_length + step_size) <= abs(length):
-            p_x, p_y, p_yaw = _interpolate(current_length, mode, max_curvature,
+
+        if "S" == mode:
+
+            #p_x.append(origin_x)
+            #p_y.append(origin_y)
+            #p_yaw.append(origin_yaw)
+
+            p_x.append(origin_x + length / max_curvature * cos(origin_yaw))
+            p_y.append(origin_y + length / max_curvature * sin(origin_yaw))
+            p_yaw.append(origin_yaw)
+
+        else:
+            
+            while abs(current_length + step_size) <= abs(length):
+                p_x, p_y, p_yaw = _interpolate(current_length, mode, max_curvature,
                                            origin_x, origin_y, origin_yaw,
                                            p_x, p_y, p_yaw)
-            current_length += step_size
+                current_length += step_size
 
-        p_x, p_y, p_yaw = _interpolate(length, mode, max_curvature, origin_x,
+            p_x, p_y, p_yaw = _interpolate(length, mode, max_curvature, origin_x,
                                        origin_y, origin_yaw, p_x, p_y, p_yaw)
 
     return p_x, p_y, p_yaw

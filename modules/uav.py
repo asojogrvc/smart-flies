@@ -531,22 +531,28 @@ class UAV():
 
 def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
-    min_radius = 50            # Minimum Curvature radius [m]
-    loiter_radius = 76
-    g_max = np.arcsin(13 / 180 * np.pi)
-    steps = 50                 # [m]
-
-    try:
-        dH = uav.extra_parameters["security_height"]
-    except:
-        dH = 0
-    
-    # by now 
-    dH = 0
-
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
         return None
+
+    loiter_radius = 76
+    g_max = np.arcsin(9 / 180 * np.pi)
+    steps = 65                          # 50 by default
+
+    try:
+        min_radius = uav.extra_parameters["Min. Radius"]
+    except:
+        min_radius = 50 # Minimum Curvature radius [m]
+
+    try:
+        dH = uav.extra_parameters["Security Height"]
+    except:
+        dH = 0
+
+    try:
+        max_angle = uav.extra_parameters["Max. Angle"]
+    except:
+        max_angle = 10
     
     n_wind = np.array([np.sin(np.deg2rad(wind_dir)), np.cos(np.deg2rad(wind_dir))])
 
@@ -634,20 +640,39 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         p1 = point2[:2]
         p2 = uav.routeUTM[1:][m+1][0]
         n1 = point2[:2] - point1[:2]
+        n1 = n1 / np.linalg.norm(n1)
         n2 = uav.routeUTM[1:][m+1][1][:2] - uav.routeUTM[1:][m+1][0][:2]
-        points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1, height), n1, np.append(p2[:2], height),
-                                                      n2, min_radius, g_max, step_size = steps / 100)
-        for i, point in enumerate(points[1:-1]):
+        n2 = n2 / np.linalg.norm(n2)
 
-            latlon = CO.utm2latlon(point, utmZone)
+        # if the angle is too high
+        sprod = np.dot(n1, n2)
+        print(sprod)
+        if np.rad2deg(np.arccos(sprod)) > max_angle:
+            points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1, height), n1, np.append(p2[:2], height),
+                                                      n2, min_radius, g_max, step_size = steps / 100)
+            for i, point in enumerate(points[1:-1]):
+
+                latlon = CO.utm2latlon(point, utmZone)
+        
+                actions = {
+                    "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+                    "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
+                        # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+                }
+                uav.waypoints.add_Waypoint(point, actions, "Navigation")
+
+        else: # if not
+            
+            latlon = CO.utm2latlon(np.append(p2[:2], wp_altitude2), utmZone)
         
             actions = {
-                "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-                "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
+                    "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+                    "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude2]
                         # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
-            uav.waypoints.add_Waypoint(point, actions, "Navigation")
-        
+
+            uav.waypoints.add_Waypoint(np.append(p2[:2], wp_altitude2), actions, "Navigation")
+
         m += 1
 
     # Must be at least 250m in the counterdirection of the wind

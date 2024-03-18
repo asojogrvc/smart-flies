@@ -331,7 +331,23 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
                 uav.missionSettings['Insp. height'] / temp)))
             
         uav.extra_parameters["Tower Height"] = uav_dict["settings"]["tower_height"]
-        uav.extra_parameters["Take Off Height"] = uav_dict["settings"]["takeoff_height"]
+
+        try:
+            uav.extra_parameters["Take Off Height"] = uav_dict["settings"]["takeoff_height"]
+        except:
+            None
+
+        # PX4 Exclusives
+    
+        try:
+            uav.extra_parameters["Max. Angle"] = uav_dict["settings"]["max_angle"]
+        except:
+            None
+        try:
+            uav.extra_parameters["Min. Radius"] = uav_dict["settings"]["min_radius"]
+        except:
+            None
+
         if 1 == json_obj["case"]:
             uav.extra_parameters["Orbital Points"] = uav_dict["settings"]["orbital_points"]
             uav.extra_parameters["Security Height"] = uav_dict["settings"]["security_height"]
