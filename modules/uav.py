@@ -80,9 +80,13 @@ class UAV():
         
     def load_from_Model(self, model: str, id:str, case: int) -> bool:
 
-        # It might be a good not load the entire database each time
+        # It might be a good not load the entire database each time XD
         f = open("./files/devices.yaml", "r")
-        data = load(f, Loader=Loader)[model]
+        try:
+            data = load(f, Loader=Loader)[model]
+        except:
+            data = load(f, Loader=Loader)["dji_M300"] # Load this one by default if the requested category is not right
+
         f.close()
         
         try:
