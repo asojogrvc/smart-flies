@@ -448,7 +448,7 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
     for point, actions, mode in uav.waypoints:
         # wp = (point_vector, actions_dict, mode_str)
 
-        if "Landing" == mode: # Complex_Item
+        if "DEPRECATED" == mode: # Complex_Item
             item = {
                 "altitudesAreRelative": True,
                 "complexItemType": "vtolLandingPattern",

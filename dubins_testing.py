@@ -2,7 +2,7 @@ from modules import dubins as DB, coordinates as CO
 import numpy as np
 import matplotlib.pyplot as plt
 
-p1 = np.array([0, 0, 0])
+p1 = np.array([0, 0, 5])
 n1 = np.array([1, 0, 0])
 p2 = np.array([-5, 5, 0])
 n2 = np.array([1, 0, 0])

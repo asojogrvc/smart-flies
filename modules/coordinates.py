@@ -415,14 +415,24 @@ def get_Safe_Dubins_3D_Path(p1: np.ndarray, n1a: np.ndarray, p2: np.ndarray, n2a
 
     if not max_gradQ: # Safe
 
-        heights = p1[2] + dh_1 * (np.array((range(n_points)))) / n_points
-
-        #print("hey")
+        heights = [p1[2]]
+        for i in range(n_points-1):
+            dh = g * np.linalg.norm(points2D[i+1] - points2D[i])
+            heights.append(heights[-1] + dh)
+        
+        heights = np.array(heights)
+        # print("hey")
         
     else:             # Too step
 
         dh_2 = g_max*d * np.sign(p2[2]- p1[2])
-        heights = p1[2] + dh_2 * (np.array((range(n_points)))) / n_points
+        
+        heights = [p1[2]]
+        for i, point in enumerate(points2D[:-1]):
+            dh = g_max * np.linalg.norm(points2D[i+1] - points2D[i]) * np.sign(p2[2]- p1[2])
+            heights.append(heights[-1] + dh)
+
+        heights = np.array(heights)
 
         if dh_2 > threshold:
 

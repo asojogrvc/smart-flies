@@ -592,7 +592,6 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     height = uav.missionSettings["Insp. height"] + uav.routeUTM[1][0][2]
     points, _ = CO.get_Safe_Dubins_3D_Path(np.append(p1[:2], takeoff_altitude), n1, np.append(p2[:2], height), n2, min_radius, g_max, step_size = steps / 100)
 
-    print(points)
     for point in points[1:-1]:
 
         latlon = CO.utm2latlon(point, utmZone)
@@ -600,7 +599,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
                                 # too slow maybe
 
         actions = {
-            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+            "command": 16,
              "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
         }
@@ -625,13 +624,13 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
             wp_altitude2 = uav.missionSettings["Insp. height"] + move[1][2]
         
         actions = {
-            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+            "command": 16,
              "params": [0, 0, 0, None, latlon1[0], latlon1[1], wp_altitude1]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
         uav.waypoints.add_Waypoint(np.append(point1[:2], wp_altitude1), actions, mode)
         actions = {
-            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+            "command": 16,
              "params": [0, 0, 0, None, latlon2[0], latlon2[1], wp_altitude2]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
@@ -659,7 +658,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
                 latlon = CO.utm2latlon(point, utmZone)
         
                 actions = {
-                    "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+                    "command": 16,
                     "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
                         # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
                 }
@@ -670,7 +669,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
             latlon = CO.utm2latlon(np.append(p2[:2], wp_altitude2), utmZone)
         
             actions = {
-                    "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
+                    "command": 16,
                     "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude2]
                         # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
             }
@@ -679,54 +678,51 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
         m += 1
 
-    # Must be at least 250m in the counterdirection of the wind
-    pointap = uav.routeUTM[-1][1] - 300 * np.append(n_wind, 0)
-    # Landing  
-    pointl = uav.routeUTM[-1][1]
-
-    # Instead of dubins this just should enter the loiter as tangent. The orientation
-    # is the one that makes the UAV to rotate the least. To get the orientation, just take a tangent
-    # circle inmediately and exit it in the correct direction. Check for the case where the loiter point is too close
-
-    p1 = uav.routeUTM[1:-1][-1][1][:2]
-    n1 = uav.routeUTM[1:-1][-1][1][:2] - uav.routeUTM[1:-1][-1][0][:2]
+    # Get from the last point to approaching point, 300m downwind from the base:
+    p1 = np.append(uav.routeUTM[-1][0][:2], wp_altitude2)
+    n1 = uav.routeUTM[-1][1][:2] - uav.routeUTM[-1][0][:2]
     n1 = n1 / np.linalg.norm(n1)
 
-    p2 = pointap[:2]
-    n2 = pointl[:2]-pointap[:2]
+    p2 = np.append(uav.routeUTM[-1][1][:2], landing_altitude) - 300 * np.append(n_wind, 0)
+    n2 = n_wind
     n2 = n2 / np.linalg.norm(n2)
 
-    points, clkwiseQ, _ = CO.get_Safe_Loiter_Alignment(p1, n1, p2, loiter_radius, min_radius, step_size = steps)
+    #points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
+    height = uav.missionSettings["Insp. height"] + uav.routeUTM[1][0][2]
+    points, _ = CO.get_Safe_Dubins_3D_Path(p1, n1, p2, n2, min_radius, g_max, step_size = steps / 100)
 
-    for point in points:
+    for point in points[1:-1]:
 
         latlon = CO.utm2latlon(point, utmZone)
+        
+                                # too slow maybe
 
         actions = {
-            "command": 16, # MAV_CMD_NAV_VTOL_TAKEOFF
-             "params": [0, 0, 0, None, latlon[0], latlon[1], wp_altitude2]
+            "command": 16,
+             "params": [0, 0, 0, None, latlon[0], latlon[1], point[2]]
                     # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
         }
-        uav.waypoints.add_Waypoint(np.append(point, wp_altitude2), actions, "Navigation")
-    
-    
-    actions = {}
-    latlon = CO.utm2latlon(pointl, utmZone)
-    actions["Landing Point"] = np.append(latlon[:2], 0)
-    latlon = CO.utm2latlon(pointap, utmZone)
-    print(pointap)
-    actions["Approach Point"] = np.append(latlon[:2], landing_altitude)
+        uav.waypoints.add_Waypoint(point, actions, "Navigation")
 
-    # Check if it is better to loiter clockwise or not
-    # clkwiseQ = bool(1+np.sign(
-    #    (pointl[0] - pointap[0]) * (point2[1] - pointap[1])
-    #    - (pointl[1] - pointap[1]) * (point2[0] - pointap[0])
-    #                    ))
-    
-    actions["Loiter Clockwise"] = clkwiseQ
-    actions["command"] = 85
-    actions["Loiter Radius"] = loiter_radius
-    uav.waypoints.add_Waypoint(np.append(point[:2], landing_altitude), actions, "Landing")
+    # Approaching point
+    latlon = CO.utm2latlon(p2, utmZone)
+    actions = {
+        "command": 16,
+        "params": [0, 0, 0, None, latlon[0], latlon[1], p2[2]]
+                    # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+    }
+    uav.waypoints.add_Waypoint(p2, actions, "Navigation")
+
+    # Landing point
+    point = np.append(uav.routeUTM[-1][1][:2], landing_altitude)
+    latlon = CO.utm2latlon(point, utmZone)
+    actions = {
+        "command": 21,
+        "params": [0, 0, 0, None, latlon[0], latlon[1], landing_altitude]
+                    # [Empty, VTOL_TRANSITION_HEADING, Empty, Yaw, Lat, Long, Alt]
+    }
+    uav.waypoints.add_Waypoint(point, actions, "Landing")
+
 
     return None
     
