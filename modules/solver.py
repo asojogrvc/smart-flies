@@ -119,8 +119,11 @@ class Problem():
                 from the start, it adds them dynamically. It is usually faster but less stable.
         """
 
-        # As I store the solution within UAVs, I might just pass a flag with the problem status to avoid
-        # redudant computation
+        # Check first if case is not lidar inspection, which won't need any solver. It is just geometry
+
+        if 2 == self.get_Mission_Mode():
+            status = solve_Lidar_Case(self)
+            return status
 
         # Depending on the selection, exec one of the solvers
         match which_solver:
@@ -153,6 +156,34 @@ class Problem():
 
 # -------------------------------------- Solvers --------------------------------------------- 
 
+def solve_Lidar_Case(problem: Problem) -> bool:
+    """
+    This mode only expects one UAV and one lineal branch. If something else
+    is given, the solver won't function properly. This case can be solved geometrically 
+    without any graph or complex solver and as such, it is done independly
+    """
+
+    # Let's get the UAV and its base.
+    uav: UAVS.UAV = problem.get_UAV_Team().get_List()[0]
+    base = problem.get_Bases().get_Base(uav.missionSettings['Base'])
+
+    # Let's get the closest tower to the UAV base. It only works with the one at the end or the start.
+    # Just need to check
+    towers = problem.get_Towers()
+    towers_coordinates = towers.get_DictCoordinates() # This is a bit stupid but it is for future-proofing
+    fTower, lTower = get_First_and_Last_Towers(towers)
+
+    fDist = np.linalg.norm(towers_coordinates[fTower] - base.get_Coordinates())
+    lDist = np.linalg.norm(towers_coordinates[lTower] - base.get_Coordinates())
+    
+    if fDist <= lDist:
+        "first tower closer"
+    else:
+        "last tower closer"
+
+    
+
+    return False
 
 def abstract_DFJ_Solver(problem: Problem) -> bool:
     """
@@ -475,6 +506,17 @@ def GRASP_Solver():
     return None
 
 # -------------------------------------- Auxiliary Functions ---------------------------------------------
+
+def get_First_and_Last_Towers(towers: TW.Towers) -> tuple[str, str]:
+    """
+    Outputs the first and last added towers to the towers class.
+    """
+
+    # The code is such that towers name already gives them the correct order (?)
+    first_tower = "T1"
+    last_tower = "T"+str(len(towers.get_Towers()))
+
+    return first_tower, last_tower
 
 def delete_Loops_with_Base(loops: list, base: str) -> list:
 
