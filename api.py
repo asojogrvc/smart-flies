@@ -255,9 +255,9 @@ def json_output():
 
         file_path = os.path.join("server", "dynamic", "mission_"+str(id)+".yaml")
 
-        f = open(file_path, 'r')
-        mission_data = yaml.safe_load(f)
-        json.append(mission_data)
+        # f = open(file_path, 'r')
+        # mission_data = yaml.safe_load(f)
+        # json.append(mission_data)
         
         try:
             f = open(file_path, 'r')
