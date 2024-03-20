@@ -506,7 +506,7 @@ class UAV():
                 ipoints = CO.get_Path_Online_Elevations(np.append(orbit[-1], 0),
                                                          self.routeUTM[0][0], towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
                 CO.update_Height(ipoints, tH + dH - bH)
-                ctions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 if len(ipoints) > 1:
                     for ipoint in ipoints[:-1]:
                         self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
@@ -539,7 +539,6 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
         return None
 
-    loiter_radius = 76
     g_max = np.arcsin(9 / 180 * np.pi)
     steps = 65                          # 50 by default
 
