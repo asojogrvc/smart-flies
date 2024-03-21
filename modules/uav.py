@@ -526,10 +526,12 @@ class UAV():
 
                 actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
-                
+            
+            case 3:
+                "asd"
+
             case _ :
-                print("No such mode exits")
-                return None
+                print("No such mode exists")
 
         return None
 

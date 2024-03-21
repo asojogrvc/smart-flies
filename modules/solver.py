@@ -170,20 +170,58 @@ def solve_Lidar_Case(problem: Problem) -> bool:
     # Let's get the closest tower to the UAV base. It only works with the one at the end or the start.
     # Just need to check
     towers = problem.get_Towers()
-    towers_coordinates = towers.get_DictCoordinates() # This is a bit stupid but it is for future-proofing
-    fTower, lTower = get_First_and_Last_Towers(towers)
+    towers_coordinates = towers.get_DictCoordinates()
+    fTower, lTower = get_First_and_Last_Towers(towers) # This is a bit stupid but it is for future-proofing
 
     fDist = np.linalg.norm(towers_coordinates[fTower] - base.get_Coordinates())
     lDist = np.linalg.norm(towers_coordinates[lTower] - base.get_Coordinates())
     
     if fDist <= lDist:
-        "first tower closer"
-    else:
-        "last tower closer"
 
+        uav.route = [(uav.missionSettings['Base'], fTower)]
+        uav.routeModes = ["Navigation"]
+
+        for i in range(1, len(towers_coordinates)):
+            uav.route.append(("T"+str(i), "T"+str(i+1)))
+            uav.routeModes.append("Inspection")
+
+        for i in reversed(range(1, len(towers_coordinates))):
+            uav.route.append(("T"+str(i+1), "T"+str(i)))
+            uav.routeModes.append("Inspection")
+
+        uav.route.append((fTower, uav.missionSettings['Base']))
+        uav.routeModes.append("Navigation")
+
+
+    else:
+
+        uav.route = [(uav.missionSettings['Base'], lTower)]
+        uav.routeModes = ["Navigation"]
+
+        for i in reversed(range(1, len(towers_coordinates))):
+            uav.route.append(("T"+str(i+1), "T"+str(i)))
+            uav.routeModes.append("Inspection")
+
+        for i in range(1, len(towers_coordinates)):
+            uav.route.append(("T"+str(i), "T"+str(i+1)))
+            uav.routeModes.append("Inspection")
+
+
+        uav.route.append((lTower, uav.missionSettings['Base']))
+        uav.routeModes.append("Navigation")
+
+    uav.routeAbstract = uav.route
+
+    print("route", uav.route)
+    print("routeAbstract", uav.routeAbstract)
+    print("routeModes", uav.routeModes)
+
+    uav.routeUTM = route_to_UTM(uav.route, towers, problem.get_Bases())
+    
+    print("routeUTM", uav.routeUTM)
     
 
-    return False
+    return True
 
 def abstract_DFJ_Solver(problem: Problem) -> bool:
     """
