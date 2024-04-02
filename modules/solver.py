@@ -1249,8 +1249,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
                 # Continuity. The UAV that inspects must be the one that exits the segment
                 for uav in puavs:
-
-                    if tooManyUAVSQ or distant_subgraphsQ:
+                    
+                    # Disabled since they do nothing. Subtour elimination and the disabling of the base already do this job
+                    if False: #tooManyUAVSQ or distant_subgraphsQ:
 
                         Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
@@ -1438,7 +1439,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
                 for uav in puavs:
                     
-                    if tooManyUAVSQ or distant_subgraphsQ:
+                    if False: #tooManyUAVSQ or distant_subgraphsQ:
 
                         Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
 
