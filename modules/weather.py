@@ -70,7 +70,7 @@ class Weather():
 
         try: response = requests.get(url, timeout=5.0)
         except: 
-            print("Weather API Connection error")
+            print("Weather API Connection error or timed-out")
             return False
     
 

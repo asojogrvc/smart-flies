@@ -156,7 +156,11 @@ def update_Height_Online(coords: np.ndarray):
         request = url + f"{coords[0]}"+','+f"{coords[1]}"+'|'
         # get response from the api
         #print(request)
-        response = requests.get(request, timeout=10.0)
+        try:
+            response = requests.get(request, timeout=10.0)
+        except:
+            print("API Timeout or wrong request!")
+            return None
         
         # if the response is positive, update, if not, don't
         if 200 == response.status_code and "error" not in response.json():
@@ -177,7 +181,11 @@ def update_Height_Online(coords: np.ndarray):
             # request url
             request = url + towers_string
             #print(request)
-            response = requests.get(request, timeout=10.0)
+            try:
+                response = requests.get(request, timeout=10.0)
+            except:
+                print("API Timeout or wrong request!")
+                return None
 
             # if the response is positive, store heights in "elevation"
             elevations = np.zeros(len(coords))
@@ -215,7 +223,11 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
         request = url + f"{coordslatlot[0]}"+','+f"{coordslatlot[1]}"+'|'
         # get response from the api
         #print(request)
-        response = requests.get(request, timeout=10.0)
+        try:
+            response = requests.get(request, timeout=10.0)
+        except:
+            print("API Timeout or wrong request!")
+            return None
         
         # if the response is positive, update, if not, don't
         if 200 == response.status_code and "error" not in response.json():
@@ -237,7 +249,11 @@ def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
             # request url
             request = url + towers_string
             #print(request)
-            response = requests.get(request, timeout=10.0)
+            try:
+                response = requests.get(request, timeout=10.0)
+            except:
+                print("API Timeout or wrong request!")
+                return None
 
             # if the response is positive, store heights in "elevation"
             elevations = np.zeros(len(coords))
@@ -270,7 +286,11 @@ def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, u
     request = url + f"{p1[0]}"+','+f"{p1[1]}"+'|'+f"{p2[0]}"+','+f"{p2[1]}"+f"&samples={n_points}"
     # get response from the api
     #print(request)
-    response = requests.get(request, timeout=10.0)
+    try:
+        response = requests.get(request, timeout=10.0)
+    except:
+        print("API Timeout or wrong request!")
+        return None
     print(request)
     print(response.json())
     path = []
