@@ -526,10 +526,141 @@ class UAV():
 
                 actions = {"video_start": 0, "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
+            
+            case 2:
+
+                gimbal = - float(self.missionSettings["Cam. angle"])
+
+                points, n_dir, n_perp = CO.compute_Parallel_Trajectory(self.routeUTM[0][0][:2], self.routeUTM[1], self.missionSettings["Insp. horizontal offset"])
+
+                n = points[0] - self.routeUTM[0][0][:2]
+                n = n / np.linalg.norm(n)
+                yaw = np.rad2deg(np.arccos(n[1]))
+                if n[0] < 0: yaw = -yaw
+
+                # Takeoff at base
+                actions = {"video_start": True, "gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(self.routeUTM[0][0][:2], fH), actions, "Navigation")
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(self.routeUTM[0][0][:2], tH + dH), actions, "Navigation")
+
+                # Travel to the first inspection point at security height
+
+                # -----
+                ipoints = CO.get_Path_Online_Elevations(self.routeUTM[0][0], np.append(points[0], 0), towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
+                CO.update_Height(ipoints, tH + dH - bH)
+                    
+                if len(ipoints) > 1:
+                    for ipoint in ipoints[:-1]:
+                        actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                        self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
+                # -----
+
+                # First inspection point at security height
+                btH = coords_dict[self.route[0][1]][2] - bH
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(points[0], tH + dH + btH), actions, "Navigation")
+
+                # Get down to inspection height
+
+                n = (n_dir + n_perp ) / np.sqrt(2)
+                yaw = np.rad2deg(np.arccos(n[1]))
+                if n[0] < 0: yaw = -yaw
+
+                actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
+                self.waypoints.add_Waypoint(np.append(points[0], tH + self.missionSettings["Insp. height"] + btH), actions, "Inspection")
+
+                # Continue to the next point
+                btH = coords_dict[self.route[1][1]][2] - bH
+                actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
+                self.waypoints.add_Waypoint(np.append(points[1], tH + self.missionSettings["Insp. height"] + btH), actions, "Inspection")
+
+                # Do all inspection until half of the route, where it needs to rotate and go back
+                half = int(np.floor(len(self.route) / 2))
+
+                print("half", half)
+                print(len(self.route))
+
+                for i, move in enumerate(self.routeUTM[2:half]):
+
+                    points, n_dir, n_perp = CO.compute_Parallel_Trajectory(points[1], move, self.missionSettings["Insp. horizontal offset"])
+
+                    n = (n_dir + n_perp ) / np.sqrt(2)
+                    yaw = np.rad2deg(np.arccos(n[1]))
+                    if n[0] < 0: yaw = -yaw
+
+                    btH = coords_dict[self.route[2:half][i][0]][2] - bH
+                    actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
+                    self.waypoints.add_Waypoint(np.append(points[0], tH + self.missionSettings["Insp. height"] + btH), actions, "Inspection")
+
+                    btH = coords_dict[self.route[2:half][i][1]][2] - bH
+                    actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
+                    self.waypoints.add_Waypoint(np.append(points[1], tH + self.missionSettings["Insp. height"] + btH), actions, "Inspection")
+
+                # Get to security height and get to the other side
                 
+                n = n_perp
+                yaw = np.rad2deg(np.arccos(n[1]))
+                if n[0] < 0: yaw = -yaw
+
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(points[1], tH + dH + btH), actions, "Navigation")
+
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(
+                    np.append(points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n_perp, tH + dH + btH), actions, "Navigation")
+                
+                # Get back to inspection height and inspect till it finish te towers.
+                #actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                #self.waypoints.add_Waypoint(
+                #    np.append(points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n_perp, tH + self.missionSettings["Insp. height"] + btH),
+                #    actions, "Navigation")
+                
+                points = 2*[points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n_perp]
+
+                for i, move in enumerate(self.routeUTM[half:-1]):
+
+                    points, n_dir, n_perp = CO.compute_Parallel_Trajectory(points[1], move, self.missionSettings["Insp. horizontal offset"])
+
+                    n = (n_dir + n_perp ) / np.sqrt(2)
+                    yaw = np.rad2deg(np.arccos(n[1]))
+                    if n[0] < 0: yaw = -yaw
+
+                    btH = coords_dict[self.route[half:-1][i][0]][2] - bH
+                    actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
+                    self.waypoints.add_Waypoint(np.append(points[0], tH + self.missionSettings["Insp. height"] + btH), actions, "Inspection")
+
+                    btH = coords_dict[self.route[half:-1][i][1]][2] - bH
+                    actions = {"gimbal": gimbal, "yaw": yaw, "photo": True, "mode": 1}
+                    self.waypoints.add_Waypoint(np.append(points[1], tH + self.missionSettings["Insp. height"] + btH), actions, "Inspection")
+
+                n = self.routeUTM[0][0][:2] - points[1]
+                n = n / np.linalg.norm(n)
+                yaw = np.rad2deg(np.arccos(n[1]))
+                if n[0] < 0: yaw = -yaw
+
+                # Get to security height where it last was and get back to base
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(points[1], tH + dH + btH), actions, "Navigation")
+
+                # -----
+                ipoints = CO.get_Path_Online_Elevations(np.append(points[1], 0), self.routeUTM[0][0], towers.get_UTM_Zone(), 200)[1:] # Delete the first point as it is already in
+                CO.update_Height(ipoints, tH + dH - bH)
+                    
+                if len(ipoints) > 1:
+                    for ipoint in ipoints[:-1]:
+                        actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                        self.waypoints.add_Waypoint(ipoint, actions, "Navigation")
+                # -----
+
+                # land at base
+                actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(self.routeUTM[0][0][:2], tH + dH), actions, "Navigation")
+                actions = {"video_start": False, "gimbal": gimbal, "yaw": yaw, "mode": 0}
+                self.waypoints.add_Waypoint(np.append(self.routeUTM[0][0][:2], fH), actions, "Navigation")
+
             case _ :
-                print("No such mode exits")
-                return None
+                print("No such mode exists")
 
         return None
 
