@@ -1300,6 +1300,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                     nodelist.remove(base.get_Name())
 
                 if tooManyUAVSQ or distant_subgraphsQ:
+
+                    Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
+
                     # Base exit constrain
                     pmodel.addCons(
                             SCIP.quicksum(
@@ -1476,6 +1479,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                     nodelist.remove(base.get_Name())
 
                 if tooManyUAVSQ or distant_subgraphsQ:
+
+                    Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
+                    
                     # Base exit constrain
                     pmodel.addCons(
                             SCIP.quicksum(
