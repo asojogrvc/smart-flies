@@ -46,7 +46,7 @@ def print_Header(file, id:str):
     """
     file.write("version: "+str(yaml_version)+"\n")
     file.write("frame_id: "+f_id+"\n")
-    file.write("id: "+id+"\n")
+    file.write("id: "+str(id)+"\n")
 
     return None
 

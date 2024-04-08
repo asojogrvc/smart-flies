@@ -357,6 +357,7 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
     Outputs:
         - List of the n_points waypoints as 2D vectors.
         - n_dir: Normalized vector in the direction of the output trajectory.
+        - n_dir: Normalized vector in the direction of the tower.
     """
 
     # Get heights out
@@ -376,8 +377,8 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
     phi = np.arccos(-n_dir[0])
     if 0 < n_dir[1]: phi = - phi
 
-    p4 = [np.cos((n_points - 1) / n_points * 2 * np.pi + phi), np.sin((n_points - 1) / n_points* 2 * np.pi + phi)]
-    p5 = [np.cos((n_points - 1) / n_points * 2 * np.pi + phi), -np.sin((n_points - 1) / n_points* 2 * np.pi + phi)]
+    p4 = p2 +  [distance * np.cos((n_points - 1) / n_points * 2 * np.pi + phi), distance * np.sin((n_points - 1) / n_points* 2 * np.pi + phi)]
+    p5 = p2 +  [distance * np.cos((n_points - 1) / n_points * 2 * np.pi + phi), - distance * np.sin((n_points - 1) / n_points* 2 * np.pi + phi)]
 
     d4 = np.linalg.norm(p3-p4)
     d5 = np.linalg.norm(p3-p5)
@@ -386,13 +387,11 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
     else: sign = -1
 
     orbit = [p2 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), sign * np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
-
-    v_dirs = [p2 - 0.5*(orbit[i]+orbit[i+1])  for i in range(n_points-1)]
-    v_dirs.append(p2 - 0.5*(orbit[0]+orbit[-1]))
+    v_dirs = [p2 - orbit[i]  for i in range(n_points)]
 
     k = 0
     for vec in v_dirs:
-        v_dirs[k]= vec / np.linalg.norm(vec)
+        v_dirs[k] = vec / np.linalg.norm(vec)
         k += 1
 
     return orbit, n_dir, v_dirs
