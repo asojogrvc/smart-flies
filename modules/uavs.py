@@ -31,6 +31,11 @@ class UAV():
         else:
             self.__model = "Model A"
 
+        if "base" in kwargs:
+            self.__base = kwargs["base"]
+        else:
+            self.__base = "B"
+
     # ------------------------ Setting parameter functions ---------------------------
 
     def set_ID(self, id:str):
@@ -44,6 +49,9 @@ class UAV():
         else:
             raise Exception("No such model")
         return None
+    
+    def set_Base(self, base:str):
+        self.__base = base
         
 
     # ----------------------------- Getting parameter functions -------------------------------
@@ -53,6 +61,9 @@ class UAV():
     
     def get_Model(self) -> str:
         return self.__model
+    
+    def get_Base(self) -> str:
+        return self.__base
         
     
 class UAV_Team():

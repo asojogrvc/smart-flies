@@ -5,13 +5,10 @@ and settings.
 As of now, all methods can be seen as a MILP problem than can solved using SCIP and its Python Interface PySCIPOpt
 """
 
-import networkx as nx, copy
-import numpy as np
-import itertools
-import pyscipopt as SCIP # Model, quicksum, SCIP_PARAMSETTING
-from PyQt6.QtWidgets import QProgressBar
+import networkx as nx
+import pyscipopt as SCIP
 
-from modules import bases as BA, tasks as TS, uavs as UAVS, weather as WT, weights as WE
+from modules import bases as BA, tasks as TS, uavs as UAVS, weather as WT
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -26,6 +23,8 @@ class Problem():
         self.__tasks = tasks 
         self.__uavs = uavs
 
+        if "weather" in kwargs and WT.Weather == type(kwargs["weather"]):
+            self.__weather = kwargs["weather"]
 
         # Auxiliary parameters: 
         #   - The graph represents the abstract representation of the towers and bases. It dependes on the used solver method
@@ -61,3 +60,27 @@ def dynamic_Solver(problem: Problem):
 
 def solver(problem: Problem):
     return None
+
+def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS.Towers,
+                              tasks: TS.Tasks, uavs: UAVS.UAV_Team, weather: WT.Weather):
+    
+    # For each base, we need to add one vertex
+    for name, position in bases:
+        graph.add_node(name, position = position)
+    
+    # For each task, we need to add at least a vertex
+    for name, geometry in tasks:
+
+        if str == type(geometry): # Punctual inspection
+            graph.add_node(name, to_Inspect = geometry)
+
+        elif tuple == type(geometry) and 2 == len(geometry):
+            graph.add_node(name+"_U", to_Inspect = geometry)
+            graph.add_node(name+"_D", to_Inspect = geometry[::-1])
+
+    # Connect bases with compatible vertices
+    for uav in uavs:
+        uav.get_Base()
+
+
+    return graph
