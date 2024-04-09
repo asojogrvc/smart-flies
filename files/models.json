@@ -1,0 +1,14 @@
+{
+    "A": {
+        "Speed": 5,
+        "Charge": 100
+    },
+    "B": {
+        "Speed": 15,
+        "Charge": 45
+    },
+    "C": {
+        "Speed": 2,
+        "Charge": 200
+    }
+}

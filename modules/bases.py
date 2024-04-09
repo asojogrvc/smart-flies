@@ -1,10 +1,4 @@
-import numpy as np
-import re
-from pykml import parser
-import matplotlib.pyplot as plt
-
-import modules.coordinates as CO
-
+import numpy as np, matplotlib.pyplot as plt
 
 class Bases():
     
@@ -21,6 +15,26 @@ class Bases():
         self.__iter_max = len(self.__bases)
 
         return None
+    
+    # ------------------------ Parameter output functions ----------------------
+        
+    def get_List(self) -> dict:
+        """
+        Gets the Bases as a Python dict.
+        """
+        return self.__bases
+    
+    def print(self):
+        """
+        Prints the bases data
+        """
+
+        print("------------------------------Bases-------------------------------")
+        for name, position in self:
+            print(" - Name: ", name, " Position: ", position)
+        print("------------------------------------------------------------------")
+
+        return None
 
     # ------------------------ Adding bases functions ---------------------------
     
@@ -29,7 +43,10 @@ class Bases():
         Add a single base to the bases instance
         """
 
-        self.__bases[name] = position
+        if not name in self.__bases:
+            self.__bases[name] = position
+        else:
+            raise Exception("New base cannot share nane with any other base in the team")
 
         return None
 
@@ -43,9 +60,10 @@ class Bases():
 
         if which in self.__bases:
             del self.__bases[which]
-            return None
         else:
-            raise Exception("No base with such name")
+            raise Exception("No such ID")
+        
+        return None
 
 
     def reset(self):
@@ -71,56 +89,34 @@ class Bases():
         except:
             raise Exception("No base with such name")
     
-    def print(self):
-        """
-        Prints the bases in a human-readable way
-        """
-
-        print("----------------------------Bases------------------------------")
-        if self.__list:
-            for base in self:
-                print("  ", end = "")
-                base.print()
-
-        print("----------------------------------------------------------------")
-
-    def get_Coordinates(self) -> np.ndarray:
-        """
-        Outputs the list of UTM coordinates without Zone
-        """
-
-        return self.__coordinates
-    
 
     # -------------------------------- Plotting functions -------------------------------------
 
     def plot(self, axes: plt.Axes):
-        """
-        Auxiliary method that connects with an already existing matplotlib figure via axes.
-        It just plots every base within the base list
-        """
-        for base in self:
-            base.plot(axes)
+
+        for name, position in self:
+            axes.scatter(position[0], position[1], c ='r')
+            axes.annotate(name, (position[0], position[1]))
 
         return None
 
     # -------------------------------- Iterator definition -------------------------------------
 
+    
     # Iterator method so we can use "for base in bases". Should be good.
     # This method just initialize things
     def __iter__(self) -> "Bases":
         self.__iter_counter = 0
-        self.__iter_max = len(self.__list)
+        self.__iter_max = len(self.__bases)
         return self
     # Should give the next element each time it is called
-    def __next__(self) -> Base:
+
+    def __next__(self) -> tuple:
         # Sets maximum number of iterations
-        if self.__iter_counter < (self.__iter_max): # self.iter_max might be changed to self.number_of_bases
-                                                # len(self.list) cannot be used as it will create infinite loops
-                                                # if the list length is changed within an iteration
+        if self.__iter_counter < (self.__iter_max):
             self.__iter_counter += 1
-            return self.__list[self.__iter_counter-1]
+
+            name = list(self.__bases.keys())[self.__iter_counter-1]
+            return name, self.__bases[name]
         else:
             raise StopIteration
-    
-

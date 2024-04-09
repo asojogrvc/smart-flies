@@ -3,7 +3,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 
-import modules.workers as UAVS, modules.weather as WT
+import modules.uavs as UAVS, modules.weather as WT
 
 # These parameters might be loaded externally o get passed to the functions
 

@@ -11,7 +11,7 @@ import itertools
 import pyscipopt as SCIP # Model, quicksum, SCIP_PARAMSETTING
 from PyQt6.QtWidgets import QProgressBar
 
-from modules import bases as BA, tasks as TS, workers as WS, weather as WT, weights as WE
+from modules import bases as BA, tasks as TS, uavs as WS, weather as WT, weights as WE
 
 class Problem():
     def __init__(self, id:str, bases:BA.Bases, tasks: TS.Tasks, workers: WS.Workers, **kwargs):
