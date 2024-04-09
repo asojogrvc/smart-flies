@@ -69,14 +69,14 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
         graph.add_node(name, position = position)
     
     # For each task, we need to add at least a vertex
-    for name, geometry in tasks:
+    for name, data in tasks:
 
-        if str == type(geometry): # Punctual inspection
-            graph.add_node(name, to_Inspect = geometry)
+        if str == type(data["inspection_of"]): # Punctual inspection
+            graph.add_node(name, inspection_of = data["inspection_of"])
 
-        elif tuple == type(geometry) and 2 == len(geometry):
-            graph.add_node(name+"_U", to_Inspect = geometry)
-            graph.add_node(name+"_D", to_Inspect = geometry[::-1])
+        elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
+            graph.add_node(name+"_U", inspection_of = data["inspection_of"])
+            graph.add_node(name+"_D", inspection_of = data["inspection_of"][::-1])
 
     # Connect bases with compatible vertices
     for uav in uavs:

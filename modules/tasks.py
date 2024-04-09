@@ -88,32 +88,35 @@ class Tasks():
 
     def __init__(self):
 
-        self.__list = {} # name, data. data is either a str with the tower name or a tuple for two names
-
-    def add_Task(self, name: str, **kwargs):
-
-        if "tower" in kwargs:
-
-            if str == type(kwargs["tower"]):
-                self.__list[name] = kwargs["tower"]
-            else:
-                raise Exception(" 'tower' is not a valid tuple")
-            return None
+        self.__list = {} # name, data. 
         
-        elif "pair_of_towers" in kwargs:
+        # data is a dict with:
+            # inspection_of: either a str with the tower name or a tuple for two names
+            # incompatiblity: a list of incompatible UAV IDs
 
-            if tuple == type(kwargs["pair_of_towers"]) and 2 == len(kwargs["pair_of_towers"]):
-                self.__list[name] = kwargs["pair_of_towers"]
-            else:
-                raise Exception(" 'pair_of_towers' is not a valid tuple")
-            
-            return None
+    def add_Task(self, name: str, inspection_of: str | tuple, **kwargs):
+        """
+        For punctual inspection: inspection_of is a str with the name of the tower
+        For lineal inspection: it is a tuple with the name of the two defining towers.
+
+        It is also possible to define incompatibility with certain UAVs by giving a list with their IDs
+        """
+
+        if "incompatible_IDs" in kwargs:
+            incompatible_IDs = kwargs["incompatible_IDs"]
+        else:
+            incompatible_IDs = []
+
+
+        self.__list[name] = {"inspection_of": inspection_of, "incompatible_IDs": incompatible_IDs}
+
+        return None
         
     def print(self):
 
         print("----------------------------Task List-----------------------------")
-        for task, geometry in self:
-            print(" - Name: ", task, " Inspection of: ", geometry)
+        for name, data in self:
+            print(" - Name: ", name, " Inspection of: ", data["inspection_of"], " Incompatible with IDs: ", data["incompatible_IDs"])
         print("------------------------------------------------------------------")
 
 
@@ -137,3 +140,5 @@ class Tasks():
             return name, self.__list[name]
         else:
             raise StopIteration
+
+    

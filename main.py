@@ -50,8 +50,8 @@ def create_UAVs() -> UAVS.UAV_Team:
 
 def create_Tasks() -> TS.Tasks:
     tasks = TS.Tasks()
-    tasks.add_Task("TaskT1", tower = "T1")
-    tasks.add_Task("TaskS2", pair_of_towers = ("T2", "T3"))
+    tasks.add_Task("TaskT1", inspection_of = "T1", incompatible_IDs = [0,])
+    tasks.add_Task("TaskS2", inspection_of = ("T2", "T3"))
 
     return tasks
 
@@ -61,6 +61,8 @@ bases = create_Bases()
 towers = create_Towers()
 uav_team = create_UAVs()
 tasks = create_Tasks()
+
+tasks.print()
 
 problem = SO.Problem(bases, towers, tasks, uav_team)
 
