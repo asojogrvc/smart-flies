@@ -50,8 +50,8 @@ def create_UAVs() -> UAVS.UAV_Team:
 
 def create_Tasks() -> TS.Tasks:
     tasks = TS.Tasks()
-    tasks.add_Task("TaskT1", inspection_of = "T1", incompatible_IDs = [0,])
-    tasks.add_Task("TaskS2", inspection_of = ("T2", "T3"))
+    tasks.add_Task("tT1", inspection_of = "T1", incompatible_IDs = [0,])
+    tasks.add_Task("tS2", inspection_of = ("T2", "T3"))
 
     return tasks
 
@@ -65,13 +65,17 @@ tasks = create_Tasks()
 tasks.print()
 
 problem = SO.Problem(bases, towers, tasks, uav_team)
+problem.solve(True)
 
-graph = nx.MultiDiGraph()
-SO.construct_Abstract_Graph(graph, bases, towers, tasks, uav_team, "")
+graph = problem.get_Graph()
 
 fig = plt.figure()
-axes = fig.add_subplot(111)
+axes = fig.add_subplot(131)
 nx.draw_networkx(graph, ax=axes, with_labels = True)
+axes1 = fig.add_subplot(132)
+nx.draw_networkx(SO.get_Subgraph(graph, 0), ax=axes1, with_labels = True)
+axes2 = fig.add_subplot(133)
+nx.draw_networkx(SO.get_Subgraph(graph, 1), ax=axes2, with_labels = True)
 
 """
 bases.plot(axes)

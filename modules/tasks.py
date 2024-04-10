@@ -122,6 +122,21 @@ class Tasks():
 
         return None
     
+    def compatible_With(self, id: str) -> list:
+
+        compatible = []
+        for name, data in self:
+            if not id in data["incompatible_IDs"]:
+
+                if str == type(data["inspection_of"]):
+                    compatible.append(name)
+                else:
+                    compatible.append(name+"_U")
+                    compatible.append(name+"_D")
+
+
+        return compatible
+
 
     # -------------------------------- Iterator definition -------------------------------------
 
