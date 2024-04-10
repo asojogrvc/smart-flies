@@ -1,9 +1,4 @@
 # UAV and UAV Team Classes
-import numpy as np, matplotlib.pyplot as plt
-from yaml import load, Loader
-import copy
-
-from modules import tasks as TW, waypoints as WP, coordinates as CO, bases as BA, dubins as DB
 
 # Load Model Database
 import json 
@@ -36,6 +31,8 @@ class UAV():
         else:
             self.__base = "B"
 
+        self.__route = []
+
     # ------------------------ Setting parameter functions ---------------------------
 
     def set_ID(self, id:str):
@@ -52,7 +49,6 @@ class UAV():
     
     def set_Base(self, base:str):
         self.__base = base
-        
 
     # ----------------------------- Getting parameter functions -------------------------------
     

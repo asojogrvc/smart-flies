@@ -5,9 +5,8 @@ and settings.
 As of now, all methods can be seen as a MILP problem than can solved using SCIP and its Python Interface PySCIPOpt
 """
 
-import networkx as nx
+import networkx as nx, pyscipopt as SCIP, numpy as np
 from itertools import combinations
-import pyscipopt as SCIP
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, weather as WT
 
@@ -109,24 +108,25 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     # They will be zero by default
     for pair in pairs:
         for uav in uavs:
-            Z[str(uav.get_ID())+"Z"+pair[0]+pair[1]] = 0
-            Z[str(uav.get_ID())+"Z"+pair[1]+pair[0]] = 0
+            Z[str(uav.get_ID())+"Z"+pair[0]+"-"+pair[1]] = 0
+            Z[str(uav.get_ID())+"Z"+pair[1]+"-"+pair[0]] = 0
 
     # Except if they represent an existing edge
     for edge in graph.edges: # edge = (node1, node2, key)
-        Z[str(edge[2])+"Z"+edge[0]+edge[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = str(edge[2])+"Z"+edge[0]+edge[1])
+        Z[str(edge[2])+"Z"+edge[0]+"-"+edge[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = str(edge[2])+"Z"+edge[0]+"-"+edge[1])
 
-    # UAV usage variables. One per 
+    # UAV usage variables. One per uav
     Y = {
-            uav.get_ID(): scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+str(edge[2]))
-            for uav in uavs
-        }
+        uav.get_ID(): scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+str(uav.get_ID()))
+        for uav in uavs
+    }
     
     for uav in uavs:
+
         # Base exit constraints
         scip_model.addCons(
             SCIP.quicksum(
-                Z[str(uav.get_ID())+"Z"+edge[0]+edge[1]]
+                Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
                 for edge in graph.out_edges(uav.get_Base())
             )
             == 
@@ -137,24 +137,23 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         graph.in_edges()
         scip_model.addCons(
             SCIP.quicksum(
-                Z[str(uav.get_ID())+"Z"+edge[0]+edge[1]]
+                Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
                 for edge in graph.in_edges(uav.get_Base())
             )
             == 
             Y[uav.get_ID()]
         )
 
-    # Task Completion constraint
+    # Task Completion constraints
     for name, data in tasks:
+
+        # Punctual inspection
         if str == type(data["inspection_of"]):
             
             scip_model.addCons(
                 SCIP.quicksum(
-                    SCIP.quicksum(
-                        Z[str(uav.get_ID())+"Z"+edge[0]+edge[1]]
-                        for uav in uavs
-                    )
-                    for edge in graph.in_edges(name)
+                        Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in graph.in_edges(name)  # As this contains the key (ID), there is no need to sum for UAVs
                 )
                 == 
                 1
@@ -162,24 +161,18 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
             scip_model.addCons(
                 SCIP.quicksum(
-                    SCIP.quicksum(
-                        Z[str(uav.get_ID())+"Z"+edge[0]+edge[1]]
-                        for uav in uavs
-                    )
+                        Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
                     for edge in graph.out_edges(name)
                 )
                 == 
                 1
             )
 
+        # Lineal inspection
         else:
-            
             scip_model.addCons(
                 SCIP.quicksum(
-                    SCIP.quicksum(
-                        Z[str(uav.get_ID())+"Z"+edge[0]+edge[1]]
-                        for uav in uavs
-                    )
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
                     for edge in list(graph.in_edges(name+"_U"))+list(graph.in_edges(name+"_D"))
                 )
                 == 
@@ -188,17 +181,58 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
             scip_model.addCons(
                 SCIP.quicksum(
-                    SCIP.quicksum(
-                        Z[str(uav.get_ID())+"Z"+edge[0]+edge[1]]
-                        for uav in uavs
-                    )
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
                     for edge in list(graph.out_edges(name+"_U"))+list(graph.out_edges(name+"_D"))
                 )
                 == 
                 1
             )
 
+    for uav in uavs:
+        for name in tasks.compatible_With(uav.get_ID()):
+
+            Y[name+"|"+str(uav.get_ID())] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+str(uav.get_ID()))
+
+
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in list(graph.in_edges(name)) + list(graph.out_edges(name))
+                )
+                == 
+                2 * Y[name+"|"+str(uav.get_ID())]
+            )
+
     return scip_model, Z, Y
+
+def order_Route(route: list) -> list:
+
+    ordered_Route = []
+
+    if 0 < len(route):
+
+        start = ordered_Route[0]
+
+    return ordered_Route
+
+def parse_Solution(sol: SCIP.scip.Solution, Z: dict, uavs: UAVS.UAV_Team):
+
+    routes = {str(uav.get_ID()): [] for uav in uavs}
+
+    for edge in Z:
+
+        try: value = sol[Z[edge]]
+        except: value = 0
+
+        if np.abs(value - 1.0) < 1e-6: # To avoid floating point errors
+            
+            edge_parts = edge.split("Z")
+            uav_ID = edge_parts[0]
+            nodes = tuple(edge_parts[1].split("-"))
+
+            routes[uav_ID].append(nodes)
+
+    return routes
 
 def get_Subgraph(graph: nx.MultiDiGraph, id: str) -> list:
 
@@ -224,9 +258,11 @@ def dynamic_Solver(problem: Problem):
 
     scip_model.setObjective(SCIP.quicksum(Z[key] for key in Z.keys()))
     scip_model.optimize()
-    sol = scip_model.getBestSol()
-    print(sol)
 
+    sol = scip_model.getBestSol()
+
+    routes = parse_Solution(sol, Z, uavs)
+    print(routes)
 
     return None
 
