@@ -104,6 +104,7 @@ class Tasks():
 
         if "incompatible_IDs" in kwargs:
             incompatible_IDs = kwargs["incompatible_IDs"]
+            incompatible_IDs = [str(id) for id in incompatible_IDs]
         else:
             incompatible_IDs = []
 
@@ -111,6 +112,20 @@ class Tasks():
         self.__list[name] = {"inspection_of": inspection_of, "incompatible_IDs": incompatible_IDs}
 
         return None
+    
+    def get_Task_Parsing_Dict(self) -> dict:
+
+        parsing = {}
+
+        for name, data in self:
+            if str == type(data["inspection_of"]):
+                parsing[name] = [data["inspection_of"]]
+
+            elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
+                parsing[name+"_U"] = list(data["inspection_of"])
+                parsing[name+"_D"] = list(data["inspection_of"][::-1])
+
+        return parsing
         
     def print(self):
 

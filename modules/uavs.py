@@ -14,7 +14,7 @@ class UAV():
         """
 
         if "id" in kwargs:
-            self.__id = kwargs["id"]
+            self.__id = str(kwargs["id"])
         else:
             self.__id = "UAV_0"
 
@@ -36,7 +36,7 @@ class UAV():
     # ------------------------ Setting parameter functions ---------------------------
 
     def set_ID(self, id:str):
-        self.__id = id
+        self.__id = str(id)
         return None
         
     def set_Model(self, model:str):
@@ -118,7 +118,6 @@ class UAV_Team():
         Deletes all current UAVs of the team
         """
         self.__list = []
-        self.__id_List = []
 
         return None
 
