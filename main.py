@@ -4,9 +4,9 @@ from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO
 
 def plot_Routes(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
 
-    colors = ["red", "green", "blue"]
+    colors = ["r", "g", "b"]
 
-    edge_colors = dict.fromkeys(list(G.edges), "black")
+    edge_colors = {}
 
     edges = []
     for k, uav_id in enumerate(routes):
