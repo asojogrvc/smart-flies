@@ -2,6 +2,26 @@ import numpy as np, matplotlib.pyplot as plt, networkx as nx
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO
 
+def plot_Routes(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
+
+    colors = ["red", "green", "blue"]
+
+    edge_colors = dict.fromkeys(list(G.edges), "black")
+
+    edges = []
+    for k, uav_id in enumerate(routes):
+        route = routes[uav_id]
+
+        for edge in route:
+
+            edge_colors[edge] = colors[k]
+            edges.append((edge[0], edge[1], uav_id))
+
+
+    nx.draw_networkx(G, ax=axes, edgelist = edges, edge_color = edge_colors.values(), with_labels = True)
+
+    return None
+
 # --------------------------------------------------------------------------
 
 def create_Bases() -> BA.Bases:
@@ -85,6 +105,7 @@ def create_Tasks() -> TS.Tasks:
 
     return tasks
 
+
 # --------------------------------------------------------------------------
 
 bases = create_Bases()
@@ -115,6 +136,9 @@ axes3 = fig2.add_subplot(111)
 bases.plot(axes3)
 towers.plot(axes3)
 
+fig3 = plt.figure()
+axes4 = fig3.add_subplot(111)
+plot_Routes(routes, graph, axes4)
 
 
 plt.show()

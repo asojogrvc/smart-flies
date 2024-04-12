@@ -111,7 +111,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     start_positions = graph.nodes(data = "start_position")
     end_positions = graph.nodes(data = "end_position")
 
-    print(end_positions)
+    #print(end_positions)
 
     scip_model = SCIP.Model("GTSP-MUAV")
     if "is_editable" in kwargs and True == kwargs["is_editable"]:
@@ -148,24 +148,25 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     for uav in uavs:
 
         # Base exit constraints
+        edges = list(dict.fromkeys(list(graph.out_edges(uav.get_Base()))))
         scip_model.addCons(
             SCIP.quicksum(
                 Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                for edge in graph.out_edges(uav.get_Base())
+                for edge in edges
             )
             == 
-            Y[uav.get_ID()]
+            1 #Y[uav.get_ID()]
         )
 
         # Base enter constraints
-        graph.in_edges()
+        edges = list(dict.fromkeys(list(graph.in_edges(uav.get_Base()))))
         scip_model.addCons(
             SCIP.quicksum(
                 Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                for edge in graph.in_edges(uav.get_Base())
+                for edge in edges
             )
             == 
-            Y[uav.get_ID()]
+            1 # Y[uav.get_ID()]
         )
 
     # Task Completion constraints
@@ -174,19 +175,27 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         # Punctual inspection
         if str == type(data["inspection_of"]):
             
+            edges = list(dict.fromkeys(list(graph.in_edges(name))))
             scip_model.addCons(
                 SCIP.quicksum(
-                        Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in graph.in_edges(name)  # As this contains the key (ID), there is no need to sum for UAVs
-                )
+                    SCIP.quicksum(
+                            Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
+                )    
                 == 
                 1
             )
 
+            edges = list(dict.fromkeys(list(graph.out_edges(name))))
             scip_model.addCons(
                 SCIP.quicksum(
-                        Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in graph.out_edges(name)
+                    SCIP.quicksum(
+                            Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
                 )
                 == 
                 1
@@ -194,19 +203,28 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
         # Lineal inspection
         else:
+            
+            edges = list(dict.fromkeys(list(graph.in_edges(name+"_U"))+list(graph.in_edges(name+"_D"))))
             scip_model.addCons(
                 SCIP.quicksum(
-                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in list(graph.in_edges(name+"_U"))+list(graph.in_edges(name+"_D"))
+                    SCIP.quicksum(
+                        Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
                 )
                 == 
                 1
             )
 
+            edges = list(dict.fromkeys(list(graph.out_edges(name+"_U"))+list(graph.out_edges(name+"_D"))))
             scip_model.addCons(
                 SCIP.quicksum(
-                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in list(graph.out_edges(name+"_U"))+list(graph.out_edges(name+"_D"))
+                    SCIP.quicksum(
+                        Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
                 )
                 == 
                 1
@@ -217,11 +235,11 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
             Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
 
-
+            edges = list(dict.fromkeys(list(graph.in_edges(name))+list(graph.out_edges(name))))
             scip_model.addCons(
                 SCIP.quicksum(
                     Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in list(graph.in_edges(name)) + list(graph.out_edges(name))
+                    for edge in edges
                 )
                 == 
                 2 * Y[name+"|"+uav.get_ID()]
@@ -384,7 +402,7 @@ def solver(problem: Problem) -> dict:
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
     scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs)
 
-    print(Wt)
+    #print(Wt)
 
     # Subtour elimination
     vertices = list(abstract_G.nodes)
@@ -445,7 +463,7 @@ def dynamic_Solver(problem: Problem) -> dict:
         for uav in uavs:
             baseQ, rest_of_vertices = does_Contain_Vertex(routes[uav.get_ID()], uav.get_Base())
 
-            print("vertices", rest_of_vertices)
+            #print("vertices", rest_of_vertices)
 
             if not baseQ:
                 
