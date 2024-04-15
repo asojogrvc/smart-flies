@@ -32,7 +32,7 @@ def create_Bases() -> BA.Bases:
     )
     bases.add_Base(
         "B1",
-        np.array([4, 4, 0])
+        np.array([3.5, 4, 0])
     )
 
     return bases
@@ -41,7 +41,7 @@ def create_Towers() -> TS.Towers:
     towers = TS.Towers()
     towers.add_Tower(
         "T1",
-        np.array([0,0,0])
+        np.array([0, -0.25,0])
     )
     towers.add_Tower(
         "T2",
@@ -49,11 +49,11 @@ def create_Towers() -> TS.Towers:
     )
     towers.add_Tower(
         "T3",
-        np.array([2,0,0])
+        np.array([-0.35,1.35,0])
     )
     towers.add_Tower(
         "T4",
-        np.array([0,1,0])
+        np.array([0,0.75,0])
     )
     towers.add_Tower(
         "T5",
@@ -61,11 +61,11 @@ def create_Towers() -> TS.Towers:
     )
     towers.add_Tower(
         "T6",
-        np.array([2,1,0])
+        np.array([2,1.25,0])
     )
     towers.add_Tower(
         "T7",
-        np.array([0,2,0])
+        np.array([0,3,0])
     )
     towers.add_Tower(
         "T8",
@@ -73,10 +73,10 @@ def create_Towers() -> TS.Towers:
     )
     towers.add_Tower(
         "T9",
-        np.array([2,2,0])
+        np.array([2,3,0])
     )
 
-    towers.add_Power_Lines([("T1", "T2"), ("T2", "T5"), ("T4", "T5"), ("T5", "T6"), ("T5", "T8") , ("T7", "T8"), ("T8", "T9")])
+    towers.add_Power_Lines([("T1", "T2"), ("T2", "T5"), ("T3", "T4"), ("T4", "T5"), ("T5", "T6"), ("T5", "T8") , ("T7", "T8"), ("T8", "T9")])
 
     return towers
 
@@ -87,7 +87,7 @@ def create_UAVs() -> UAVS.UAV_Team:
         id = 0, model = "A", base = "B0"
     ))
     uav_team.add_UAV(UAVS.UAV(
-        id = 1, model = "A", base = "B0"
+        id = 1, model = "A", base = "B1"
     ))
 
     return uav_team
@@ -114,7 +114,7 @@ uav_team = create_UAVs()
 tasks = create_Tasks()
 
 problem = SO.Problem(bases, towers, tasks, uav_team)
-routes = problem.solve(dynamic = False)
+routes = problem.solve(dynamic = True)
 
 print(routes)
 

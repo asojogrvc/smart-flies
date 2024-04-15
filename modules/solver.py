@@ -245,7 +245,46 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 2 * Y[name+"|"+uav.get_ID()]
             )
 
-    return scip_model, Z, Wt, Y
+    Sigmas = {}
+    if "add_sigmas" in kwargs and kwargs["add_sigmas"]:
+
+        print("Time Difference optimization Added")
+        
+        # Time difference constraints
+        uav_pairs = pairs = list(combinations(uavs.get_List().keys(), 2))
+        edges = list(dict.fromkeys([edge[:2] for edge in graph.edges]))
+
+        for uav1, uav2 in uav_pairs:
+            Sigmas[uav1+"-"+uav2] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "Si"+uav1+"-"+uav2)
+
+            # Constraint 1
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+              - SCIP.quicksum(
+                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                <= 
+                Sigmas[uav1+"-"+uav2]
+            )
+            # Constraint 1
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+              - SCIP.quicksum(
+                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                <= 
+                Sigmas[uav1+"-"+uav2]
+            )
+
+    return scip_model, Z, Wt, Y, Sigmas
 
 def compute_Subtour_Subset_from_Route(route: list, base: str) -> list:
 
@@ -293,35 +332,29 @@ def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, G: nx.MultiDiGraph, Z:dict,
 
 def find_Loop(route: list) -> tuple[list, list]:
 
-    starting_move = route[0]
+    from_nodes = copy.deepcopy([move[0] for move in route])
+    to_nodes = copy.deepcopy([move[1] for move in route])
 
-    loop = [starting_move, ]
+    moves_left = copy.deepcopy(route[1:])
+    loop = [route[0]]
 
-    unlisted_moves = route.copy()
+    search_node = to_nodes[0]
 
+    notBackQ = True
+    while notBackQ:
 
-    checklist = unlisted_moves.copy()
+        idx = from_nodes.index(search_node)
 
-    foundQ = True
+        if to_nodes[0] == to_nodes[idx]:
+            notBackQ = False
+            break
 
-    while foundQ:
+        search_node = to_nodes[idx]
+        loop.append((from_nodes[idx], to_nodes[idx]))
+        moves_left.remove((from_nodes[idx], to_nodes[idx]))
 
-        foundQ = False
-
-        for move in checklist:
-            if starting_move[1] == move[0]: #The next point of the loop is found
-
-                loop.append(move)
-                starting_move = move
-                del unlisted_moves[checklist.index(move)]
-
-                foundQ = True
-                break
-
-        if foundQ:
-            checklist = unlisted_moves.copy()
     
-    return loop, unlisted_moves
+    return loop, moves_left
 
 def list_Loops(route: list) -> tuple[list]:
 
@@ -331,14 +364,16 @@ def list_Loops(route: list) -> tuple[list]:
         return []
 
     loop, left = find_Loop(route)
+    # print("loop, left", loop, left)
 
     loop_list.append(loop)
 
     while left:
 
         loop, left = find_Loop(left)
+        # print("loop, left", loop, left)
 
-        if not left:
+        if left:
             loop_list.append(loop)
 
     return loop_list
@@ -392,15 +427,17 @@ def solver(problem: Problem) -> dict:
 
     print("Non-Dynamic Solver")
 
+    A = 0.25
+
     bases = problem.get_Bases()
     towers = problem.get_Towers()
     tasks = problem.get_Tasks()
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
 
-
+    
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
-    scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs)
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True)
 
     #print(Wt)
 
@@ -418,13 +455,17 @@ def solver(problem: Problem) -> dict:
         #print("Q", Q)
         for uav in uavs:
             add_DFJ_Subtour_Constraint(Q, uav.get_ID(), abstract_G, Z, scip_model)
-
-    scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
+    # --------------------------------------------------------------------------------------------------
+    if 0 == A:
+        scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
+    if 0 == (A - 1):
+        scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
+    else:
+        scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
+                                + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
 
     scip_model.writeProblem('scip_model.cip')
-
     scip_model.optimize()
-
     sol = scip_model.getBestSol()
 
     routes = parse_Solution(sol, Z, uavs)
@@ -433,7 +474,7 @@ def solver(problem: Problem) -> dict:
 
 def dynamic_Solver(problem: Problem) -> dict:
 
-    print("Dynamic Solver")
+    A = 0.25
 
     bases = problem.get_Bases()
     towers = problem.get_Towers()
@@ -441,40 +482,44 @@ def dynamic_Solver(problem: Problem) -> dict:
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
 
-
+    
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
-    scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, is_editable = True)
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True)
 
+    if 0 == A:
+        scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
+    if 0 == (A - 1):
+        scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
+    else:
+        scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
+                                + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
 
-    scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
     scip_model.writeProblem('scip_model.cip')
 
-    iter = 0
-    print("------------- Initial Iteration ------------")
-    scip_model.optimize()
-    routes = parse_Solution(scip_model.getBestSol(), Z, uavs)
-
-    scip_model.freeReoptSolve()
     
-    # As of now, it just deletes routes without the base
-    baseQ = False
-    while not baseQ:
+    print("-------------Initial Iteration-------------")
+    scip_model.optimize()
+    sol = scip_model.getBestSol()
 
-        for uav in uavs:
-            baseQ, rest_of_vertices = does_Contain_Vertex(routes[uav.get_ID()], uav.get_Base())
+    routes = parse_Solution(sol, Z, uavs)
 
-            #print("vertices", rest_of_vertices)
+    k = 1
+    subroutesQ = True
+    while subroutesQ:
+    
+        # Routes must be only one loop and contain the base
+        for uav_id in uavs.get_List():
+            print(uav_id, list_Loops(routes[uav_id]))
 
-            if not baseQ:
-                
-                add_DFJ_Subtour_Constraint(rest_of_vertices, uav.get_ID(), abstract_G, Z, scip_model)
+        print("-------------Iteration:"+str(k)+"-------------")
 
-        scip_model.optimize()
-        routes = parse_Solution(scip_model.getBestSol(), Z, uavs)
-        
-        scip_model.freeReoptSolve()
+        if subroutesQ:
 
-    for uav in uavs:
-        print(list_Loops(routes[uav.get_ID()]))
+            scip_model.optimize()
+            sol = scip_model.getBestSol()
+            routes = parse_Solution(sol, Z, uavs)
+
+        k += 1
+        subroutesQ = False
 
     return routes
