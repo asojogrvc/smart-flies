@@ -89,6 +89,9 @@ def create_UAVs() -> UAVS.UAV_Team:
     uav_team.add_UAV(UAVS.UAV(
         id = 1, model = "A", base = "B1"
     ))
+    uav_team.add_UAV(UAVS.UAV(
+        id = 2, model = "B", base = "B1"
+    ))
 
     return uav_team
 
@@ -121,7 +124,7 @@ print(routes)
 
 graph = problem.get_Graph()
 
-
+"""
 fig = plt.figure()
 axes = fig.add_subplot(131)
 nx.draw_networkx(graph, ax=axes, with_labels = True)
@@ -135,6 +138,7 @@ fig2 = plt.figure()
 axes3 = fig2.add_subplot(111)
 bases.plot(axes3)
 towers.plot(axes3)
+"""
 
 fig3 = plt.figure()
 axes4 = fig3.add_subplot(111)

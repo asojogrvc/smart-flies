@@ -360,21 +360,25 @@ def list_Loops(route: list) -> tuple[list]:
 
     loop_list = []
 
+    #print("route", route)
+
     if not(route):
         return []
 
     loop, left = find_Loop(route)
-    # print("loop, left", loop, left)
+    #print("loop, left", loop, left)
 
     loop_list.append(loop)
+    #print("Loops", loop_list)
 
     while left:
 
         loop, left = find_Loop(left)
-        # print("loop, left", loop, left)
+        #print("loop, left", loop, left)
 
-        if left:
-            loop_list.append(loop)
+
+        loop_list.append(loop)
+        #print("Loops", loop_list)
 
     return loop_list
 
@@ -484,7 +488,8 @@ def dynamic_Solver(problem: Problem) -> dict:
 
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True)
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True, is_editable = True)
+    scip_model.hideOutput()
 
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
@@ -506,31 +511,35 @@ def dynamic_Solver(problem: Problem) -> dict:
     k = 1
     subroutesQ = True
     while subroutesQ:
+
+        subroutesQ = False
     
         # Routes must be only one loop and contain the base
+        print("  Routes: ", routes)
         for uav in uavs:
+            
             loops = list_Loops(routes[uav.get_ID()])
-            ("  Loops:")
+            print("  Loops:")
             print("   - ID: "+uav.get_ID(), ": ", loops)
 
-            # AQUI CHECK DE QUE NO NECESARIAMENTE EL PRIMER LOOP ES EL DE LA BASE
             if 1 == len(loops) and does_Contain_Vertex(loops[0], uav.get_Base()):
-                subroutesQ = False
-                
-                # Y AQUI QUÉ
-                for loop in loops: # AQUI VAN TODOS LOS LOOPS SIN LA BASE
+                continue
+            
+            subroutesQ = True
+            scip_model.freeReoptSolve()
+            for loop in loops:
+                if not does_Contain_Vertex(loop, uav.get_Base())[0]:
                     Q = compute_Subtour_Subset_from_Route(loop, "")
+                    #print(Q)
                     add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
-
-        print("-------------Iteration: "+str(k)+"-------------")
+                
 
         if subroutesQ:
-
+            print("-------------Iteration: "+str(k)+"-------------")
             scip_model.optimize()
             sol = scip_model.getBestSol()
             routes = parse_Solution(sol, Z, uavs)
 
         k += 1
-        subroutesQ = False
 
     return routes

@@ -1,5 +1,5 @@
 from modules import solver as SO
 
-route = [("A", "B"), ("C", "D"), ("B", "C"), ("D", "A"), ("G", "H"), ("H", "G"), ("J", "P"), ("P", "J"), ("U", "K"), ("K", "U")]
+route = [('tT5', 'B1'), ('B1', 'tS3_D'), ('tT1', 'tT2'), ('tT2', 'tT1'), ('tT3', 'tT4'), ('tT4', 'tT3'), ('tS1_D', 'tT5'), ('tS3_D', 'tS1_D')]
 
-print(SO.list_Loops(route))
+SO.list_Loops(route)
