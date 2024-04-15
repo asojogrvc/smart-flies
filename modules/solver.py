@@ -302,7 +302,7 @@ def compute_Subtour_Subset_from_Route(route: list, base: str) -> list:
 
     return vertices
 
-def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, G: nx.MultiDiGraph, Z:dict, model: SCIP.Model):
+def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, Z:dict, model: SCIP.Model):
 
     if not Q: return None
 
@@ -454,7 +454,7 @@ def solver(problem: Problem) -> dict:
     for Q in Qlist:
         #print("Q", Q)
         for uav in uavs:
-            add_DFJ_Subtour_Constraint(Q, uav.get_ID(), abstract_G, Z, scip_model)
+            add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
     # --------------------------------------------------------------------------------------------------
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
@@ -508,10 +508,21 @@ def dynamic_Solver(problem: Problem) -> dict:
     while subroutesQ:
     
         # Routes must be only one loop and contain the base
-        for uav_id in uavs.get_List():
-            print(uav_id, list_Loops(routes[uav_id]))
+        for uav in uavs:
+            loops = list_Loops(routes[uav.get_ID()])
+            ("  Loops:")
+            print("   - ID: "+uav.get_ID(), ": ", loops)
 
-        print("-------------Iteration:"+str(k)+"-------------")
+            # AQUI CHECK DE QUE NO NECESARIAMENTE EL PRIMER LOOP ES EL DE LA BASE
+            if 1 == len(loops) and does_Contain_Vertex(loops[0], uav.get_Base()):
+                subroutesQ = False
+                
+                # Y AQUI QUÉ
+                for loop in loops: # AQUI VAN TODOS LOS LOOPS SIN LA BASE
+                    Q = compute_Subtour_Subset_from_Route(loop, "")
+                    add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
+
+        print("-------------Iteration: "+str(k)+"-------------")
 
         if subroutesQ:
 
