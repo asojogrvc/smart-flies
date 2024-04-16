@@ -102,7 +102,7 @@ class UAV_Team():
 
         print("----------------------------UAV Team------------------------------")
         for uav in self:
-            print(" - ID: ", uav.get_ID(), " Model: ", uav.get_Model())
+            print(" - ID: ", uav.get_ID(), " Model: ", uav.get_Model(), " Base: ", uav.get_Base())
         print("------------------------------------------------------------------")
 
         return None
