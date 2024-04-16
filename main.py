@@ -2,7 +2,7 @@ import numpy as np, matplotlib.pyplot as plt, networkx as nx
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO
 
-def plot_Routes(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
+def plot_Routes_Abstract(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
 
     colors = ["r", "g", "b"]
 
@@ -21,6 +21,28 @@ def plot_Routes(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
     nx.draw_networkx(G, ax=axes, edgelist = edges, edge_color = edge_colors.values(), with_labels = True)
 
     return None
+
+def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
+
+    colors = ["r", "g", "b"]
+
+    j = 0
+    for uav_id in real_routes:
+
+        route = real_routes[uav_id]
+
+        coordinates = np.zeros((len(route), 3))
+
+        k = 0
+        for point in route:
+            coordinates[k,:] = coordinates_dict[point]
+            k += 1
+
+        axes.plot(coordinates[:,0], coordinates[:,1], colors[j])
+        j += 1
+
+    return None
+
 
 # --------------------------------------------------------------------------
 
@@ -96,6 +118,7 @@ def create_UAVs() -> UAVS.UAV_Team:
     return uav_team
 
 def create_Tasks() -> TS.Tasks:
+
     tasks = TS.Tasks()
     tasks.add_Task("tT1", inspection_of = "T1", incompatible_IDs = [0,])
     tasks.add_Task("tT2", inspection_of = "T2", incompatible_IDs = [0,])
@@ -117,9 +140,9 @@ uav_team = create_UAVs()
 tasks = create_Tasks()
 
 problem = SO.Problem(bases, towers, tasks, uav_team)
-routes = problem.solve(dynamic = True)
+routes = problem.solve(dynamic = False)
 
-print(routes)
+print("Routes", routes)
 
 
 graph = problem.get_Graph()
@@ -132,17 +155,29 @@ axes1 = fig.add_subplot(132)
 nx.draw_networkx(SO.get_Subgraph(graph, 0), ax=axes1, with_labels = True)
 axes2 = fig.add_subplot(133)
 nx.draw_networkx(SO.get_Subgraph(graph, 1), ax=axes2, with_labels = True)
-
+"""
 
 fig2 = plt.figure()
 axes3 = fig2.add_subplot(111)
 bases.plot(axes3)
 towers.plot(axes3)
-"""
+
+
+vertices_dict = tasks.get_Task_Parsing_Dict()
+for uav in uav_team:
+    vertices_dict[uav.get_Base()] = [uav.get_Base()]
+
+real_routes = SO.parse_Routes(routes , vertices_dict)
+coordinates_dict = towers.get_Positions()
+for name, position in bases:
+    coordinates_dict[name] = position
+
+print("Real Routes", real_routes)
+plot_Routes(real_routes, coordinates_dict, axes3)
 
 fig3 = plt.figure()
 axes4 = fig3.add_subplot(111)
-plot_Routes(routes, graph, axes4)
+plot_Routes_Abstract(routes, graph, axes4)
 
 
 plt.show()

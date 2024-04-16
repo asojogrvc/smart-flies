@@ -10,6 +10,8 @@ from itertools import combinations, chain
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, weather as WT
 
+A = 0.25
+
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
         """
@@ -77,11 +79,25 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
 
         if str == type(data["inspection_of"]): # Punctual inspection
 
-            graph.add_node(name, inspection_of = data["inspection_of"], start_position = positions[data["inspection_of"]], end_position = positions[data["inspection_of"]])
+            graph.add_node(
+                name,
+                inspection_of = data["inspection_of"],
+                start_position = positions[data["inspection_of"]],
+                end_position = positions[data["inspection_of"]]
+            )
 
         elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
-            graph.add_node(name+"_U", inspection_of = data["inspection_of"], start_position = positions[data["inspection_of"][0]], end_position = positions[data["inspection_of"][1]])
-            graph.add_node(name+"_D", inspection_of = data["inspection_of"][::-1], start_position = positions[data["inspection_of"][1]], end_position = positions[data["inspection_of"][0]])
+            graph.add_node(
+                name+"_U",
+                inspection_of = data["inspection_of"],
+                start_position = positions[data["inspection_of"][0]],
+                end_position = positions[data["inspection_of"][1]]
+            )
+            graph.add_node(
+                name+"_D",
+                inspection_of = data["inspection_of"][::-1],
+                start_position = positions[data["inspection_of"][1]],
+                end_position = positions[data["inspection_of"][0]])
 
     
     for uav in uavs:
@@ -107,6 +123,8 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
     return graph
 
 def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> SCIP.Model:
+
+    speeds = uavs.get_Speeds()
 
     start_positions = graph.nodes(data = "start_position")
     end_positions = graph.nodes(data = "end_position")
@@ -135,9 +153,12 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     # Except if they represent an existing edge
     for edge in graph.edges: # edge = (node1, node2, key)
+
         Z[edge[2]+"Z"+edge[0]+"-"+edge[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = str(edge[2])+"Z"+edge[0]+"-"+edge[1])
 
-        Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = np.linalg.norm(end_positions[edge[0]] - start_positions[edge[1]])
+        Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = np.linalg.norm(end_positions[edge[0]] - start_positions[edge[1]]) + np.linalg.norm(end_positions[edge[1]] - start_positions[edge[1]])
+
+        Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] / speeds[edge[2]]
 
     # UAV usage variables. One per uav
     Y = {
@@ -417,6 +438,60 @@ def parse_Solution(sol: SCIP.scip.Solution, Z: dict, uavs: UAVS.UAV_Team):
 
     return routes
 
+def order_Route(route: list, base: str):
+
+    from_nodes = copy.deepcopy([move[0] for move in route])
+    to_nodes = copy.deepcopy([move[1] for move in route])
+
+    # Find the base
+    idx = from_nodes.index(base)
+
+    moves_left = copy.deepcopy(route[:idx] + route[idx+1 :])
+    ordered_route = [route[idx]]
+
+    search_node = to_nodes[idx]
+
+    notBackQ = True
+    while notBackQ:
+
+        idx = from_nodes.index(search_node)
+
+        search_node = to_nodes[idx]
+        ordered_route.append((from_nodes[idx], to_nodes[idx]))
+        moves_left.remove((from_nodes[idx], to_nodes[idx]))
+
+        if base == to_nodes[idx]:
+            notBackQ = False
+            break
+
+    return ordered_route
+
+def order_Routes(routes:dict, uavs: UAVS.UAV_Team) -> dict:
+    #print(routes)
+    ordered_routes = {}
+    for uav in uavs:
+        ordered_routes[uav.get_ID()] = order_Route(routes[uav.get_ID()], uav.get_Base())
+
+    return ordered_routes
+
+def parse_Route(route: list, vertices_dict: dict) -> list:
+
+    points = vertices_dict[route[0][0]] + vertices_dict[route[0][1]]
+
+    for move in route[1:]:
+        points = points + vertices_dict[move[1]]
+
+    return points
+
+def parse_Routes(routes: dict, vertices_dict: dict) -> dict:
+
+    parsed = {}
+
+    for uav_id in routes:
+        parsed[uav_id] = parse_Route(routes[uav_id], vertices_dict)
+
+    return parsed
+
 def get_Subgraph(graph: nx.MultiDiGraph, id: str) -> list:
 
     edges = [(i, j, k)   for i, j, k in graph.edges if k == str(id)]
@@ -430,8 +505,6 @@ def get_Subgraph(graph: nx.MultiDiGraph, id: str) -> list:
 def solver(problem: Problem) -> dict:
 
     print("Non-Dynamic Solver")
-
-    A = 0.25
 
     bases = problem.get_Bases()
     towers = problem.get_Towers()
@@ -474,11 +547,11 @@ def solver(problem: Problem) -> dict:
 
     routes = parse_Solution(sol, Z, uavs)
 
-    return routes
+    return order_Routes(routes, uavs)
 
 def dynamic_Solver(problem: Problem) -> dict:
 
-    A = 0.25
+    print("Dynamic Solver")
 
     bases = problem.get_Bases()
     towers = problem.get_Towers()
@@ -542,4 +615,4 @@ def dynamic_Solver(problem: Problem) -> dict:
 
         k += 1
 
-    return routes
+    return order_Routes(routes, uavs)

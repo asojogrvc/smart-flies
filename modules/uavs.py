@@ -31,7 +31,7 @@ class UAV():
         else:
             self.__base = "B"
 
-        self.__route = []
+        #self.__route = []
 
     # ------------------------ Setting parameter functions ---------------------------
 
@@ -84,6 +84,16 @@ class UAV_Team():
         Gets the UAVs as a Python dict.
         """
         return self.__list
+    
+    def get_Speeds(self) -> dict:
+
+        speeds = {}
+
+        for uav in self:
+            speeds[uav.get_ID()] = models[uav.get_Model()]["Speed"]
+
+        return speeds
+
     
     def print(self):
         """
