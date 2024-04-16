@@ -8,9 +8,9 @@ As of now, all methods can be seen as a MILP problem than can solved using SCIP 
 import networkx as nx, pyscipopt as SCIP, numpy as np, copy
 from itertools import combinations, chain
 
-from modules import bases as BA, tasks as TS, uavs as UAVS, weather as WT
+from modules import bases as BA, tasks as TS, uavs as UAVS
 
-A = 0.25
+A = 0
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -25,8 +25,8 @@ class Problem():
         self.__tasks = tasks 
         self.__uavs = uavs
 
-        if "weather" in kwargs and WT.Weather == type(kwargs["weather"]):
-            self.__weather = kwargs["weather"]
+        #if "weather" in kwargs and WT.Weather == type(kwargs["weather"]):
+        #    self.__weather = kwargs["weather"]
 
         # Auxiliary parameters: 
         #   - The graph represents the abstract representation of the towers and bases. It dependes on the used solver method
@@ -64,7 +64,7 @@ class Problem():
         return routes
 
 def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS.Towers,
-                              tasks: TS.Tasks, uavs: UAVS.UAV_Team, weather: WT.Weather):
+                              tasks: TS.Tasks, uavs: UAVS.UAV_Team):
     
     positions = dict(towers.get_Graph().nodes(data = "position"))
 
@@ -513,7 +513,7 @@ def solver(problem: Problem) -> dict:
     abstract_G = problem.get_Graph()
 
     
-    abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
+    abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
     scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True)
 
     #print(Wt)

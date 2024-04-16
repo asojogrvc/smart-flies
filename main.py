@@ -2,6 +2,7 @@ import numpy as np, matplotlib.pyplot as plt, networkx as nx
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO
 
+
 def plot_Routes_Abstract(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
 
     colors = ["r", "g", "b"]
@@ -130,7 +131,6 @@ def create_Tasks() -> TS.Tasks:
     tasks.add_Task("tS3", inspection_of = ("T8", "T9"))
 
     return tasks
-
 
 # --------------------------------------------------------------------------
 
