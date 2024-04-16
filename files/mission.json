@@ -1,0 +1,45 @@
+{
+    "Bases":{
+        "B0": [-1, -1, 0],
+        "B1": [3.5, 4, 0]
+    },
+    "Towers": {
+        "List": {
+            "T1": [0, -0.25, 0],
+            "T2": [1, 0, 0],
+            "T3": [-0.35, 1.35, 0],
+            "T4": [0, 0.75, 0],
+            "T5": [1, 1, 0],
+            "T6": [2, 1.25, 0],
+            "T7": [0, 3, 0],
+            "T8": [1, 2, 0],
+            "T9": [2, 3, 0]
+        },
+        "Lines": [["T1", "T2"], ["T2", "T5"], ["T3", "T4"], ["T4", "T5"],
+                  ["T5", "T6"], ["T5", "T8"], ["T7", "T8"], ["T8", "T9"]]
+    },
+    "UAVS": {
+        "0": {
+            "model": "A",
+            "base": "B0"
+        },
+        "1": {
+            "model": "A",
+            "base": "B1"
+        },
+        "2": {
+            "model": "B",
+            "base": "B1"
+        }
+    },
+    "Tasks": {
+        "tT1":{"inspection_of": "T1", "incompatible_IDs": [0] },
+        "tT2":{"inspection_of": "T2", "incompatible_IDs": [0] },
+        "tT3":{"inspection_of": "T3", "incompatible_IDs": [0] },
+        "tT4":{"inspection_of": "T4", "incompatible_IDs": [0] },
+        "tT5":{"inspection_of": "T5", "incompatible_IDs": [0] },
+        "tS1":{"inspection_of": ["T5", "T8"] },
+        "tS2":{"inspection_of": ["T7", "T8"] },
+        "tS3":{"inspection_of": ["T8", "T9"] }
+    }
+}
