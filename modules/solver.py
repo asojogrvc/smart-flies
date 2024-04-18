@@ -68,7 +68,7 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
     
     positions = dict(towers.get_Graph().nodes(data = "position"))
 
-    #print(positions)
+    print(positions)
     
     # For each base, we need to add one vertex
     for name, position in bases:

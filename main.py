@@ -53,30 +53,22 @@ towers = problem.get_Towers()
 tasks = problem.get_Tasks()
 uav_team = problem.get_UAVs()
 
+bases.print()
+tasks.print()
+uav_team.print()
+
 # --------------------------------------------------------------------------
 
 routes = problem.solve(dynamic = False)
 
 print("Routes", routes)
 
-
 graph = problem.get_Graph()
-
-"""
-fig = plt.figure()
-axes = fig.add_subplot(131)
-nx.draw_networkx(graph, ax=axes, with_labels = True)
-axes1 = fig.add_subplot(132)
-nx.draw_networkx(SO.get_Subgraph(graph, 0), ax=axes1, with_labels = True)
-axes2 = fig.add_subplot(133)
-nx.draw_networkx(SO.get_Subgraph(graph, 1), ax=axes2, with_labels = True)
-"""
 
 fig2 = plt.figure()
 axes3 = fig2.add_subplot(111)
 bases.plot(axes3)
 towers.plot(axes3)
-
 
 vertices_dict = tasks.get_Task_Parsing_Dict()
 for uav in uav_team:
@@ -93,7 +85,6 @@ plot_Routes(real_routes, coordinates_dict, axes3)
 fig3 = plt.figure()
 axes4 = fig3.add_subplot(111)
 plot_Routes_Abstract(routes, graph, axes4)
-
 
 plt.show()
 

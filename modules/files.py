@@ -33,17 +33,34 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
     tasks = TS.Tasks()
     for name in mission["Tasks"]:
 
-        try:
-            tasks.add_Task(
-                name,
-                inspection_of = mission["Tasks"][name]["inspection_of"],
-                incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
-            )
-        except:
-            tasks.add_Task(
-                name,
-                inspection_of = mission["Tasks"][name]["inspection_of"]
-            )
+        if list == type(mission["Tasks"][name]["inspection_of"]) and 2 == len(mission["Tasks"][name]["inspection_of"]):
+            try:
+                tasks.add_Task(
+                    name,
+                    inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1]),
+                    incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                )
+            except:
+                tasks.add_Task(
+                    name,
+                    inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1])
+                )
+
+        else:
+            try:
+                tasks.add_Task(
+                    name,
+                    inspection_of = mission["Tasks"][name]["inspection_of"],
+                    incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                )
+            except:
+                tasks.add_Task(
+                    name,
+                    inspection_of = mission["Tasks"][name]["inspection_of"]
+                )
+            
+
+        
 
 
     return SO.Problem(bases, towers, tasks, uavs)
