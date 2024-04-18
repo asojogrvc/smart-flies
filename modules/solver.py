@@ -7,10 +7,11 @@ As of now, all methods can be seen as a MILP problem than can solved using SCIP 
 
 import networkx as nx, pyscipopt as SCIP, numpy as np, copy
 from itertools import combinations, chain
+from time import time
 
 from modules import bases as BA, tasks as TS, uavs as UAVS
 
-A = 0.5
+A = 0
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -60,12 +61,18 @@ class Problem():
     
     def solve(self, **kwargs) -> dict:
 
+        if "add_sigmas" in kwargs and bool == type(kwargs["add_sigmas"]): add_sigmasQ = kwargs["add_sigmas"]
+        else: add_sigmasQ = True
+        if "auto_uav_disabling" in kwargs and bool == type(kwargs["auto_uav_disabling"]): auto_uav_disablingQ = kwargs["auto_uav_disabling"]
+        else: auto_uav_disablingQ = True
+
         if "dynamic" in kwargs:
             if False == kwargs["dynamic"]:
-                routes = solver(self)
+                routes = solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ)
                 return routes
+            
 
-        routes = dynamic_Solver(self)
+        routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ)
         return routes
 
 def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS.Towers,
@@ -73,7 +80,7 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
     
     positions = dict(towers.get_Graph().nodes(data = "position"))
 
-    print(positions)
+    #print(positions)
     
     # For each base, we need to add one vertex
     for name, position in bases:
@@ -139,13 +146,13 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     scip_model = SCIP.Model("GTSP-MUAV")
     if "is_editable" in kwargs and True == kwargs["is_editable"]:
         scip_model.enableReoptimization()
-        scip_model.hideOutput()
+        #scip_model.hideOutput()
 
     if "wind_vector" in kwargs and np.ndarray == type(kwargs["wind_vector"]):
         wind_vector = kwargs["wind_vector"]
     else: wind_vector = np.array([0,0,0])
 
-    print("wind", wind_vector)
+    #print("wind", wind_vector)
 
     # For each pair of vertices in the graph and uav, we need to define a Z.
     Z = {}
@@ -187,35 +194,58 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
         if 0 > Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]]: print("Warning: Negative TIME COST. Wind speed might be too high!")
 
-    # UAV usage variables. One per uav
-    Y = {
-        uav.get_ID(): scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+str(uav.get_ID()))
-        for uav in uavs
-    }
-    
+      
+    Y = {}
     for uav in uavs:
 
-        # Base exit constraints
         edges = list(dict.fromkeys(list(graph.out_edges(uav.get_Base()))))
-        scip_model.addCons(
-            SCIP.quicksum(
-                Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                for edge in edges
+        
+        if "auto_uav_disabling" in kwargs and False == kwargs["auto_uav_disabling"]:
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                1.0
             )
-            == 
-            1 #Y[uav.get_ID()]
-        )
 
-        # Base enter constraints
-        edges = list(dict.fromkeys(list(graph.in_edges(uav.get_Base()))))
-        scip_model.addCons(
-            SCIP.quicksum(
-                Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
-                for edge in edges
+            # Base enter constraints
+            edges = list(dict.fromkeys(list(graph.in_edges(uav.get_Base()))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                1.0
             )
-            == 
-            1 # Y[uav.get_ID()]
-        )
+
+        else:
+            # UAV usage variables. One per uav
+            Y[uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+str(uav.get_ID()))
+
+            # Base exit constraints
+            
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                Y[uav.get_ID()]
+            )
+
+            # Base enter constraints
+            edges = list(dict.fromkeys(list(graph.in_edges(uav.get_Base()))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                Y[uav.get_ID()]
+            )
 
     # Task Completion constraints
     for name, data in tasks:
@@ -357,16 +387,6 @@ def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, Z:dict, model: SCIP.Model):
     # Compute all pairs of Q vertices:
     pairs = list(combinations(Q, 2))
 
-    # Delete pairs that are not edges in the graph
-    #for pair in pairs:
-    #    if not G.has_edge(pair[0], pair[1], key = uav_id):
-    #        pairs.remove(pair)
-    #    if not G.has_edge(pair[1], pair[0], key = uav_id):
-    #        try: pairs.remove(pair)
-    #        except: None # It is already removed
-
-    #print("Pairs", pairs)
-
     if pairs:
         model.addCons(
             SCIP.quicksum(
@@ -467,6 +487,9 @@ def parse_Solution(sol: SCIP.scip.Solution, Z: dict, uavs: UAVS.UAV_Team):
 
 def order_Route(route: list, base: str):
 
+    if not route:
+        return []
+
     from_nodes = copy.deepcopy([move[0] for move in route])
     to_nodes = copy.deepcopy([move[1] for move in route])
 
@@ -494,14 +517,18 @@ def order_Route(route: list, base: str):
     return ordered_route
 
 def order_Routes(routes:dict, uavs: UAVS.UAV_Team) -> dict:
-    #print(routes)
     ordered_routes = {}
     for uav in uavs:
+
         ordered_routes[uav.get_ID()] = order_Route(routes[uav.get_ID()], uav.get_Base())
+
 
     return ordered_routes
 
 def parse_Route(route: list, vertices_dict: dict) -> list:
+
+    if not route:
+        return []
 
     points = vertices_dict[route[0][0]] + vertices_dict[route[0][1]]
 
@@ -529,7 +556,7 @@ def get_Subgraph(graph: nx.MultiDiGraph, id: str) -> list:
 
     return sG
 
-def solver(problem: Problem) -> dict:
+def solver(problem: Problem, **kwargs) -> dict:
 
     print("Non-Dynamic Solver")
 
@@ -539,9 +566,15 @@ def solver(problem: Problem) -> dict:
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
 
+    if "add_sigmas" in kwargs and bool == type(kwargs["add_sigmas"]): add_sigmasQ = kwargs["add_sigmas"]
+    else: add_sigmasQ = True
+    if "auto_uav_disabling" in kwargs and bool == type(kwargs["auto_uav_disabling"]): auto_uav_disablingQ = kwargs["auto_uav_disabling"]
+    else: auto_uav_disablingQ = True
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True, wind_vector = problem.get_Wind())
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs,
+                                                        add_sigmas = add_sigmasQ, wind_vector = problem.get_Wind(),
+                                                        auto_uav_disabling = auto_uav_disablingQ)
 
     #print(Wt)
 
@@ -560,6 +593,7 @@ def solver(problem: Problem) -> dict:
         for uav in uavs:
             add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
     # --------------------------------------------------------------------------------------------------
+
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
     if 0 == (A - 1):
@@ -569,14 +603,19 @@ def solver(problem: Problem) -> dict:
                                 + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
 
     scip_model.writeProblem('scip_model.cip')
+    t0 = time()
     scip_model.optimize()
     sol = scip_model.getBestSol()
 
     routes = parse_Solution(sol, Z, uavs)
+    print("Solver Routes", routes)
+    
+    dt = time() - t0
+    print("Solved in:", dt, "s")
 
     return order_Routes(routes, uavs)
 
-def dynamic_Solver(problem: Problem) -> dict:
+def dynamic_Solver(problem: Problem, **kwargs) -> dict:
 
     print("Dynamic Solver")
 
@@ -586,10 +625,16 @@ def dynamic_Solver(problem: Problem) -> dict:
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
 
+    if "add_sigmas" in kwargs and bool == type(kwargs["add_sigmas"]): add_sigmasQ = kwargs["add_sigmas"]
+    else: add_sigmasQ = True
+    if "auto_uav_disabling" in kwargs and bool == type(kwargs["auto_uav_disabling"]): auto_uav_disablingQ = kwargs["auto_uav_disabling"]
+    else: auto_uav_disablingQ = True
+
     
-    abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True, is_editable = True, wind_vector = problem.get_Wind())
-    scip_model.hideOutput()
+    abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
+                                                        wind_vector = problem.get_Wind(), auto_uav_disabling = auto_uav_disablingQ)
+    #scip_model.hideOutput()
 
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
@@ -599,10 +644,12 @@ def dynamic_Solver(problem: Problem) -> dict:
         scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
                                 + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
 
-    scip_model.writeProblem('scip_model.cip')
+    
 
     
     print("-------------Initial Iteration-------------")
+    t0 = time()
+
     scip_model.optimize()
     sol = scip_model.getBestSol()
 
@@ -622,7 +669,10 @@ def dynamic_Solver(problem: Problem) -> dict:
             print("  Loops:")
             print("   - ID: "+uav.get_ID(), ": ", loops)
 
-            if 1 == len(loops) and does_Contain_Vertex(loops[0], uav.get_Base()):
+            # UAV is not active
+            if 0 == len(loops): continue
+
+            if 1 == len(loops) and does_Contain_Vertex(loops[0], uav.get_Base())[0]:
                 continue
             
             subroutesQ = True
@@ -631,7 +681,8 @@ def dynamic_Solver(problem: Problem) -> dict:
                 if not does_Contain_Vertex(loop, uav.get_Base())[0]:
                     Q = compute_Subtour_Subset_from_Route(loop, "")
                     #print(Q)
-                    add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
+                    for Qs in chain.from_iterable(list(combinations(Q, r)) for r in range(2, len(Q)+1)):
+                        add_DFJ_Subtour_Constraint(Qs, uav.get_ID(), Z, scip_model)
                 
 
         if subroutesQ:
@@ -641,5 +692,9 @@ def dynamic_Solver(problem: Problem) -> dict:
             routes = parse_Solution(sol, Z, uavs)
 
         k += 1
+
+    scip_model.writeProblem('scip_model.cip')
+    dt = time() - t0
+    print("Solved in:", dt, "s")
 
     return order_Routes(routes, uavs)

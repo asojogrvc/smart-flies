@@ -1,10 +1,10 @@
 {
     "A": {
-        "Speed": 5,
+        "Speed": 10,
         "Charge": 100
     },
     "B": {
-        "Speed": 7,
+        "Speed": 15,
         "Charge": 45
     },
     "C": {

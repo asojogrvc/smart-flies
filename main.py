@@ -2,10 +2,11 @@ import numpy as np, matplotlib.pyplot as plt, networkx as nx
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO, files as F
 
+colors = ["r", "g", "b", "c", "k"]
 
 def plot_Routes_Abstract(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
 
-    colors = ["r", "g", "b"]
+    
 
     edge_colors = {}
 
@@ -24,8 +25,6 @@ def plot_Routes_Abstract(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
     return None
 
 def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
-
-    colors = ["r", "g", "b"]
 
     j = 0
     for uav_id in real_routes:
@@ -46,7 +45,7 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/mission.json")
+problem = F.load_Problem_from_File("./files/y3uav9t.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()
@@ -55,7 +54,7 @@ uav_team = problem.get_UAVs()
 
 # --------------------------------------------------------------------------
 
-routes = problem.solve(dynamic = False)
+routes = problem.solve(dynamic = False, auto_uav_disabling = True)
 
 print("Routes", routes)
 
