@@ -42,5 +42,5 @@
         "tS2":{"inspection_of": ["T7", "T8"] },
         "tS3":{"inspection_of": ["T8", "T9"] }
     },
-    "Wind": [0, 0, 0]
+    "Wind": [5, 0, 0]
 }

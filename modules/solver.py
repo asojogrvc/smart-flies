@@ -11,7 +11,7 @@ from time import time
 
 from modules import bases as BA, tasks as TS, uavs as UAVS
 
-A = 0
+A = 0.5
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -596,7 +596,7 @@ def solver(problem: Problem, **kwargs) -> dict:
 
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
-    if 0 == (A - 1):
+    elif 0 == (A - 1):
         scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
     else:
         scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
@@ -638,7 +638,7 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
 
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
-    if 0 == (A - 1):
+    elif 0 == (A - 1):
         scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
     else:
         scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
