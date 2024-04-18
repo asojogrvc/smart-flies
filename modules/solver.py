@@ -25,8 +25,10 @@ class Problem():
         self.__tasks = tasks 
         self.__uavs = uavs
 
-        #if "weather" in kwargs and WT.Weather == type(kwargs["weather"]):
-        #    self.__weather = kwargs["weather"]
+        if "wind_vector" in kwargs and np.ndarray == type(kwargs["wind_vector"]):
+            self.__wind_vector = kwargs["wind_vector"]
+        else: self.__wind_vector = np.array([0,0,0])
+
 
         # Auxiliary parameters: 
         #   - The graph represents the abstract representation of the towers and bases. It dependes on the used solver method
@@ -52,6 +54,9 @@ class Problem():
     
     def get_Graph(self):
         return self.__graph
+    
+    def get_Wind(self):
+        return self.__wind_vector
     
     def solve(self, **kwargs) -> dict:
 
@@ -136,6 +141,10 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         scip_model.enableReoptimization()
         scip_model.hideOutput()
 
+    if "wind_vector" in kwargs and np.ndarray == type(kwargs["wind_vector"]):
+        wind_vector = kwargs["wind_vector"]
+    else: wind_vector = np.array([0,0,0])
+
     # For each pair of vertices in the graph and uav, we need to define a Z.
     Z = {}
     Wt = {} # Time Weights
@@ -156,9 +165,23 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
         Z[edge[2]+"Z"+edge[0]+"-"+edge[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = str(edge[2])+"Z"+edge[0]+"-"+edge[1])
 
-        Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = np.linalg.norm(end_positions[edge[0]] - start_positions[edge[1]]) + np.linalg.norm(end_positions[edge[1]] - start_positions[edge[1]])
+        # Task transition
+        move_vector = end_positions[edge[0]] - start_positions[edge[1]]
+        d = np.linalg.norm(move_vector)
+        if 0 == d:
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = 0
+        else:
+            effective_speed = speeds[edge[2]] - np.dot(wind_vector, move_vector) / d
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = d / effective_speed
 
-        Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] / speeds[edge[2]]
+        # Task Completion
+        move_vector = end_positions[edge[1]] - start_positions[edge[1]]
+        d = np.linalg.norm(move_vector)
+        if 0 == d:
+            None
+        else:
+            effective_speed = speeds[edge[2]] - np.dot(wind_vector, move_vector) / d
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
 
     # UAV usage variables. One per uav
     Y = {
@@ -514,7 +537,7 @@ def solver(problem: Problem) -> dict:
 
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True)
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True, wind_vector = problem.get_Wind())
 
     #print(Wt)
 
@@ -561,7 +584,7 @@ def dynamic_Solver(problem: Problem) -> dict:
 
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs, "")
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True, is_editable = True)
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = True, is_editable = True, wind_vector = problem.get_Wind())
     scip_model.hideOutput()
 
     if 0 == A:
