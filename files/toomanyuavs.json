@@ -1,0 +1,43 @@
+{
+    "Bases":{
+        "B0": [0, 0, 0]
+    },
+    "Towers": {
+        "List": {
+            "T1": [1, 1, 0],
+            "T2": [-1, 1, 0],
+            "T3": [-1, -1, 0],
+            "T4": [1, -1, 0]
+        },
+        "Lines": [["T1", "T2"], ["T2", "T3"], ["T3", "T4"], ["T4", "T1"]]
+    },
+    "UAVs": {
+        "0": {
+            "Model": "A",
+            "Base": "B0"
+        },
+        "1": {
+            "Model": "A",
+            "Base": "B0"
+        },
+        "2": {
+            "Model": "AB",
+            "Base": "B0"
+        },
+        "3": {
+            "Model": "AB",
+            "Base": "B0"
+        },
+        "4": {
+            "Model": "AB",
+            "Base": "B0"
+        }
+    },
+    "Tasks": {
+        "tT1":{"inspection_of": "T1"},
+        "tT2":{"inspection_of": "T2"},
+        "tT3":{"inspection_of": "T3"},
+        "tT4":{"inspection_of": "T4"}
+    },
+    "Wind": [0, 0, 0]
+}

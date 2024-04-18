@@ -10,7 +10,7 @@ from itertools import combinations, chain
 
 from modules import bases as BA, tasks as TS, uavs as UAVS
 
-A = 0
+A = 0.5
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -145,6 +145,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         wind_vector = kwargs["wind_vector"]
     else: wind_vector = np.array([0,0,0])
 
+    print("wind", wind_vector)
+
     # For each pair of vertices in the graph and uav, we need to define a Z.
     Z = {}
     Wt = {} # Time Weights
@@ -182,6 +184,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         else:
             effective_speed = speeds[edge[2]] - np.dot(wind_vector, move_vector) / d
             Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
+
+        if 0 > Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]]: print("Warning: Negative TIME COST. Wind speed might be too high!")
 
     # UAV usage variables. One per uav
     Y = {

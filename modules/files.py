@@ -58,9 +58,9 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
                     name,
                     inspection_of = mission["Tasks"][name]["inspection_of"]
                 )
-            
-
         
 
-
-    return SO.Problem(bases, towers, tasks, uavs)
+    if "Wind" in mission:
+        return SO.Problem(bases, towers, tasks, uavs, wind_vector = np.array(mission["Wind"]))
+    else: return SO.Problem(bases, towers, tasks, uavs)
+    
