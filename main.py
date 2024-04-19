@@ -4,6 +4,9 @@ from matplotlib.lines import Line2D
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO, files as F
 
+# TODOs:
+# - CHANGE FONT WEIGHT
+
 colors = ["r", "g", "b", "c", "k"]
 
 def plot_Routes_Abstract(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
@@ -40,7 +43,7 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
             coordinates[k,:] = coordinates_dict[point]
             k += 1
 
-        axes.plot(coordinates[:,0], coordinates[:,1], colors[j])
+        axes.plot(coordinates[:,0], coordinates[:,1], colors[j], linewidth=2, linestyle = '-.')
         j += 1
 
     return None
@@ -79,10 +82,16 @@ plot_Routes(real_routes, coordinates_dict, axes3)
 
 towers.plot(axes3)
 bases.plot(axes3)
+
 legend_handles = [Line2D([0], [0], marker='o', color='w', label='Bases',
                           markerfacecolor='r', markersize=9),
                   Line2D([0], [0], marker='o', color='k', label='Power Line Network',
                           markerfacecolor='C0', markersize=9)]
+k = 0
+for uav in uav_team:
+    colors[k]
+    legend_handles.append(Line2D([0], [0], linestyle = "--", color=colors[k], label="UAV Route: "+uav.get_ID()))
+    k += 1
 
 axes3.legend(handles = legend_handles)
 

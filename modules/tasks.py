@@ -79,7 +79,7 @@ class Towers():
         for key in pos3D:
             pos2D[key] = pos3D[key][0:2]
 
-        nx.draw_networkx(self.__graph, pos = pos2D, ax=axes, with_labels = True),
+        nx.draw_networkx(self.__graph, pos = pos2D, ax=axes, with_labels = True, width = 3, node_size = 400, font_size = 34),
                           #verticalalignment="bottom", horizontalalignment = "left")
         
         return None
