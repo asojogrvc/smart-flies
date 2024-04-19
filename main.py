@@ -1,4 +1,6 @@
 import numpy as np, matplotlib.pyplot as plt, networkx as nx
+from matplotlib.patches import Circle
+from matplotlib.lines import Line2D
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO, files as F
 
@@ -54,7 +56,7 @@ uav_team = problem.get_UAVs()
 
 # --------------------------------------------------------------------------
 
-routes = problem.solve(dynamic = True, auto_uav_disabling = False)
+routes = problem.solve(dynamic = False, auto_uav_disabling = False)
 
 print("Routes", routes)
 
@@ -62,9 +64,6 @@ graph = problem.get_Graph()
 
 fig2 = plt.figure()
 axes3 = fig2.add_subplot(111)
-bases.plot(axes3)
-towers.plot(axes3)
-
 vertices_dict = tasks.get_Task_Parsing_Dict()
 for uav in uav_team:
     vertices_dict[uav.get_Base()] = [uav.get_Base()]
@@ -76,6 +75,16 @@ for name, position in bases:
 
 print("Real Routes", real_routes)
 plot_Routes(real_routes, coordinates_dict, axes3)
+
+
+towers.plot(axes3)
+bases.plot(axes3)
+legend_handles = [Line2D([0], [0], marker='o', color='w', label='Bases',
+                          markerfacecolor='r', markersize=9),
+                  Line2D([0], [0], marker='o', color='k', label='Power Line Network',
+                          markerfacecolor='C0', markersize=9)]
+
+axes3.legend(handles = legend_handles)
 
 fig3 = plt.figure()
 axes4 = fig3.add_subplot(111)

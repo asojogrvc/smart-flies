@@ -146,7 +146,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     scip_model = SCIP.Model("GTSP-MUAV")
     if "is_editable" in kwargs and True == kwargs["is_editable"]:
         scip_model.enableReoptimization()
-        #scip_model.hideOutput()
+        scip_model.hideOutput()
 
     if "wind_vector" in kwargs and np.ndarray == type(kwargs["wind_vector"]):
         wind_vector = kwargs["wind_vector"]

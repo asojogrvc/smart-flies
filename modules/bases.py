@@ -95,8 +95,8 @@ class Bases():
     def plot(self, axes: plt.Axes):
 
         for name, position in self:
-            axes.scatter(position[0], position[1], c ='r')
-            axes.annotate(name, (position[0], position[1]))
+            axes.scatter(position[0], position[1], c ='r', s = 300, zorder=10)
+            axes.annotate(name, (position[0], position[1]), fontsize=12, zorder=15, ha='center', va='center')
 
         return None
 
