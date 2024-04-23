@@ -548,6 +548,23 @@ def parse_Routes(routes: dict, vertices_dict: dict) -> dict:
 
     return parsed
 
+def plan_Time(routes: dict, Wt: dict):
+
+    current_max_id = ""
+    current_max_time = -1
+
+    for uav_id in routes:
+
+        time = 0
+        for edge in routes[uav_id]:
+            time += Wt[uav_id+"Z"+edge[0]+"-"+edge[1]]
+        
+        if time > current_max_time: 
+            current_max_id = uav_id
+            current_max_time = time
+
+    return current_max_id, current_max_time
+
 def get_Subgraph(graph: nx.MultiDiGraph, id: str) -> list:
 
     edges = [(i, j, k)   for i, j, k in graph.edges if k == str(id)]
@@ -614,6 +631,8 @@ def solver(problem: Problem, **kwargs) -> dict:
     
     dt = time() - t0
     print("Solved in:", dt, "s")
+
+    print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
 
     return order_Routes(routes, uavs)
 
