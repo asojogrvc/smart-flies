@@ -325,46 +325,26 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 2 * Y[name+"|"+uav.get_ID()]
             )
 
-    Sigmas = {}
-    if "add_sigmas" in kwargs and kwargs["add_sigmas"]:
+    return scip_model, Z, Wt, Y
 
-        print("Time Difference optimization Added")
-        
-        # Time difference constraints
-        uav_pairs = pairs = list(combinations(uavs.get_List().keys(), 2))
-        edges = list(dict.fromkeys([edge[:2] for edge in graph.edges]))
+def add_Cost_Function(scip_model: SCIP.Model, **kwargs):
 
-        for uav1, uav2 in uav_pairs:
-            Sigmas[uav1+"-"+uav2] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "Si"+uav1+"-"+uav2)
+    if "which" in kwargs:
+        which = kwargs["which"]
 
-            # Constraint 1
-            scip_model.addCons(
-                SCIP.quicksum(
-                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-              - SCIP.quicksum(
-                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-                <= 
-                Sigmas[uav1+"-"+uav2]
-            )
-            # Constraint 1
-            scip_model.addCons(
-                SCIP.quicksum(
-                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-              - SCIP.quicksum(
-                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-                <= 
-                Sigmas[uav1+"-"+uav2]
-            )
+    match which:
+        case "min_the_max" | "mtm":
 
-    return scip_model, Z, Wt, Y, Sigmas
+            M = scip_model.addVar(vtype = 'C', obj = 1.0, name = "M")
+
+            
+
+        case "min-all-routes" | "mar":
+
+        case "min-the-sum" | "mts":
+
+
+    return None
 
 def compute_Subtour_Subset_from_Route(route: list, base: str) -> list:
 
@@ -587,14 +567,11 @@ def solver(problem: Problem, **kwargs) -> dict:
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
 
-    if "add_sigmas" in kwargs and bool == type(kwargs["add_sigmas"]): add_sigmasQ = kwargs["add_sigmas"]
-    else: add_sigmasQ = True
     if "auto_uav_disabling" in kwargs and bool == type(kwargs["auto_uav_disabling"]): auto_uav_disablingQ = kwargs["auto_uav_disabling"]
     else: auto_uav_disablingQ = True
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs,
-                                                        add_sigmas = add_sigmasQ, wind_vector = problem.get_Wind(),
+    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
                                                         auto_uav_disabling = auto_uav_disablingQ)
 
     #print(Wt)
@@ -614,6 +591,45 @@ def solver(problem: Problem, **kwargs) -> dict:
         for uav in uavs:
             add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
     # --------------------------------------------------------------------------------------------------
+
+    Sigmas = {}
+    if "add_sigmas" in kwargs and kwargs["add_sigmas"]:
+
+        print("Time Difference optimization Added")
+        
+        # Time difference constraints
+        uav_pairs = list(combinations(uavs.get_List().keys(), 2))
+        edges = list(dict.fromkeys([edge[:2] for edge in abstract_G.edges]))
+
+        for uav1, uav2 in uav_pairs:
+            Sigmas[uav1+"-"+uav2] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "Si"+uav1+"-"+uav2)
+
+            # Constraint 1
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+              - SCIP.quicksum(
+                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                <= 
+                Sigmas[uav1+"-"+uav2]
+            )
+            # Constraint 1
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+              - SCIP.quicksum(
+                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                <= 
+                Sigmas[uav1+"-"+uav2]
+            )
 
     if 0 == A:
         scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
