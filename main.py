@@ -50,7 +50,7 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/y3uav9t.json")
+problem = F.load_Problem_from_File("./files/atlas.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()

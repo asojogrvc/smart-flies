@@ -11,7 +11,7 @@ from time import time
 
 from modules import bases as BA, tasks as TS, uavs as UAVS
 
-A = 0.5
+A = 0
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -558,6 +558,8 @@ def plan_Time(routes: dict, Wt: dict):
         time = 0
         for edge in routes[uav_id]:
             time += Wt[uav_id+"Z"+edge[0]+"-"+edge[1]]
+        
+        print("(id, time): ", uav_id, time)
         
         if time > current_max_time: 
             current_max_id = uav_id
