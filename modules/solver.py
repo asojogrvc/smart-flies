@@ -65,14 +65,16 @@ class Problem():
         else: add_sigmasQ = True
         if "auto_uav_disabling" in kwargs and bool == type(kwargs["auto_uav_disabling"]): auto_uav_disablingQ = kwargs["auto_uav_disabling"]
         else: auto_uav_disablingQ = True
+        if "cost_function" in kwargs: cost_functionQ = kwargs["cost_function"]
+        else: cost_functionQ = "mtm"
 
         if "dynamic" in kwargs:
             if False == kwargs["dynamic"]:
-                routes = solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ)
+                routes = solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
                 return routes
             
 
-        routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ)
+        routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
         return routes
 
 def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS.Towers,
@@ -327,22 +329,100 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     return scip_model, Z, Wt, Y
 
-def add_Cost_Function(scip_model: SCIP.Model, **kwargs):
-
-    if "which" in kwargs:
-        which = kwargs["which"]
+def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z: dict, Wt: dict, graph: nx.MultiDiGraph, **kwargs):
 
     match which:
         case "min_the_max" | "mtm":
+            print("Using Min The max Cost Function")
 
             M = scip_model.addVar(vtype = 'C', obj = 1.0, name = "M")
 
-            
+            edges = list(dict.fromkeys([(edge[0], edge[1]) for edge in graph.edges]))
+
+            for uav in uavs:
+
+                scip_model.addCons(
+                    SCIP.quicksum(
+                        Wt[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] * Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                    )      
+                    <= 
+                    M
+                )
 
         case "min-all-routes" | "mar":
 
+            print("Using Min All Routes Cost Function")
+
+            Sigmas = {}
+            edges = list(dict.fromkeys([(edge[0], edge[1]) for edge in graph.edges]))
+
+            for uav in uavs:
+
+                Sigmas[uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = 1.0, name = "S"+uav.get_ID())
+
+                scip_model.addCons(
+                    SCIP.quicksum(
+                        Wt[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] * Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                    )      
+                    <= 
+                    Sigmas[uav.get_ID()]
+                )
+
         case "min-the-sum" | "mts":
 
+            print("Using Min The Sum Cost Function")
+
+            if "add_sigmas" in kwargs and kwargs["add_sigmas"]:
+
+                Sigmas = {}
+
+                print("Time Difference optimization Added")
+        
+                # Time difference constraints
+                uav_pairs = list(combinations(uavs.get_List().keys(), 2))
+                edges = list(dict.fromkeys([edge[:2] for edge in graph.edges]))
+
+                for uav1, uav2 in uav_pairs:
+                    Sigmas[uav1+"-"+uav2] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "Si"+uav1+"-"+uav2)
+
+                    # Constraint 1
+                    scip_model.addCons(
+                        SCIP.quicksum(
+                                Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
+                            for edge in edges
+                        )
+                      - SCIP.quicksum(
+                                Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
+                            for edge in edges
+                        )
+                        <= 
+                        Sigmas[uav1+"-"+uav2]
+                    )
+                    # Constraint 2
+                    scip_model.addCons(
+                        SCIP.quicksum(
+                                Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
+                            for edge in edges
+                        )
+                      - SCIP.quicksum(
+                                Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
+                            for edge in edges
+                        )
+                        <= 
+                        Sigmas[uav1+"-"+uav2]
+                    )
+
+            if 0 == A:
+                scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
+            elif 0 == (A - 1):
+                scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
+            else:
+                scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
+                                + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
+
+        case _: raise Exception("No valid cost function selected")
 
     return None
 
@@ -571,7 +651,7 @@ def solver(problem: Problem, **kwargs) -> dict:
     else: auto_uav_disablingQ = True
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
+    scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
                                                         auto_uav_disabling = auto_uav_disablingQ)
 
     #print(Wt)
@@ -592,52 +672,12 @@ def solver(problem: Problem, **kwargs) -> dict:
             add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
     # --------------------------------------------------------------------------------------------------
 
-    Sigmas = {}
-    if "add_sigmas" in kwargs and kwargs["add_sigmas"]:
-
-        print("Time Difference optimization Added")
-        
-        # Time difference constraints
-        uav_pairs = list(combinations(uavs.get_List().keys(), 2))
-        edges = list(dict.fromkeys([edge[:2] for edge in abstract_G.edges]))
-
-        for uav1, uav2 in uav_pairs:
-            Sigmas[uav1+"-"+uav2] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "Si"+uav1+"-"+uav2)
-
-            # Constraint 1
-            scip_model.addCons(
-                SCIP.quicksum(
-                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-              - SCIP.quicksum(
-                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-                <= 
-                Sigmas[uav1+"-"+uav2]
-            )
-            # Constraint 1
-            scip_model.addCons(
-                SCIP.quicksum(
-                    Z[uav2+"Z"+edge[0]+"-"+edge[1]] * Wt[uav2+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-              - SCIP.quicksum(
-                    Z[uav1+"Z"+edge[0]+"-"+edge[1]] * Wt[uav1+"Z"+edge[0]+"-"+edge[1]]
-                    for edge in edges
-                )
-                <= 
-                Sigmas[uav1+"-"+uav2]
-            )
-
-    if 0 == A:
-        scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
-    elif 0 == (A - 1):
-        scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
+    if "cost_function" in kwargs:
+        which = kwargs["cost_function"]
     else:
-        scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
-                                + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
+        which = "mtm"
+    
+    add_Cost_Function(scip_model, which, uavs, Z, Wt, abstract_G, **kwargs)
 
     scip_model.writeProblem('scip_model.cip')
     t0 = time()
@@ -671,20 +711,16 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
 
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y, Sigmas = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
+    scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
                                                         wind_vector = problem.get_Wind(), auto_uav_disabling = auto_uav_disablingQ)
     #scip_model.hideOutput()
 
-    if 0 == A:
-        scip_model.setObjective(SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys()))
-    elif 0 == (A - 1):
-        scip_model.setObjective(SCIP.quicksum(sigma for sigma in Sigmas.values()))
+    if "cost_function" in kwargs:
+        which = kwargs["cost_function"]
     else:
-        scip_model.setObjective(A * SCIP.quicksum( Wt[key] * Z[key] for key in Z.keys())
-                                + (1 - A) * SCIP.quicksum(sigma for sigma in Sigmas.values()))
-
+        which = "mtm"
     
-
+    add_Cost_Function(scip_model, which, uavs, Z, Wt, abstract_G, **kwargs)
     
     print("-------------Initial Iteration-------------")
     t0 = time()
