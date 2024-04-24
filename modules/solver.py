@@ -1200,7 +1200,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     if distant_subgraphsQ: print("Subgroup of towers might be too far from some of the UAVs bases. Allowing automatic disabling")
         
     match mode:
-
+         
         case 0:
 
             tooManyUAVSQ = len(puavs.get_List()) > len(list(ptowers.get_Graph().edges()))
