@@ -11,7 +11,7 @@ from time import time
 
 from modules import bases as BA, tasks as TS, uavs as UAVS
 
-A = 0
+A = 0.5
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -148,7 +148,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     scip_model = SCIP.Model("GTSP-MUAV")
     if "is_editable" in kwargs and True == kwargs["is_editable"]:
         scip_model.enableReoptimization()
-        scip_model.hideOutput()
+        #scip_model.hideOutput()
 
     if "wind_vector" in kwargs and np.ndarray == type(kwargs["wind_vector"]):
         wind_vector = kwargs["wind_vector"]
@@ -664,12 +664,17 @@ def solver(problem: Problem, **kwargs) -> dict:
         except:
             None
 
-    Qlist = chain.from_iterable(list(combinations(vertices, r)) for r in range(2, len(vertices)+1))
+    Qlist = list(chain.from_iterable(list(combinations(vertices, r)) for r in range(2, len(vertices)+1)))
 
+    k = 1
     for Q in Qlist:
         #print("Q", Q)
         for uav in uavs:
             add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
+        
+        print("Subtour Constraints Addition: ", 100 * k / len(Qlist),end="\r")
+        k += 1
+
     # --------------------------------------------------------------------------------------------------
 
     if "cost_function" in kwargs:
@@ -679,7 +684,7 @@ def solver(problem: Problem, **kwargs) -> dict:
     
     add_Cost_Function(scip_model, which, uavs, Z, Wt, abstract_G, **kwargs)
 
-    scip_model.writeProblem('scip_model.cip')
+    #scip_model.writeProblem('scip_model.cip')
     t0 = time()
     scip_model.optimize()
     sol = scip_model.getBestSol()
@@ -713,7 +718,6 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
     scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
                                                         wind_vector = problem.get_Wind(), auto_uav_disabling = auto_uav_disablingQ)
-    #scip_model.hideOutput()
 
     if "cost_function" in kwargs:
         which = kwargs["cost_function"]
@@ -755,8 +759,9 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
             for loop in loops:
                 if not does_Contain_Vertex(loop, uav.get_Base())[0]:
                     Q = compute_Subtour_Subset_from_Route(loop, "")
-                    #print(Q)
-                    for Qs in chain.from_iterable(list(combinations(Q, r)) for r in range(2, len(Q)+1)):
+                    subsets = chain.from_iterable(list(combinations(Q, r)) for r in range(2, len(Q)+1))
+
+                    for Qs in subsets:
                         add_DFJ_Subtour_Constraint(Qs, uav.get_ID(), Z, scip_model)
                 
 

@@ -4,9 +4,6 @@ from matplotlib.lines import Line2D
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO, files as F
 
-# TODOs:
-# - CHANGE FONT WEIGHT
-
 colors = ["r", "g", "b", "c", "k"]
 
 def plot_Routes_Abstract(routes: dict, G: nx.MultiDiGraph, axes: plt.Axes):
@@ -50,7 +47,7 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/atlas.json")
+problem = F.load_Problem_from_File("./files/ATLAS_U5T13S6.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()
@@ -59,13 +56,13 @@ uav_team = problem.get_UAVs()
 
 # --------------------------------------------------------------------------
 
-routes = problem.solve(dynamic = False, auto_uav_disabling = False, cost_function = "mts")
+routes = problem.solve(dynamic = True, auto_uav_disabling = False, cost_function = "mtm")
 
 print("Routes", routes)
 
 graph = problem.get_Graph()
 
-fig2 = plt.figure()
+fig2 = plt.figure(figsize=(7, 5))
 axes3 = fig2.add_subplot(111)
 vertices_dict = tasks.get_Task_Parsing_Dict()
 for uav in uav_team:
@@ -85,15 +82,16 @@ bases.plot(axes3)
 
 legend_handles = [Line2D([0], [0], marker='o', color='w', label='Bases',
                           markerfacecolor='r', markersize=9),
-                  Line2D([0], [0], marker='o', color='k', label='Power Line Network',
+                  Line2D([0], [0], marker='o', color='k', label='PLN',
                           markerfacecolor='C0', markersize=9)]
 k = 0
 for uav in uav_team:
     colors[k]
-    legend_handles.append(Line2D([0], [0], linestyle = "--", color=colors[k], label="UAV Route: "+uav.get_ID()))
+    legend_handles.append(Line2D([0], [0], linestyle = "--", color=colors[k], label="UAV: "+uav.get_ID()))
     k += 1
 
-axes3.legend(handles = legend_handles)
+axes3.legend(handles = legend_handles, fontsize = 12)
+axes3.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 
 fig3 = plt.figure()
 axes4 = fig3.add_subplot(111)
