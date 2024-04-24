@@ -194,18 +194,27 @@ def compute_Abstract_Edge_Weights(node1: tuple, node2: tuple, uavs: UAVS.UAV_Tea
             # S to S
             else:
 
+                insp_vector = node2[1][1] - node2[0][1]
+                d_insp = np.linalg.norm(insp_vector)
+
                 if node2[0][0] == node1[1][0]:
                     for uav in uavs:
-                        W_t[uav.get_ID()] = 0.0
-                        W_e1[uav.get_ID()] = 0.0
+                        
+                        i_speed = uav.missionSettings['Insp. speed']
+
+                        W_t[uav.get_ID()] = d_insp / i_speed
+                        W_e1[uav.get_ID()] = compute_Consumption(insp_vector, i_speed, uav, weather)
+
                     # print('SS2')
                     return W_t, W_e1
         
                 travel_vector = node2[0][1] - node1[1][1]
                 d_travel = np.linalg.norm(travel_vector)
+                
+                # AQUI
 
-                insp_vector = node2[1][1] - node2[0][1]
-                d_insp = np.linalg.norm(insp_vector)
+                #insp_vector = node2[1][1] - node2[0][1]
+                #d_insp = np.linalg.norm(insp_vector)
 
                 # UAVs are distinguished using their IDs, not their names
                 for uav in uavs:
