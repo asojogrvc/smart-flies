@@ -777,4 +777,6 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     dt = time() - t0
     print("Solved in:", dt, "s")
 
+    print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
+
     return order_Routes(routes, uavs)
