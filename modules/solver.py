@@ -191,9 +191,9 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         move_vector = end_positions[edge[1]] - start_positions[edge[1]]
         d = np.linalg.norm(move_vector)
         if 0 == d:
-            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 2 * np.pi * orbit_radius / effective_speed
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 4 * np.pi * orbit_radius / effective_speed
         else:
-            effective_speed = speeds[edge[2]] - np.dot(wind_vector, move_vector) / d
+            effective_speed = speeds[edge[2]] / 2 - np.dot(wind_vector, move_vector) / d
             Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
 
         if 0 > Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]]: print("Warning: Negative TIME COST. Wind speed might be too high!")
@@ -726,6 +726,7 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     
     add_Cost_Function(scip_model, which, uavs, Z, Wt, abstract_G, **kwargs)
     
+    scip_model.writeProblem('scip_model.cip')
     print("-------------Initial Iteration-------------")
     t0 = time()
 
@@ -773,7 +774,6 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
 
         k += 1
 
-    scip_model.writeProblem('scip_model.cip')
     dt = time() - t0
     print("Solved in:", dt, "s")
 
