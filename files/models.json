@@ -1,14 +1,22 @@
 {
     "A": {
+        "type": "QR",
         "Speed": 10,
-        "Charge": 100
+        "iSpeed": 5
     },
     "B": {
-        "Speed": 15,
-        "Charge": 45
+        "type": "QR",
+        "Speed": 7,
+        "iSpeed": 5
     },
     "C": {
+        "type": "QR",
         "Speed": 5,
-        "Charge": 200
+        "iSpeed": 5 
+    },
+    "D": {
+        "type": "FW",
+        "Speed": 15,
+        "iSpeed": 15 
     }
 }

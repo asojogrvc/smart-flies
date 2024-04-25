@@ -139,6 +139,7 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
 def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> SCIP.Model:
 
     speeds = uavs.get_Speeds()
+    ispeeds = uavs.get_Inspection_Speeds()
 
     start_positions = graph.nodes(data = "start_position")
     end_positions = graph.nodes(data = "end_position")

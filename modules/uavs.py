@@ -93,6 +93,24 @@ class UAV_Team():
             speeds[uav.get_ID()] = models[uav.get_Model()]["Speed"]
 
         return speeds
+    
+    def get_Inspection_Speeds(self) -> dict:
+
+        speeds = {}
+
+        for uav in self:
+            speeds[uav.get_ID()] = models[uav.get_Model()]["iSpeed"]
+
+        return speeds
+    
+    def get_Types(self) -> dict:
+
+        types = {}
+
+        for uav in self:
+            types[uav.get_ID()] = models[uav.get_Model()]["type"]
+
+        return types
 
     
     def print(self):
