@@ -140,6 +140,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     speeds = uavs.get_Speeds()
     ispeeds = uavs.get_Inspection_Speeds()
+    types = uavs.get_Types()
 
     start_positions = graph.nodes(data = "start_position")
     end_positions = graph.nodes(data = "end_position")
@@ -192,7 +193,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         move_vector = end_positions[edge[1]] - start_positions[edge[1]]
         d = np.linalg.norm(move_vector)
         if 0 == d:
-            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 4 * np.pi * orbit_radius / effective_speed
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 2 * np.pi * orbit_radius / effective_speed
         else:
             effective_speed = speeds[edge[2]] / 2 - np.dot(wind_vector, move_vector) / d
             Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
