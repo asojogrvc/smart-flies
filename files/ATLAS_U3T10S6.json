@@ -50,7 +50,10 @@
         "tT9":{"inspection_of": "T9"},
         "tS1":{"inspection_of": ["T5","T6"]},
         "tS2":{"inspection_of": ["T6","T7"]},
-        "tS3":{"inspection_of": ["T7","T8"]}
+        "tS3":{"inspection_of": ["T7","T8"]},
+        "tS4":{"inspection_of": ["T9","T10"]},
+        "tS5":{"inspection_of": ["T1","T2"]},
+        "tS6":{"inspection_of": ["T2","T3"]}
     },
     "Wind": [5, 0, 0]
 }

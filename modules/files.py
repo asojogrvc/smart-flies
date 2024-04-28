@@ -1,5 +1,6 @@
 import numpy as np, json, networkx as nx, random
 from itertools import combinations, groupby
+from hilbert import decode
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO
 
@@ -64,6 +65,55 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
     if "Wind" in mission:
         return SO.Problem(bases, towers, tasks, uavs, wind_vector = np.array(mission["Wind"]))
     else: return SO.Problem(bases, towers, tasks, uavs)
+
+def gen_Hilbert_Map(num_dims: int, num_bits: int, d_towers: float):
+
+    max_h = 2**(num_bits*num_dims)
+
+    # Generate a sequence of Hilbert integers.
+    hilberts = np.arange(max_h)
+
+    # Compute the 2-dimensional locations.
+    locs =  d_towers * decode(hilberts, num_dims, num_bits)
+
+    base_p = int(max_h / 2)
+    data = {
+        "Bases": {
+            "B": [float(locs[base_p,0]), float(locs[base_p,1]), 0]
+        },
+        "UAVs": {
+            "0": {
+            "Model": "A",
+            "Base": "B"
+        },
+        },
+        "Wind": [0, 0, 0]
+    }
+
+    tlist = {}
+    tasks = {}
+    lines = []
+    for k in range(base_p):
+        tlist["T"+str(k)] = [float(locs[k,0]), float(locs[k,1]), 0]
+
+        if k < base_p-1:
+            edge = ["T"+str(k),"T"+str(k+1)] 
+            lines.append(edge)
+            tasks["tS"+str(k)] = {"inspection_of": edge}
+    
+    for k in range(base_p+1, max_h):
+        tlist["T"+str(k)] = [float(locs[k,0]), float(locs[k,1]), 0]
+        if k < max_h-1: 
+            edge = ["T"+str(k),"T"+str(k+1)] 
+            lines.append(edge)
+            tasks["tS"+str(k)] = {"inspection_of": edge}
+
+    data["Towers"] = {"List": tlist, "Lines": lines}
+    data["Tasks"]= tasks
+
+    with open('./files/HILBERT_U1S'+str(max_h-1)+'.json', 'w') as f:
+        json.dump(data, f, indent=4)
+
 
 def gnp_random_connected_graph(n, p):
     """

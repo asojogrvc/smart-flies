@@ -140,7 +140,6 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     speeds = uavs.get_Speeds()
     ispeeds = uavs.get_Inspection_Speeds()
-    types = uavs.get_Types()
 
     start_positions = graph.nodes(data = "start_position")
     end_positions = graph.nodes(data = "end_position")
@@ -757,18 +756,26 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
             if 1 == len(loops) and does_Contain_Vertex(loops[0], uav.get_Base())[0]:
                 continue
             
+            Q_list = []
+
             subroutesQ = True
             scip_model.freeReoptSolve()
             for loop in loops:
                 if not does_Contain_Vertex(loop, uav.get_Base())[0]:
                     Q = compute_Subtour_Subset_from_Route(loop, "")
+                    Q_list.append(Q)
+                
+
+        if subroutesQ:
+
+            for uav in uavs:
+                for Q in Q_list:
                     subsets = chain.from_iterable(list(combinations(Q, r)) for r in range(2, len(Q)+1))
 
                     for Qs in subsets:
                         add_DFJ_Subtour_Constraint(Qs, uav.get_ID(), Z, scip_model)
-                
 
-        if subroutesQ:
+        
             print("-------------Iteration: "+str(k)+"-------------")
             scip_model.optimize()
             sol = scip_model.getBestSol()

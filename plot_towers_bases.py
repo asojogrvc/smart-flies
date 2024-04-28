@@ -3,7 +3,7 @@ from matplotlib.lines import Line2D
 
 from modules import bases as BA, tasks as TS, uavs as UAVS, solver as SO, files as F
 
-problem = F.load_Problem_from_File("./files/ATLAS_U2T3S3.json")
+problem = F.load_Problem_from_File("./files/HILBERT_U1S63.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()

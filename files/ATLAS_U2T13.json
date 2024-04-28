@@ -31,25 +31,22 @@
         "1": {
             "Model": "B",
             "Base": "B1"
-        },
-        "2": {
-            "Model": "C",
-            "Base": "B1"
         }
     },
     "Tasks": {
-        "tS1":{"inspection_of": ["T4","T5"]},
-        "tS2":{"inspection_of": ["T7", "T8"]},
-        "tS3":{"inspection_of": ["T8", "T9"]},
-        "tS4":{"inspection_of": ["T9", "T10"]},
-        "tS5":{"inspection_of": ["T10", "T6"]},
-        "tS6":{"inspection_of": ["T6", "T11"]},
-        "tS7":{"inspection_of": ["T11", "T12"]},
-        "tS8":{"inspection_of": ["T12", "T13"]},
-        "tS9":{"inspection_of": ["T6", "T5"]},
-        "tS10":{"inspection_of":["T4", "T3"]},
-        "tS11":{"inspection_of":["T3", "T2"]},
-        "tS12":{"inspection_of":["T2", "T1"]}
+        "tT1":{"inspection_of": "T1"},
+        "tT2":{"inspection_of": "T2"},
+        "tT3":{"inspection_of": "T3"},
+        "tT4":{"inspection_of": "T4"},
+        "tT5":{"inspection_of": "T5"},
+        "tT6":{"inspection_of": "T6"},
+        "tT7":{"inspection_of": "T7"},
+        "tT8":{"inspection_of": "T8"},
+        "tT9":{"inspection_of": "T9"},
+        "tT10":{"inspection_of": "T10"},
+        "tT11":{"inspection_of": "T11"},
+        "tT12":{"inspection_of": "T12"},
+        "tT13":{"inspection_of": "T13"}
     },
     "Wind": [3, 0, 0]
 }

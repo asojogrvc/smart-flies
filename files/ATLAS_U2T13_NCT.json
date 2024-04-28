@@ -29,27 +29,24 @@
             "Base": "B0"
         },
         "1": {
-            "Model": "B",
-            "Base": "B1"
-        },
-        "2": {
-            "Model": "C",
+            "Model": "A",
             "Base": "B1"
         }
     },
     "Tasks": {
-        "tS1":{"inspection_of": ["T4","T5"]},
-        "tS2":{"inspection_of": ["T7", "T8"]},
-        "tS3":{"inspection_of": ["T8", "T9"]},
-        "tS4":{"inspection_of": ["T9", "T10"]},
-        "tS5":{"inspection_of": ["T10", "T6"]},
-        "tS6":{"inspection_of": ["T6", "T11"]},
-        "tS7":{"inspection_of": ["T11", "T12"]},
-        "tS8":{"inspection_of": ["T12", "T13"]},
-        "tS9":{"inspection_of": ["T6", "T5"]},
-        "tS10":{"inspection_of":["T4", "T3"]},
-        "tS11":{"inspection_of":["T3", "T2"]},
-        "tS12":{"inspection_of":["T2", "T1"]}
+        "tT1":{"inspection_of": "T1", "incompatible_IDs": [1]},
+        "tT2":{"inspection_of": "T2", "incompatible_IDs": [0]},
+        "tT3":{"inspection_of": "T3", "incompatible_IDs": [1]},
+        "tT4":{"inspection_of": "T4", "incompatible_IDs": [0]},
+        "tT5":{"inspection_of": "T5", "incompatible_IDs": [1]},
+        "tT6":{"inspection_of": "T6", "incompatible_IDs": [0]},
+        "tT7":{"inspection_of": "T7", "incompatible_IDs": [0]},
+        "tT8":{"inspection_of": "T8", "incompatible_IDs": [1]},
+        "tT9":{"inspection_of": "T9", "incompatible_IDs": [0]},
+        "tT10":{"inspection_of": "T10", "incompatible_IDs": [1]},
+        "tT11":{"inspection_of": "T11", "incompatible_IDs": [1]},
+        "tT12":{"inspection_of": "T12", "incompatible_IDs": [0]},
+        "tT13":{"inspection_of": "T13", "incompatible_IDs": [1]}
     },
     "Wind": [3, 0, 0]
 }
