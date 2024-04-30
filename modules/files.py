@@ -114,7 +114,6 @@ def gen_Hilbert_Map(num_dims: int, num_bits: int, d_towers: float):
     with open('./files/HILBERT_U1S'+str(max_h-1)+'.json', 'w') as f:
         json.dump(data, f, indent=4)
 
-
 def gnp_random_connected_graph(n, p):
     """
     Generates a random undirected graph, similarly to an Erdős-Rényi 
@@ -147,4 +146,51 @@ def generate_random_PLN(n_towers: int, p_connections: float) -> nx.Graph:
         notplanar = not is_planar
 
     return graph
+
+def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
+
+    f = open(i_file_path, 'r')
+    contents = f.readlines()
+
+    tlist = {}
+    tasks = {}
+
+    firstQ = True
+    for line in contents[7:]:
+
+        if "DEMAND_SECTION\n" == line:
+            break
+
+        parsed_line = line.strip().split(" ")
+
+        if firstQ:
+            data = {"Bases": {
+                "B": [float(parsed_line[1]), float(parsed_line[2]), 0]
+                    },
+                "UAVs": {
+                    "0": {
+                        "Model": "A",
+                        "Base": "B"
+                    },
+                },
+                "Wind": [0, 0, 0]
+            }
+            firstQ = False
+            continue
+
+        tlist["P"+parsed_line[0]] = [float(parsed_line[1]), float(parsed_line[2]), 0]
+        tasks["t"+"P"+parsed_line[0]] = {"inspection_of": "P"+parsed_line[0]}
+
+    #del tasks["P"+parsed_line[0]]
+
+    
+
+
+    data["Towers"] = {"List": tlist, "Lines": {}}
+    data["Tasks"] = tasks
+
+    with open(o_file_path, 'w') as f:
+        json.dump(data, f, indent=4)
+
+    return None
 
