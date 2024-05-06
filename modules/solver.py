@@ -12,6 +12,7 @@ from time import time
 from modules import bases as BA, tasks as TS, uavs as UAVS
 
 A = 0.5
+max_w = 6
 
 class Problem():
     def __init__(self, bases:BA.Bases, towers: TS.Towers, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs):
@@ -766,11 +767,21 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
                     Q_list.append(Q)
                 
 
+        
         if subroutesQ:
 
             for uav in uavs:
                 for Q in Q_list:
-                    subsets = chain.from_iterable(list(combinations(Q, r)) for r in range(2, len(Q)+1))
+                    
+                    length = len(Q)
+
+                    if max_w <= length:
+                        print("Too large!")
+                        subsets = chain.from_iterable(list(combinations(Q[:max_w], r)) for r in range(2, max_w+1))
+                        add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
+                    else:
+                        subsets = chain.from_iterable(list(combinations(Q, r)) for r in range(2, length+1))
+                    
 
                     for Qs in subsets:
                         add_DFJ_Subtour_Constraint(Qs, uav.get_ID(), Z, scip_model)
