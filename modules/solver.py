@@ -121,7 +121,6 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
 
         # Connect bases with compatible vertices
         for task in compatible_tasks:
-
             graph.add_edge(uav.get_Base(), task, uav.get_ID())
             graph.add_edge(task, uav.get_Base(), uav.get_ID())
 
@@ -136,6 +135,10 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
             
 
     return graph
+
+def get_Subgraph(graph: nx.MultiDiGraph, uav:UAVS.UAV) -> nx.MultiDiGraph:
+
+    return nx.from_edgelist([(i, j)  for i, j, k in graph.edges if k == uav.get_ID()])
 
 def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> SCIP.Model:
 
@@ -628,16 +631,6 @@ def plan_Time(routes: dict, Wt: dict):
             current_max_time = time
 
     return current_max_id, current_max_time
-
-def get_Subgraph(graph: nx.MultiDiGraph, id: str) -> list:
-
-    edges = [(i, j, k)   for i, j, k in graph.edges if k == str(id)]
-    #vertices = set( [n for i, j, k in graph.edges if k == 2  for n in [i, j]] )
-
-    sG = nx.MultiDiGraph()
-    sG.add_edges_from(edges)
-
-    return sG
 
 def solver(problem: Problem, **kwargs) -> dict:
 

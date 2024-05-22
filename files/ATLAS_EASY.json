@@ -37,7 +37,8 @@
         "tT1":{"inspection_of": "T4"},
         "tT2":{"inspection_of": "T7"},
         "tT3":{"inspection_of": "T8"},
-        "tS4":{"inspection_of": ["T5", "T10"]}
+        "tS1":{"inspection_of": ["T5", "T10"], "incompatible_IDs": [1]}
     },
+    "Tasks_Order": {"0": [["tT1", "tT2"]], "1": [["tT1", "tT2"]]},
     "Wind": [5, 0, 0]
 }

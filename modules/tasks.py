@@ -91,7 +91,8 @@ class Tasks():
 
     def __init__(self):
 
-        self.__list = {} # name, data. 
+        self.__list = {} # name, data.
+        self.__ordering = {} # uav_id: list of order pairs
         
         # data is a dict with:
             # inspection_of: either a str with the tower name or a tuple for two names
@@ -116,6 +117,12 @@ class Tasks():
 
         return None
     
+    def set_Order(self, order_dict: dict):
+        self.__ordering = order_dict
+
+    def get_Order(self) -> dict:
+        return self.__ordering
+
     def get_Task_Parsing_Dict(self) -> dict:
 
         parsing = {}
@@ -135,6 +142,8 @@ class Tasks():
         print("----------------------------Task List-----------------------------")
         for name, data in self:
             print(" - Name: ", name, " Inspection of: ", data["inspection_of"], " Incompatible with IDs: ", data["incompatible_IDs"])
+        print("---- Ordering ----------------------------------------------------")
+        print(self.__ordering)
         print("------------------------------------------------------------------")
 
 
