@@ -6,7 +6,7 @@ As of now, all methods can be seen as a MILP problem than can solved using SCIP 
 """
 
 import networkx as nx, pyscipopt as SCIP, numpy as np, copy
-from itertools import combinations, chain
+from itertools import combinations, chain, groupby
 from time import time
 
 from modules import bases as BA, tasks as TS, uavs as UAVS
@@ -445,6 +445,7 @@ def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z
 
     return None
 
+
 def compute_Subtour_Subset_from_Route(route: list, base: str) -> list:
 
     from_vertices = []
@@ -476,6 +477,20 @@ def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, Z:dict, model: SCIP.Model):
                     <= 
                 len(Q) - 1.0
         )
+
+    return None
+
+def add_Subpath_DFJ_Constraint(path: list, uav_id: str, Z:dict, model: SCIP.Model):
+
+    if not path: return None
+
+    model.addCons(
+        SCIP.quicksum(
+                Z[uav_id+"Z"+pair[0]+"-"+pair[1]]
+            for pair in path)
+                <=
+            len(path) -  1
+    )
 
     return None
 
@@ -558,6 +573,17 @@ def does_Contain_Vertices(route:list, vertices: list) -> bool:
         return True
 
     return False
+
+def remove_Invalid_Paths(paths: list, complex_tasks:list):
+    
+    returned_paths = copy.deepcopy(paths)
+    for path in paths:
+        for complex_task in complex_tasks:
+            if does_Contain_Vertices(path, [complex_task+"_U", complex_task+"_D"]): 
+                returned_paths.remove(path)
+                break
+
+    return returned_paths
 
 def parse_Solution(sol: SCIP.scip.Solution, Z: dict, uavs: UAVS.UAV_Team):
 
@@ -680,8 +706,9 @@ def solver(problem: Problem, **kwargs) -> dict:
                                                         auto_uav_disabling = auto_uav_disablingQ)
     
     # Precedence constraints v1 (Brute Force) ------------------------------------------
-
+    tasks_order = tasks.get_Order()
     for uav in uavs:
+
         id = uav.get_ID()
         sG = compute_Subgraph(abstract_G, uav)
         subgraphs[id] = sG
@@ -689,10 +716,26 @@ def solver(problem: Problem, **kwargs) -> dict:
         ssG.remove_node(uav.get_Base())
         simp_subgraphs[id] = ssG
 
-        for order_pair in tasks.get_Order()[id]:
-            paths = list(nx.all_simple_edge_paths(ssG, order_pair[0], order_pair[0]))
+        paths_to_delete = []
 
-            paths = remove_Invalid_Paths(paths, complex_tasks)  
+        if id in tasks_order:
+            for order_pair in tasks_order[id]:
+            
+                # We list all subpaths with the inverse precedence to delete all routes that contain them
+                paths = list(nx.all_simple_edge_paths(ssG, order_pair[1], order_pair[0]))
+                #print(id, paths, len(paths))
+                paths = remove_Invalid_Paths(paths, complex_tasks)
+                #print(id, paths, len(paths))
+
+                paths_to_delete = paths_to_delete + paths
+
+            # Remove duplicates (as list are not hashable, we need an unsual approach)
+            paths_to_delete.sort()
+            paths_to_delete = list(j for j, _ in groupby(paths_to_delete))
+
+            # We delete each of them using DFJ constraints. Maybe, I can limit the length of deleted paths as larger paths won't fit optimality
+            for path in paths_to_delete:
+                add_Subpath_DFJ_Constraint(path, id, Z, scip_model)     
 
     # ----------------------------------------------------------------------------------
 
