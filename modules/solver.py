@@ -37,6 +37,8 @@ class Problem():
         #   - The SCIP model is just another abstraction layer to communicate the actual MILP problem to SCIP
 
         self.__graph = nx.MultiDiGraph()
+        self.__subgraphs = {}
+        self.__simplified_subgraphs = {}
         self.__scip_model = SCIP.Model("MW-TP")
         self.__scip_model.enableReoptimization()
 
@@ -56,6 +58,18 @@ class Problem():
     
     def get_Graph(self):
         return self.__graph
+    
+    def get_Subgraph(self, id: str):
+        return self.__subgraphs[id]
+    
+    def get_Simplified_Subgraph(self, id: str):
+        return self.__simplified_subgraphs[id]
+    
+    def get_Subgraphs(self):
+        return self.__subgraphs
+    
+    def get_Simplified_Subgraphs(self):
+        return self.__simplified_subgraphs
     
     def get_Wind(self):
         return self.__wind_vector
@@ -136,7 +150,7 @@ def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS
 
     return graph
 
-def get_Subgraph(graph: nx.MultiDiGraph, uav:UAVS.UAV) -> nx.MultiDiGraph:
+def compute_Subgraph(graph: nx.MultiDiGraph, uav:UAVS.UAV) -> nx.MultiDiGraph:
 
     return nx.from_edgelist([(i, j)  for i, j, k in graph.edges if k == uav.get_ID()])
 
@@ -533,6 +547,18 @@ def does_Contain_Vertex(route: list, vertex: str) -> tuple[bool, list]:
 
     return False, vertices
 
+def does_Contain_Vertices(route:list, vertices: list) -> bool:
+
+    withinQ = len(vertices) * [False]
+
+    for idx, vertex in enumerate(vertices):
+        withinQ[idx], _ = does_Contain_Vertex(route, vertex)
+
+    if all(withinQ):
+        return True
+
+    return False
+
 def parse_Solution(sol: SCIP.scip.Solution, Z: dict, uavs: UAVS.UAV_Team):
 
     routes = {str(uav.get_ID()): [] for uav in uavs}
@@ -639,15 +665,36 @@ def solver(problem: Problem, **kwargs) -> dict:
     bases = problem.get_Bases()
     towers = problem.get_Towers()
     tasks = problem.get_Tasks()
+    complex_tasks = tasks.get_Complex_Tasks()
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
+    subgraphs = problem.get_Subgraphs()
+    simp_subgraphs = problem.get_Simplified_Subgraphs()
 
     if "auto_uav_disabling" in kwargs and bool == type(kwargs["auto_uav_disabling"]): auto_uav_disablingQ = kwargs["auto_uav_disabling"]
     else: auto_uav_disablingQ = True
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
+
     scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
                                                         auto_uav_disabling = auto_uav_disablingQ)
+    
+    # Precedence constraints v1 (Brute Force) ------------------------------------------
+
+    for uav in uavs:
+        id = uav.get_ID()
+        sG = compute_Subgraph(abstract_G, uav)
+        subgraphs[id] = sG
+        ssG = copy.deepcopy(sG)
+        ssG.remove_node(uav.get_Base())
+        simp_subgraphs[id] = ssG
+
+        for order_pair in tasks.get_Order()[id]:
+            paths = list(nx.all_simple_edge_paths(ssG, order_pair[0], order_pair[0]))
+
+            paths = remove_Invalid_Paths(paths, complex_tasks)  
+
+    # ----------------------------------------------------------------------------------
 
     #print(Wt)
 

@@ -8,18 +8,18 @@ bases = problem.get_Bases()
 towers = problem.get_Towers()
 tasks = problem.get_Tasks()
 tasks.print()
+print(tasks.get_Complex_Tasks())
 uav_team = problem.get_UAVs()
 
-abstract_G = nx.MultiDiGraph()
-abstract_G = SO.construct_Abstract_Graph(abstract_G, bases, towers, tasks, uav_team)
+routes = problem.solve(dynamic = False, auto_uav_disabling = False, cost_function = "mtm")
 
-G1 = SO.get_Subgraph(abstract_G, uav_team.get_List()["0"])
-G1.remove_node("B0")
+sGs = problem.get_Subgraphs()
+ssGs = problem.get_Simplified_Subgraphs()
 
 # Gotta delete those that contain bases and 
-paths = list(nx.all_simple_edge_paths(G1, "tT1", "tT2")) # Up to a certain length, there sould be no need to delete those paths as they to long for optimality
+paths = list(nx.all_simple_edge_paths(sGs["0"], "tT1", "tT2")) # Up to a certain length, there sould be no need to delete those paths as they to long for optimality
 
 print(paths, len(paths))
 
-nx.draw_networkx(G1, with_labels = True)
+nx.draw_networkx(ssGs["0"], with_labels = True)
 plt.show()
