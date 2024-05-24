@@ -791,8 +791,11 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     bases = problem.get_Bases()
     towers = problem.get_Towers()
     tasks = problem.get_Tasks()
+    complex_tasks = tasks.get_Complex_Tasks()
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
+    subgraphs = problem.get_Subgraphs()
+    simp_subgraphs = problem.get_Simplified_Subgraphs()
 
     if "add_sigmas" in kwargs and bool == type(kwargs["add_sigmas"]): add_sigmasQ = kwargs["add_sigmas"]
     else: add_sigmasQ = True
@@ -803,6 +806,40 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
     scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
                                                         wind_vector = problem.get_Wind(), auto_uav_disabling = auto_uav_disablingQ)
+    
+     # Precedence constraints v1 (Brute Force) ------------------------------------------
+    tasks_order = tasks.get_Order()
+    for uav in uavs:
+
+        id = uav.get_ID()
+        sG = compute_Subgraph(abstract_G, uav)
+        subgraphs[id] = sG
+        ssG = copy.deepcopy(sG)
+        ssG.remove_node(uav.get_Base())
+        simp_subgraphs[id] = ssG
+
+        paths_to_delete = []
+
+        if id in tasks_order:
+            for order_pair in tasks_order[id]:
+            
+                # We list all subpaths with the inverse precedence to delete all routes that contain them
+                paths = list(nx.all_simple_edge_paths(ssG, order_pair[1], order_pair[0]))
+                #print(id, paths, len(paths))
+                paths = remove_Invalid_Paths(paths, complex_tasks)
+                #print(id, paths, len(paths))
+
+                paths_to_delete = paths_to_delete + paths
+
+            # Remove duplicates (as list are not hashable, we need an unsual approach)
+            paths_to_delete.sort()
+            paths_to_delete = list(j for j, _ in groupby(paths_to_delete))
+
+            # We delete each of them using DFJ constraints. Maybe, I can limit the length of deleted paths as larger paths won't fit optimality
+            for path in paths_to_delete:
+                add_Subpath_DFJ_Constraint(path, id, Z, scip_model)     
+
+    # ----------------------------------------------------------------------------------
 
     if "cost_function" in kwargs:
         which = kwargs["cost_function"]

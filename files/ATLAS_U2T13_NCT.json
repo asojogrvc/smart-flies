@@ -48,5 +48,6 @@
         "tT12":{"inspection_of": "T12", "incompatible_IDs": [0]},
         "tT13":{"inspection_of": "T13", "incompatible_IDs": [1]}
     },
+    "Tasks_Order": {"0": [["tT10", "tT1"], ["tT11", "tT10"]]},
     "Wind": [3, 0, 0]
 }
