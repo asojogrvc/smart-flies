@@ -920,14 +920,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     n2 = n_wind
     n2 = n2 / np.linalg.norm(n2)
 
-<<<<<<< HEAD
     points, _ = CO.get_Safe_Dubins_3D_Path(p1, n1, p2, n2, min_radius, g_max, step_size = steps / 100)
-=======
-    # points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
-    height = uav.missionSettings["Insp. height"] + uav.routeUTM[1][0][2]
-    points, _ = CO.get_Safe_Dubins_3D_Path(
-        p1, n1, p2, n2, min_radius, g_max, step_size=steps / 100)
->>>>>>> refs/remotes/origin/main
 
     for point in points[1:-1]:
 
