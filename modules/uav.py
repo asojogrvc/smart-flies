@@ -711,7 +711,6 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
 
     # Take off. This point actually gives the transition point. It must be at least 300m in the direction of wind 
     point = uav.routeUTM[0][0] + 310 * np.append(n_wind, 0)
-    print(np.append(n_wind, 0))
     latlon = CO.utm2latlon(point, utmZone)
     actions = {
         "command": 84, # MAV_CMD_NAV_VTOL_TAKEOFF
@@ -829,8 +828,6 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     n2 = n_wind
     n2 = n2 / np.linalg.norm(n2)
 
-    #points, _, _, _ = DB.plan_dubins_path(p1, n1, p2, n2, min_radius, step_size = steps / 100)
-    height = uav.missionSettings["Insp. height"] + uav.routeUTM[1][0][2]
     points, _ = CO.get_Safe_Dubins_3D_Path(p1, n1, p2, n2, min_radius, g_max, step_size = steps / 100)
 
     for point in points[1:-1]:
@@ -846,6 +843,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
         }
         uav.waypoints.add_Waypoint(point, actions, "Navigation")
 
+    
     # Approaching point
     latlon = CO.utm2latlon(p2, utmZone)
     actions = {
