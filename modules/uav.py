@@ -697,9 +697,14 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     try:
         takeoff_altitude = uav.extra_parameters["Take Off Height"]
     except:
-        takeoff_altitude = 60 # Relative to base
+        takeoff_altitude = 60    # Relative to base
 
-    landing_altitude = 20     # Relative to base
+    try:
+        tH = uav.extra_parameters["Tower Height"]
+    except:
+        tH = 5    # Relative to base
+
+    landing_altitude = dH+tH     # Relative to base
 
     # Take off. This point actually gives the transition point. It must be at least 300m in the direction of wind 
     point = uav.routeUTM[0][0] + 310 * np.append(n_wind, 0)
