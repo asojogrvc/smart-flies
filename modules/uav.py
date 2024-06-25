@@ -699,10 +699,13 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     except:
         takeoff_altitude = 60    # Relative to base
 
+    print(uav.extra_parameters)
+
     try:
         tH = uav.extra_parameters["Tower Height"]
     except:
         tH = 5    # Relative to base
+        
 
     landing_altitude = dH+tH     # Relative to base
 
