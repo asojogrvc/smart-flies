@@ -47,7 +47,7 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/ATLAS_U2T13_NCT.json")
+problem = F.load_Problem_from_File("./files/ATLAS_U2S12.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()

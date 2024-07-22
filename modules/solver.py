@@ -333,9 +333,11 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     for uav in uavs:
         for name in tasks.compatible_With(uav.get_ID()):
+            
 
             Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
 
+            """
             edges = list(dict.fromkeys(list(graph.in_edges(name))+list(graph.out_edges(name))))
             scip_model.addCons(
                 SCIP.quicksum(
@@ -345,6 +347,28 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 == 
                 2 * Y[name+"|"+uav.get_ID()]
             )
+            """
+
+            
+            edges_in = list(dict.fromkeys(list(graph.in_edges(name))))
+            edges_out = list(dict.fromkeys(list(graph.out_edges(name))))
+
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges_in
+                )
+                -
+                SCIP.quicksum(
+                    Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges_out
+                )
+                == 
+                0.0
+            )
+            
+
+
 
     return scip_model, Z, Wt, Y
 
