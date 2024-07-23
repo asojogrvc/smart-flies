@@ -219,6 +219,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
       
     Y = {}
+    T = {}
     for uav in uavs:
 
         edges = list(dict.fromkeys(list(graph.out_edges(uav.get_Base()))))
@@ -332,7 +333,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             )
 
     for uav in uavs:
-        for name in tasks.compatible_With(uav.get_ID()):
+        vertices = tasks.compatible_With(uav.get_ID())
+        for name in vertices:
             
 
             Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
@@ -366,11 +368,34 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 == 
                 0.0
             )
+
+            T[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = len(vertices), name = "T"+name+"|"+uav.get_ID())
+
+
+        edges = [(i, j, k) for i, j, k in graph.edges if k == uav.get_ID() and i != uav.get_Base() and j != uav.get_Base()]
+
+        print(len(vertices))
+
+        for edge in edges:
+            scip_model.addCons(
+                    T[edge[0]+"|"+uav.get_ID()] - T[edge[1]+"|"+uav.get_ID()] + 1
+                    <= 
+                    len(vertices) * (1 - Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]])    # number of tasked vertices + 1 for the base
+                )
             
+        scip_model.addCons(
+                    T["tT2"+"|"+uav.get_ID()] - T["tT3"+"|"+uav.get_ID()]
+                    <= 
+                    0.0
+                )
+        
+        scip_model.addCons(
+                    T["tT1"+"|"+uav.get_ID()] - T["tT3"+"|"+uav.get_ID()]
+                    <= 
+                    0.0
+                )
 
-
-
-    return scip_model, Z, Wt, Y
+    return scip_model, Z, Wt, Y, T
 
 def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z: dict, Wt: dict, graph: nx.MultiDiGraph, **kwargs):
 
@@ -468,7 +493,6 @@ def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z
         case _: raise Exception("No valid cost function selected")
 
     return None
-
 
 def compute_Subtour_Subset_from_Route(route: list, base: str) -> list:
 
@@ -828,7 +852,7 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
 
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
+    scip_model, Z, Wt, Y, T = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
                                                         wind_vector = problem.get_Wind(), auto_uav_disabling = auto_uav_disablingQ)
     
      # Precedence constraints v1 (Brute Force) ------------------------------------------
@@ -942,5 +966,9 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     print("Solved in:", dt, "s")
 
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
+
+    for key in T:
+
+        print(key, sol[T[key]])
 
     return order_Routes(routes, uavs)

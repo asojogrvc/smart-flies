@@ -27,18 +27,13 @@
         "0": {
             "Model": "A",
             "Base": "B0"
-        },
-        "1": {
-            "Model": "A",
-            "Base": "B1"
         }
     },
     "Tasks": {
         "tT1":{"inspection_of": "T4"},
         "tT2":{"inspection_of": "T7"},
         "tT3":{"inspection_of": "T8"},
-        "tS1":{"inspection_of": ["T5", "T10"], "incompatible_IDs": [1]}
+        "tS1":{"inspection_of": ["T1","T2"]}
     },
-    "Tasks_Order": {"0": [["tT2", "tT1"]], "1": [["tT3", "tT2"]]},
-    "Wind": [5, 0, 0]
+    "Wind": [0, 0, 0]
 }
