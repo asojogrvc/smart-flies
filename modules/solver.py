@@ -371,29 +371,30 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
             T[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = len(vertices), name = "T"+name+"|"+uav.get_ID())
 
+            scip_model.addCons(
+                    T[name+"|"+uav.get_ID()]
+                    >= 
+                    2    # number of tasked vertices + 1 for the base
+                )
+
+        T[uav.get_Base()+"|"+uav.get_ID()] = 1
 
         edges = [(i, j, k) for i, j, k in graph.edges if k == uav.get_ID() and i != uav.get_Base() and j != uav.get_Base()]
 
         print(len(vertices))
 
         for edge in edges:
+            
             scip_model.addCons(
                     T[edge[0]+"|"+uav.get_ID()] - T[edge[1]+"|"+uav.get_ID()] + 1
                     <= 
-                    len(vertices) * (1 - Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]])    # number of tasked vertices + 1 for the base
+                    len(vertices) * (1-Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]) # number of tasked vertices + 1 for the base
                 )
             
-        scip_model.addCons(
-                    T["tT2"+"|"+uav.get_ID()] - T["tT3"+"|"+uav.get_ID()]
-                    <= 
-                    0.0
-                )
-        
-        scip_model.addCons(
-                    T["tT1"+"|"+uav.get_ID()] - T["tT3"+"|"+uav.get_ID()]
-                    <= 
-                    0.0
-                )
+            # https://www.sciencedirect.com/science/article/pii/S0305054814001439
+            # https://www.sciencedirect.com/science/article/pii/S0305054807002468
+            # https://www.sciencedirect.com/science/article/pii/0167637791900832
+            
 
     return scip_model, Z, Wt, Y, T
 
@@ -968,7 +969,9 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
 
     for key in T:
-
-        print(key, sol[T[key]])
+        try:
+            print(key, sol[T[key]])
+        except:
+            print(key, T[key])
 
     return order_Routes(routes, uavs)

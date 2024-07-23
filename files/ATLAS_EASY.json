@@ -27,13 +27,16 @@
         "0": {
             "Model": "A",
             "Base": "B0"
+        },
+        "1": {
+            "Model": "A",
+            "Base": "B0"
         }
     },
     "Tasks": {
         "tT1":{"inspection_of": "T4"},
         "tT2":{"inspection_of": "T7"},
-        "tT3":{"inspection_of": "T8"},
-        "tS1":{"inspection_of": ["T1","T2"]}
+        "tT3":{"inspection_of": "T8"}
     },
     "Wind": [0, 0, 0]
 }
