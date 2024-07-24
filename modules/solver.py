@@ -177,6 +177,252 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     # For each pair of vertices in the graph and uav, we need to define a Z.
     Z = {}
+    T = {}
+    Y = {}
+    Wt = {} # Time Weights
+    pairs = list(combinations(graph.nodes, 2))
+
+    orbit_radius = 10
+
+    # They will be zero by default
+    for pair in pairs:
+        for uav in uavs:
+
+            Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]] = 0
+            Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] = 0
+
+            # These does not matter
+            Wt[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]] = 0
+            Wt[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] = 0
+
+            # O(n^2)
+            T[uav.get_ID()+"T"+pair[0]+"-"+pair[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[0]+"-"+pair[1])
+            T[uav.get_ID()+"T"+pair[1]+"-"+pair[0]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[1]+"-"+pair[0])
+
+    # Except if they represent an existing edge
+
+    for edge in graph.edges: # edge = (node1, node2, key)
+
+        Z[edge[2]+"Z"+edge[0]+"-"+edge[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = str(edge[2])+"Z"+edge[0]+"-"+edge[1])
+
+        # Task transition
+        move_vector = end_positions[edge[0]] - start_positions[edge[1]]
+        d = np.linalg.norm(move_vector)
+        if 0 == d:
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = 0
+        else:
+            effective_speed = speeds[edge[2]] - np.dot(wind_vector, move_vector) / d
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = d / effective_speed
+
+        # Task Completion
+        move_vector = end_positions[edge[1]] - start_positions[edge[1]]
+        d = np.linalg.norm(move_vector)
+        if 0 == d:
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 2 * np.pi * orbit_radius / ispeeds[edge[2]]
+        else:
+            effective_speed = ispeeds[edge[2]] - np.dot(wind_vector, move_vector) / d
+            Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
+
+        if 0 > Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]]: print("Warning: Negative TIME COST. Wind speed might be too high!")
+
+
+    for uav in uavs:
+
+        edges = list(dict.fromkeys(list(graph.out_edges(uav.get_Base()))))
+        
+        if "auto_uav_disabling" in kwargs and False == kwargs["auto_uav_disabling"]:
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                1.0
+            )
+
+            # Base enter constraints
+            edges = list(dict.fromkeys(list(graph.in_edges(uav.get_Base()))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                1.0
+            )
+
+        else:
+            # UAV usage variables. One per uav
+            Y[uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+str(uav.get_ID()))
+
+            # Base exit constraints
+            
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                Y[uav.get_ID()]
+            )
+
+            # Base enter constraints
+            edges = list(dict.fromkeys(list(graph.in_edges(uav.get_Base()))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[str(uav.get_ID())+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                Y[uav.get_ID()]
+            )
+
+    # Task Completion constraints
+    for name, data in tasks:
+
+        # Punctual inspection
+        if str == type(data["inspection_of"]):
+            
+            edges = list(dict.fromkeys(list(graph.in_edges(name))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    SCIP.quicksum(
+                            Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
+                )    
+                == 
+                1
+            )
+
+            edges = list(dict.fromkeys(list(graph.out_edges(name))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    SCIP.quicksum(
+                            Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
+                )
+                == 
+                1
+            )
+
+        # Lineal inspection
+        else:
+            
+            edges = list(dict.fromkeys(list(graph.in_edges(name+"_U"))+list(graph.in_edges(name+"_D"))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    SCIP.quicksum(
+                        Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
+                )
+                == 
+                1
+            )
+
+            edges = list(dict.fromkeys(list(graph.out_edges(name+"_U"))+list(graph.out_edges(name+"_D"))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    SCIP.quicksum(
+                        Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                        for edge in edges
+                    )
+                for uav in uavs
+                )
+                == 
+                1
+            )
+
+    for uav in uavs:
+        vertices = tasks.compatible_With(uav.get_ID())
+        for name in vertices:
+            
+            
+            Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
+
+            
+            edges = list(dict.fromkeys(list(graph.in_edges(name))+list(graph.out_edges(name))))
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]
+                    for edge in edges
+                )
+                == 
+                2 * Y[name+"|"+uav.get_ID()]
+            )
+        
+        #####
+
+        T[uav.get_ID()+"TtT3-tT1"] = 1
+        T[uav.get_ID()+"TtT3-tT2"] = 1
+
+        # 9h
+        edges = [(i, j, k) for i, j, k in graph.edges if k == uav.get_ID() and i != uav.get_Base() and j != uav.get_Base()]
+
+        for edge in edges:
+            scip_model.addCons(
+                Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] <= T[uav.get_ID()+"T"+edge[0]+"-"+edge[1]]
+            )
+
+        # 9i
+            scip_model.addCons(
+                T[uav.get_ID()+"T"+edge[0]+"-"+edge[1]] + T[uav.get_ID()+"T"+edge[1]+"-"+edge[0]]
+                 <= 
+                Y[edge[1]+"|"+uav.get_ID()]
+            )
+
+
+        # 9k
+            scip_model.addCons(
+                Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] + T[uav.get_ID()+"T"+edge[1]+"-"+edge[0]]
+                 <= 
+                Y[edge[1]+"|"+uav.get_ID()]
+            )
+
+        # 9j
+        trinodes = list(combinations(vertices, 3))
+        for tri in trinodes:
+        
+            scip_model.addCons(
+                Z[uav.get_ID()+"Z"+tri[0]+"-"+tri[1]] + T[uav.get_ID()+"T"+tri[2]+"-"+tri[0]]
+                 <= 
+                T[uav.get_ID()+"T"+tri[2]+"-"+tri[1]] + 1.0
+            )
+        
+
+    
+    # https://www.sciencedirect.com/science/article/pii/S0305054814001439
+
+    return scip_model, Z, Wt, Y, T
+
+def construct_SCIP_Model_OG(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> SCIP.Model:
+
+    speeds = uavs.get_Speeds()
+    ispeeds = uavs.get_Inspection_Speeds()
+
+    start_positions = graph.nodes(data = "start_position")
+    end_positions = graph.nodes(data = "end_position")
+
+    #print(end_positions)
+
+    scip_model = SCIP.Model("GTSP-MUAV")
+    if "is_editable" in kwargs and True == kwargs["is_editable"]:
+        scip_model.enableReoptimization()
+        #scip_model.hideOutput()
+
+    if "wind_vector" in kwargs and np.ndarray == type(kwargs["wind_vector"]):
+        wind_vector = kwargs["wind_vector"]
+    else: wind_vector = np.array([0,0,0])
+
+    #print("wind", wind_vector)
+
+    # For each pair of vertices in the graph and uav, we need to define a Z.
+    Z = {}
     Wt = {} # Time Weights
     pairs = list(combinations(graph.nodes, 2))
 
@@ -336,10 +582,10 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
         vertices = tasks.compatible_With(uav.get_ID())
         for name in vertices:
             
-
+            """
             Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
 
-            """
+            
             edges = list(dict.fromkeys(list(graph.in_edges(name))+list(graph.out_edges(name))))
             scip_model.addCons(
                 SCIP.quicksum(
@@ -368,7 +614,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 == 
                 0.0
             )
-
+        
+        """
             T[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = len(vertices), name = "T"+name+"|"+uav.get_ID())
 
             scip_model.addCons(
@@ -392,9 +639,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 )
             
             # https://www.sciencedirect.com/science/article/pii/S0305054814001439
-            # https://www.sciencedirect.com/science/article/pii/S0305054807002468
-            # https://www.sciencedirect.com/science/article/pii/0167637791900832
-            
+
+        """ 
 
     return scip_model, Z, Wt, Y, T
 
