@@ -338,7 +338,6 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 1
             )
 
-    T["0"+"TtT4-tT2"] = 1 # Añadir esto fuerza a que el UAV visite los dos nodos en algún punto de la ruta y en ese orden
 
     for uav in uavs:
 
@@ -392,7 +391,23 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                  <= 
                 T[uav.get_ID()+"T"+tri[2]+"-"+tri[1]] + 1.0
             )
-        
+
+    scip_model.addCons(
+        T["0"+"TtT1-tT6"] == Y["tT1|"+uav.get_ID()] * Y["tT6|"+uav.get_ID()]
+    )
+
+    # The binary product x*y can be linearized by doing:
+    #      z <= x; z <= y
+    #      z >= x + y - 1
+    # z represents the product as a new free variable.
+    # https://or.stackexchange.com/questions/37/how-to-linearize-the-product-of-two-binary-variables
+    
+    scip_model.addCons(
+        Y["tT1|0"] == 1
+    )
+    scip_model.addCons(
+        Y["tT6|0"] == 1
+    )
     
     # https://www.sciencedirect.com/science/article/pii/S0305054814001439
 
