@@ -338,7 +338,10 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 1
             )
 
+    T["0"+"TtT4-tT2"] = 1 # Añadir esto fuerza a que el UAV visite los dos nodos en algún punto de la ruta y en ese orden
+
     for uav in uavs:
+
         vertices = tasks.compatible_With(uav.get_ID())
         for name in vertices:
             
@@ -355,12 +358,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 == 
                 2 * Y[name+"|"+uav.get_ID()]
             )
+
         
-        #####
-
-        T[uav.get_ID()+"TtT3-tT1"] = 1
-        T[uav.get_ID()+"TtT3-tT2"] = 1
-
         # 9h
         edges = [(i, j, k) for i, j, k in graph.edges if k == uav.get_ID() and i != uav.get_Base() and j != uav.get_Base()]
 
@@ -394,7 +393,6 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 T[uav.get_ID()+"T"+tri[2]+"-"+tri[1]] + 1.0
             )
         
-
     
     # https://www.sciencedirect.com/science/article/pii/S0305054814001439
 
@@ -1213,11 +1211,5 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     print("Solved in:", dt, "s")
 
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
-
-    for key in T:
-        try:
-            print(key, sol[T[key]])
-        except:
-            print(key, T[key])
 
     return order_Routes(routes, uavs)
