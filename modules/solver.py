@@ -392,9 +392,12 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 T[uav.get_ID()+"T"+tri[2]+"-"+tri[1]] + 1.0
             )
 
+    
     scip_model.addCons(
-        T["0"+"TtT1-tT6"] == Y["tT1|"+uav.get_ID()] * Y["tT6|"+uav.get_ID()]
+        T["0"+"TtT11-tT7"] == Y["tT7|0"] * Y["tT11|0"]
     )
+    
+
 
     # The binary product x*y can be linearized by doing:
     #      z <= x; z <= y
@@ -402,12 +405,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     # z represents the product as a new free variable.
     # https://or.stackexchange.com/questions/37/how-to-linearize-the-product-of-two-binary-variables
     
-    scip_model.addCons(
-        Y["tT1|0"] == 1
-    )
-    scip_model.addCons(
-        Y["tT6|0"] == 1
-    )
+
     
     # https://www.sciencedirect.com/science/article/pii/S0305054814001439
 
@@ -1226,5 +1224,14 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     print("Solved in:", dt, "s")
 
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
+
+    """
+    for key in Y:
+        if sol[Y[key]] == 1.0: print("Y"+key+" = ", sol[Y[key]])
+    
+    """
+    for key in T:
+        if sol[T[key]] == 1.0: print("T"+key+" = ", sol[T[key]])
+    
 
     return order_Routes(routes, uavs)
