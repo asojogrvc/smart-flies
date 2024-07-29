@@ -371,7 +371,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             scip_model.addCons(
                 T[uav.get_ID()+"T"+edge[0]+"-"+edge[1]] + T[uav.get_ID()+"T"+edge[1]+"-"+edge[0]]
                  <= 
-                Y[edge[1]+"|"+uav.get_ID()]
+                Y[edge[0]+"|"+uav.get_ID()]
             )
 
 
@@ -379,7 +379,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             scip_model.addCons(
                 Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] + T[uav.get_ID()+"T"+edge[1]+"-"+edge[0]]
                  <= 
-                Y[edge[1]+"|"+uav.get_ID()]
+                Y[edge[0]+"|"+uav.get_ID()]
             )
 
         # 9j
@@ -392,10 +392,11 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 T[uav.get_ID()+"T"+tri[2]+"-"+tri[1]] + 1.0
             )
 
-    
+   
     scip_model.addCons(
-        T["0"+"TtT11-tT7"] == Y["tT7|0"] * Y["tT11|0"]
+        T["0"+"TtT6-tT10"] == 1.0 #Y["tT7|0"] * Y["tT11|0"]
     )
+    
     
 
 
