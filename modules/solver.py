@@ -179,6 +179,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     Z = {}
     T = {}
     Y = {}
+    U = {}
     Wt = {} # Time Weights
     pairs = list(combinations(graph.nodes, 2))
 
@@ -196,8 +197,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             Wt[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] = 0
 
             # O(n^2)
-            T[uav.get_ID()+"T"+pair[0]+"-"+pair[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[0]+"-"+pair[1])
-            T[uav.get_ID()+"T"+pair[1]+"-"+pair[0]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[1]+"-"+pair[0])
+            #T[uav.get_ID()+"T"+pair[0]+"-"+pair[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[0]+"-"+pair[1])
+            #T[uav.get_ID()+"T"+pair[1]+"-"+pair[0]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[1]+"-"+pair[0])
 
     # Except if they represent an existing edge
 
@@ -346,7 +347,11 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             
             
             Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
+            U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
 
+            scip_model.addCons(
+                U[name+"|"+uav.get_ID()] <= len(vertices) * Y[name+"|"+uav.get_ID()]
+            )
             
             edges = list(dict.fromkeys(list(graph.in_edges(name))+list(graph.out_edges(name))))
             scip_model.addCons(
@@ -358,59 +363,17 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 2 * Y[name+"|"+uav.get_ID()]
             )
 
+        nodes = list(combinations(vertices, 2))
+        for pair in nodes:
+            scip_model.addCons(
+                U[pair[0]+"|"+uav.get_ID()] - U[pair[1]+"|"+uav.get_ID()] + 1 <=  len(vertices) * (1 - Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]])
+            )
+            scip_model.addCons(
+                U[pair[1]+"|"+uav.get_ID()] - U[pair[0]+"|"+uav.get_ID()] + 1 <=  len(vertices) * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
+            )
         
-        # 9h
-        edges = [(i, j, k) for i, j, k in graph.edges if k == uav.get_ID() and i != uav.get_Base() and j != uav.get_Base()]
 
-        for edge in edges:
-            scip_model.addCons(
-                Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] <= T[uav.get_ID()+"T"+edge[0]+"-"+edge[1]]
-            )
-
-        # 9i
-            scip_model.addCons(
-                T[uav.get_ID()+"T"+edge[0]+"-"+edge[1]] + T[uav.get_ID()+"T"+edge[1]+"-"+edge[0]]
-                 <= 
-                Y[edge[0]+"|"+uav.get_ID()]
-            )
-
-
-        # 9k
-            scip_model.addCons(
-                Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] + T[uav.get_ID()+"T"+edge[1]+"-"+edge[0]]
-                 <= 
-                Y[edge[0]+"|"+uav.get_ID()]
-            )
-
-        # 9j
-        trinodes = list(combinations(vertices, 3))
-        for tri in trinodes:
-        
-            scip_model.addCons(
-                Z[uav.get_ID()+"Z"+tri[0]+"-"+tri[1]] + T[uav.get_ID()+"T"+tri[2]+"-"+tri[0]]
-                 <= 
-                T[uav.get_ID()+"T"+tri[2]+"-"+tri[1]] + 1.0
-            )
-
-   
-    scip_model.addCons(
-        T["0"+"TtT6-tT10"] == 1.0 #Y["tT7|0"] * Y["tT11|0"]
-    )
-    
-    
-
-
-    # The binary product x*y can be linearized by doing:
-    #      z <= x; z <= y
-    #      z >= x + y - 1
-    # z represents the product as a new free variable.
-    # https://or.stackexchange.com/questions/37/how-to-linearize-the-product-of-two-binary-variables
-    
-
-    
-    # https://www.sciencedirect.com/science/article/pii/S0305054814001439
-
-    return scip_model, Z, Wt, Y, T
+    return scip_model, Z, Wt, Y, U
 
 def construct_SCIP_Model_OG(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> SCIP.Model:
 
@@ -1232,7 +1195,7 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     
     """
     for key in T:
-        if sol[T[key]] == 1.0: print("T"+key+" = ", sol[T[key]])
+        print("T"+key+" = ", sol[T[key]])
     
 
     return order_Routes(routes, uavs)
