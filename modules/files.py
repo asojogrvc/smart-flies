@@ -60,7 +60,8 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
                     name,
                     inspection_of = mission["Tasks"][name]["inspection_of"]
                 )
-        
+    if "Tasks_Order" in mission:
+        tasks.set_Order(mission["Tasks_Order"]) 
 
     if "Wind" in mission:
         return SO.Problem(bases, towers, tasks, uavs, wind_vector = np.array(mission["Wind"]))

@@ -47,5 +47,12 @@
         "tS11":{"inspection_of":["T3", "T2"]},
         "tS12":{"inspection_of":["T2", "T1"]}
     },
+    "Tasks_Order": {"0": [["tS4_D", "tS8_D"]], "1": [["tS4_D", "tS8_D"]]},
+    "_comment": [
+        " For linear inspection, the direction of inspection must be given",
+        "   - U: As given in the Tasks section",
+        "   - D: In reverse",
+        " To consider any direction, the 4 cases must be included"
+    ],
     "Wind": [5, 0, 0]
 }

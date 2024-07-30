@@ -27,10 +27,6 @@
         "0": {
             "Model": "A",
             "Base": "B0"
-        },
-        "1": {
-            "Model": "B",
-            "Base": "B1"
         }
     },
     "Tasks": {
@@ -48,6 +44,5 @@
         "tT12":{"inspection_of": "T12"},
         "tT13":{"inspection_of": "T13"}
     },
-    "Wind": [3, 0, 0],
-    "Tasks_Order": {"0": [["tT10", "tT11"]], "1": [["tT2", "tT12"]]}
+    "Wind": [3, 0, 0]
 }

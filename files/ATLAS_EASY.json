@@ -29,7 +29,7 @@
             "Base": "B0"
         },
         "1": {
-            "Model": "A",
+            "Model": "B",
             "Base": "B1"
         }
     },
@@ -37,7 +37,10 @@
         "tT1":{"inspection_of": "T4"},
         "tT2":{"inspection_of": "T7"},
         "tT3":{"inspection_of": "T8"},
-        "tS4":{"inspection_of": ["T5", "T10"]}
+        "tT4":{"inspection_of": "T9"},
+        "tT5":{"inspection_of": "T10"},
+        "tT6":{"inspection_of": "T11"},
+        "tT7":{"inspection_of": "T12"}
     },
     "Wind": [5, 0, 0]
 }
