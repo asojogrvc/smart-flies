@@ -84,12 +84,12 @@ class Problem():
         else: cost_functionQ = "mtm"
 
         if "dynamic" in kwargs:
-            if False == kwargs["dynamic"]:
-                routes = solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
+            if True == kwargs["dynamic"] and not self.__tasks.get_Order():
+                routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
                 return routes
+            print("Precedence constraint are present. Dynamic Solver is not compatible. Changing to the regular solver.")
             
-
-        routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
+        routes = solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
         return routes
 
 def construct_Abstract_Graph(graph: nx.MultiDiGraph, bases: BA.Bases, towers: TS.Towers,
@@ -154,7 +154,7 @@ def compute_Subgraph(graph: nx.MultiDiGraph, uav:UAVS.UAV) -> nx.MultiDiGraph:
 
     return nx.from_edgelist([(i, j)  for i, j, k in graph.edges if k == uav.get_ID()])
 
-def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> SCIP.Model:
+def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV_Team, **kwargs) -> tuple[SCIP.Model, dict, dict, dict]:
 
     speeds = uavs.get_Speeds()
     ispeeds = uavs.get_Inspection_Speeds()
@@ -177,9 +177,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
     # For each pair of vertices in the graph and uav, we need to define a Z.
     Z = {}
-    T = {}
     Y = {}
-    U = {}
     Wt = {} # Time Weights
     pairs = list(combinations(graph.nodes, 2))
 
@@ -195,10 +193,6 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             # These does not matter
             Wt[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]] = 0
             Wt[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] = 0
-
-            # O(n^2)
-            #T[uav.get_ID()+"T"+pair[0]+"-"+pair[1]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[0]+"-"+pair[1])
-            #T[uav.get_ID()+"T"+pair[1]+"-"+pair[0]] = scip_model.addVar(vtype = 'B', obj = 0.0, name = uav.get_ID()+"T"+pair[1]+"-"+pair[0])
 
     # Except if they represent an existing edge
 
@@ -339,23 +333,12 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 1
             )
 
-
     for uav in uavs:
 
         vertices = tasks.compatible_With(uav.get_ID())
-        for name in vertices:
-            
+        for name in vertices:        
             
             Y[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'B', obj = 0.0, name = "Y"+name+"|"+uav.get_ID())
-            U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
-
-            scip_model.addCons(
-                U[name+"|"+uav.get_ID()] <= len(vertices) * Y[name+"|"+uav.get_ID()]
-            )
-
-            scip_model.addCons(
-                U[name+"|"+uav.get_ID()] >= Z[uav.get_ID()+"Z"+uav.get_Base()+"-"+name]
-            )
             
             edges = list(dict.fromkeys(list(graph.in_edges(name))+list(graph.out_edges(name))))
             scip_model.addCons(
@@ -367,23 +350,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 2 * Y[name+"|"+uav.get_ID()]
             )
 
-        nodes = list(combinations(vertices, 2))
-        for pair in nodes:
-            scip_model.addCons(
-                U[pair[0]+"|"+uav.get_ID()] - U[pair[1]+"|"+uav.get_ID()] + 1 <=  len(vertices) * (1 - Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]])
-            )
-            scip_model.addCons(
-                U[pair[1]+"|"+uav.get_ID()] - U[pair[0]+"|"+uav.get_ID()] + 1 <=  len(vertices) * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
-            )
-
-    # THIS ONE IS NOT CORRECT. CONSIDER THAT 0 VISITS T7 and not T13. 3 <= 0. Not good.
-    scip_model.addCons(
-        U["tT7|0"] <= U["tT13|0"]
-    )
-        
-
-    return scip_model, Z, Wt, Y, U
-
+    return scip_model, Z, Wt, Y
 
 def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z: dict, Wt: dict, graph: nx.MultiDiGraph, **kwargs):
 
@@ -513,6 +480,48 @@ def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, Z:dict, model: SCIP.Model):
                     <= 
                 len(Q) - 1.0
         )
+
+    return None
+
+def add_MTZ_Subtour_Constraints(tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> dict:
+
+    U = {}
+    ms = {}
+    for uav in uavs:
+
+        vertices = tasks.compatible_With(uav.get_ID())
+        m = len(vertices)
+        ms[uav.get_ID()] = m
+
+        for name in vertices:
+            
+            U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
+
+            scip_model.addCons(
+                U[name+"|"+uav.get_ID()] <= m * Y[name+"|"+uav.get_ID()]
+            )
+
+            scip_model.addCons(
+                U[name+"|"+uav.get_ID()] >= Z[uav.get_ID()+"Z"+uav.get_Base()+"-"+name]
+            )
+
+        nodes = list(combinations(vertices, 2))
+        for pair in nodes:
+            scip_model.addCons(
+                U[pair[0]+"|"+uav.get_ID()] - U[pair[1]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]])
+            )
+            scip_model.addCons(
+                U[pair[1]+"|"+uav.get_ID()] - U[pair[0]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
+            )
+
+    return U, ms
+
+def add_Precedence_Constraint(uav_id: str, tasks_order: list[str], m: int, U:dict, Y:dict, scip_model:SCIP.Model):
+
+    # tasks_order[1] > tasks_order[0]
+    scip_model.addCons(
+        U[tasks_order[1]+"|"+uav_id] - U[tasks_order[0]+"|"+uav_id] >= - m * (2 - Y[tasks_order[1]+"|"+uav_id] - Y[tasks_order[0]+"|"+uav_id] )
+    )
 
     return None
 
@@ -728,6 +737,7 @@ def solver(problem: Problem, **kwargs) -> dict:
     towers = problem.get_Towers()
     tasks = problem.get_Tasks()
     complex_tasks = tasks.get_Complex_Tasks()
+    task_order = tasks.get_Order()
     uavs = problem.get_UAVs()
     abstract_G = problem.get_Graph()
     subgraphs = problem.get_Subgraphs()
@@ -740,63 +750,22 @@ def solver(problem: Problem, **kwargs) -> dict:
 
     scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
                                                         auto_uav_disabling = auto_uav_disablingQ)
-    
-    # Precedence constraints v1 (Brute Force) ------------------------------------------
-    tasks_order = tasks.get_Order()
-    for uav in uavs:
+  
+    # --------------------------------------------------------------------------------------------------
+    #                                     Subtour Elimination
+    # --------------------------------------------------------------------------------------------------
 
-        id = uav.get_ID()
-        sG = compute_Subgraph(abstract_G, uav)
-        subgraphs[id] = sG
-        ssG = copy.deepcopy(sG)
-        ssG.remove_node(uav.get_Base())
-        simp_subgraphs[id] = ssG
-
-        paths_to_delete = []
-
-        if id in tasks_order:
-            for order_pair in tasks_order[id]:
-            
-                # We list all subpaths with the inverse precedence to delete all routes that contain them
-                paths = list(nx.all_simple_edge_paths(ssG, order_pair[1], order_pair[0]))
-                #print(id, paths, len(paths))
-                paths = remove_Invalid_Paths(paths, complex_tasks)
-                #print(id, paths, len(paths))
-
-                paths_to_delete = paths_to_delete + paths
-
-            # Remove duplicates (as list are not hashable, we need an unsual approach)
-            paths_to_delete.sort()
-            paths_to_delete = list(j for j, _ in groupby(paths_to_delete))
-
-            # We delete each of them using DFJ constraints. Maybe, I can limit the length of deleted paths as larger paths won't fit optimality
-            for path in paths_to_delete:
-                add_Subpath_DFJ_Constraint(path, id, Z, scip_model)     
-
-    # ----------------------------------------------------------------------------------
-
-    #print(Wt)
-
-    # Subtour elimination
-    vertices = list(abstract_G.nodes)
-    for uav in uavs:
-        try:
-            vertices.remove(uav.get_Base())
-        except:
-            None
-
-    Qlist = list(chain.from_iterable(list(combinations(vertices, r)) for r in range(2, len(vertices)+1)))
-
-    k = 1
-    for Q in Qlist:
-        #print("Q", Q)
-        for uav in uavs:
-            add_DFJ_Subtour_Constraint(Q, uav.get_ID(), Z, scip_model)
-        
-        print("Subtour Constraints Addition: ", 100 * k / len(Qlist),end="\r")
-        k += 1
+    U, ms = add_MTZ_Subtour_Constraints(tasks, uavs, Z, Y, scip_model)
 
     # --------------------------------------------------------------------------------------------------
+    #                                    Precedence Constraints
+    # --------------------------------------------------------------------------------------------------
+    for uav_id in task_order:
+        print("Adding precedence constraints to model")
+        m = ms[uav_id]
+        for pair in task_order[uav_id]:
+            add_Precedence_Constraint(uav_id, pair, m, U, Y, scip_model)
+
 
     if "cost_function" in kwargs:
         which = kwargs["cost_function"]
@@ -840,43 +809,10 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
 
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
-    scip_model, Z, Wt, Y, T = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
+    scip_model, Z, Wt, Y = construct_SCIP_Model(abstract_G, tasks, uavs, add_sigmas = add_sigmasQ, is_editable = True,
                                                         wind_vector = problem.get_Wind(), auto_uav_disabling = auto_uav_disablingQ)
     
-     # Precedence constraints v1 (Brute Force) ------------------------------------------
-    tasks_order = tasks.get_Order()
-    for uav in uavs:
-
-        id = uav.get_ID()
-        sG = compute_Subgraph(abstract_G, uav)
-        subgraphs[id] = sG
-        ssG = copy.deepcopy(sG)
-        ssG.remove_node(uav.get_Base())
-        simp_subgraphs[id] = ssG
-
-        paths_to_delete = []
-
-        if id in tasks_order:
-            for order_pair in tasks_order[id]:
-            
-                # We list all subpaths with the inverse precedence to delete all routes that contain them
-                paths = list(nx.all_simple_edge_paths(ssG, order_pair[1], order_pair[0]))
-                #print(id, paths, len(paths))
-                paths = remove_Invalid_Paths(paths, complex_tasks)
-                #print(id, paths, len(paths))
-
-                paths_to_delete = paths_to_delete + paths
-
-            # Remove duplicates (as list are not hashable, we need an unsual approach)
-            paths_to_delete.sort()
-            paths_to_delete = list(j for j, _ in groupby(paths_to_delete))
-
-            # We delete each of them using DFJ constraints. Maybe, I can limit the length of deleted paths as larger paths won't fit optimality
-            for path in paths_to_delete:
-                add_Subpath_DFJ_Constraint(path, id, Z, scip_model)     
-
-    # ----------------------------------------------------------------------------------
-
+   
     if "cost_function" in kwargs:
         which = kwargs["cost_function"]
     else:
@@ -954,14 +890,5 @@ def dynamic_Solver(problem: Problem, **kwargs) -> dict:
     print("Solved in:", dt, "s")
 
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
-
-    """
-    for key in Y:
-        if sol[Y[key]] == 1.0: print("Y"+key+" = ", sol[Y[key]])
-    
-    """
-    for key in T:
-        print("T"+key+" = ", sol[T[key]])
-    
 
     return order_Routes(routes, uavs)

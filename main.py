@@ -56,7 +56,7 @@ uav_team = problem.get_UAVs()
 
 # --------------------------------------------------------------------------
 
-routes = problem.solve(dynamic = True, auto_uav_disabling = False, cost_function = "mtm")
+routes = problem.solve(dynamic = False, auto_uav_disabling = False, cost_function = "mtm")
 
 print("Routes", routes)
 
