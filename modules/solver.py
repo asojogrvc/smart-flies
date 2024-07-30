@@ -84,10 +84,11 @@ class Problem():
         else: cost_functionQ = "mtm"
 
         if "dynamic" in kwargs:
-            if True == kwargs["dynamic"] and not self.__tasks.get_Order():
-                routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
-                return routes
-            print("Precedence constraint are present. Dynamic Solver is not compatible. Changing to the regular solver.")
+            if True == kwargs["dynamic"]:
+                if not self.__tasks.get_Order():
+                    routes = dynamic_Solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
+                    return routes
+                print("Precedence constraint are present. Dynamic Solver is not compatible. Changing to the regular solver.")
             
         routes = solver(self, add_sigmas = add_sigmasQ, auto_uav_disabling = auto_uav_disablingQ, cost_function = cost_functionQ)
         return routes

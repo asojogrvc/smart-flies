@@ -47,7 +47,7 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/ATLAS_U2T13.json")
+problem = F.load_Problem_from_File("./files/ATLAS_U2S12.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()
@@ -56,7 +56,7 @@ uav_team = problem.get_UAVs()
 
 # --------------------------------------------------------------------------
 
-routes = problem.solve(dynamic = False, auto_uav_disabling = False, cost_function = "mtm")
+routes = problem.solve(dynamic = True, auto_uav_disabling = False, cost_function = "mtm")
 
 print("Routes", routes)
 
@@ -68,7 +68,7 @@ vertices_dict = tasks.get_Task_Parsing_Dict()
 for uav in uav_team:
     vertices_dict[uav.get_Base()] = [uav.get_Base()]
 
-real_routes = SO.parse_Routes(routes , vertices_dict)
+real_routes = SO.parse_Routes(routes, vertices_dict)
 coordinates_dict = towers.get_Positions()
 for name, position in bases:
     coordinates_dict[name] = position
