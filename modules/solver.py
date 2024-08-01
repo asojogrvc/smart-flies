@@ -484,9 +484,10 @@ def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, Z:dict, model: SCIP.Model):
 
     return None
 
-def add_MTZ_Subtour_Constraints(tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> dict:
+def add_MTZ_Subtour_Constraints(Wt:dict, tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> dict:
 
     U = {}
+    T = {}
     ms = {}
     for uav in uavs:
 
@@ -494,9 +495,11 @@ def add_MTZ_Subtour_Constraints(tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:
         m = len(vertices)
         ms[uav.get_ID()] = m
 
+        edges = list(combinations(vertices+[uav.get_Base()], 2))
         for name in vertices:
             
             U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
+            T[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "T"+name+"|"+uav.get_ID())
 
             scip_model.addCons(
                 U[name+"|"+uav.get_ID()] <= m * Y[name+"|"+uav.get_ID()]
@@ -504,6 +507,24 @@ def add_MTZ_Subtour_Constraints(tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:
 
             scip_model.addCons(
                 U[name+"|"+uav.get_ID()] >= Z[uav.get_ID()+"Z"+uav.get_Base()+"-"+name]
+            )
+
+            scip_model.addCons(
+                T[name+"|"+uav.get_ID()] <= 1E6 * Y[name+"|"+uav.get_ID()]
+            )
+
+            scip_model.addCons(
+                T[name+"|"+uav.get_ID()] >= Wt[uav.get_ID()+"Z"+uav.get_Base()+"-"+name] * Z[uav.get_ID()+"Z"+uav.get_Base()+"-"+name]
+            )
+
+            scip_model.addCons(
+                T[name+"|"+uav.get_ID()] 
+                <=
+                SCIP.quicksum(
+                    Wt[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] * Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] +
+                    Wt[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]] * Z[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]]
+                    for edge in edges
+                )
             )
 
         nodes = list(combinations(vertices, 2))
@@ -515,7 +536,16 @@ def add_MTZ_Subtour_Constraints(tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:
                 U[pair[1]+"|"+uav.get_ID()] - U[pair[0]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
             )
 
-    return U, ms
+            scip_model.addCons(
+                T[pair[0]+"|"+uav.get_ID()] - T[pair[1]+"|"+uav.get_ID()] + Wt[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]] <=  1E6 * (1 - Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]])
+            )
+            scip_model.addCons(
+                T[pair[1]+"|"+uav.get_ID()] - T[pair[0]+"|"+uav.get_ID()] + Wt[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] <=  1E6 * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
+            )
+
+        
+
+    return U, T, ms
 
 def add_Precedence_Constraint(uav_id: str, tasks_order: list[str], m: int, U:dict, Y:dict, scip_model:SCIP.Model):
 
@@ -756,7 +786,7 @@ def solver(problem: Problem, **kwargs) -> dict:
     #                                     Subtour Elimination
     # --------------------------------------------------------------------------------------------------
 
-    U, ms = add_MTZ_Subtour_Constraints(tasks, uavs, Z, Y, scip_model)
+    U, T, ms = add_MTZ_Subtour_Constraints(Wt, tasks, uavs, Z, Y, scip_model)
 
     # --------------------------------------------------------------------------------------------------
     #                                    Precedence Constraints
@@ -787,6 +817,11 @@ def solver(problem: Problem, **kwargs) -> dict:
     print("Solved in:", dt, "s")
 
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
+
+    for key in T:
+        print(key, sol[T[key]])
+
+    print(Wt)
 
     return order_Routes(routes, uavs)
 
