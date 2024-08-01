@@ -39,15 +39,18 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
         for point in route:
             coordinates[k,:] = coordinates_dict[point]
             k += 1
-
-        axes.plot(coordinates[:,0], coordinates[:,1], colors[j], linewidth=2, linestyle = '-.')
+        x = coordinates[:,0]
+        y = coordinates[:,1]
+        #axes.plot(coordinates[:,0], coordinates[:,1], colors[j], linewidth=2, linestyle = '-.')
+        r = 0.08
+        plt.quiver(x[:-1], y[:-1], (1-r)*(x[1:]-x[:-1]), (1-r)*(y[1:]-y[:-1]), color = colors[j], width = 1E-2,scale_units='xy', angles='xy', scale=1)
         j += 1
 
     return None
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/ATLAS_U2S12.json")
+problem = F.load_Problem_from_File("./files/GUITAR_ASSEMBLY.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()
@@ -75,7 +78,6 @@ for name, position in bases:
 
 print("Real Routes", real_routes)
 plot_Routes(real_routes, coordinates_dict, axes3)
-
 
 towers.plot(axes3)
 bases.plot(axes3)

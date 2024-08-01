@@ -23,6 +23,7 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
             name,
             np.array(mission["Towers"]["List"][name])
         )
+
     for power_line in mission["Towers"]["Lines"]:
         towers.add_Power_Lines((power_line[0], power_line[1]))
 
