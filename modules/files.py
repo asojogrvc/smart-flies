@@ -36,31 +36,40 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
     tasks = TS.Tasks()
     for name in mission["Tasks"]:
 
-        if list == type(mission["Tasks"][name]["inspection_of"]) and 2 == len(mission["Tasks"][name]["inspection_of"]):
-            try:
-                tasks.add_Task(
-                    name,
-                    inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1]),
-                    incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
-                )
-            except:
-                tasks.add_Task(
-                    name,
-                    inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1])
-                )
+        if "inspection_of" in mission["Tasks"][name]:
+            if list == type(mission["Tasks"][name]["inspection_of"]) and 2 == len(mission["Tasks"][name]["inspection_of"]):
+                try:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1]),
+                        incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                    )
+                except:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1])
+                    )
 
-        else:
-            try:
-                tasks.add_Task(
-                    name,
-                    inspection_of = mission["Tasks"][name]["inspection_of"],
-                    incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
-                )
-            except:
-                tasks.add_Task(
-                    name,
-                    inspection_of = mission["Tasks"][name]["inspection_of"]
-                )
+            else:
+                try:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = mission["Tasks"][name]["inspection_of"],
+                        incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                    )
+                except:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = mission["Tasks"][name]["inspection_of"]
+                    )
+
+        if "custom_task_at" in mission["Tasks"][name]:
+            tasks.add_Task(
+                name,
+                custom_data = mission["Tasks"][name]
+            )
+        
+
     if "Tasks_Order" in mission:
         tasks.set_Order(mission["Tasks_Order"]) 
 

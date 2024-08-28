@@ -99,7 +99,7 @@ class Tasks():
             # inspection_of: either a str with the tower name or a tuple for two names
             # incompatiblity: a list of incompatible UAV IDs
 
-    def add_Task(self, name: str, inspection_of: str | tuple, **kwargs):
+    def add_Task(self, name: str, **kwargs):
         """
         For punctual inspection: inspection_of is a str with the name of the tower
         For lineal inspection: it is a tuple with the name of the two defining towers.
@@ -113,11 +113,16 @@ class Tasks():
         else:
             incompatible_IDs = []
 
+        if "custom_data" in kwargs:
+            self.__list[name] = kwargs["custom_data"]
+            self.__list[name]["incompatible_IDs"] = incompatible_IDs
 
-        self.__list[name] = {"inspection_of": inspection_of, "incompatible_IDs": incompatible_IDs}
 
-        if len(inspection_of) > 1 and not(str == type(inspection_of)):
-            self.__complex_tasks.append(name)
+        if "inspection_of" in kwargs:
+            self.__list[name] = {"inspection_of": kwargs["inspection_of"], "incompatible_IDs": incompatible_IDs}
+
+            if len(kwargs["inspection_of"]) > 1 and not(str == type(kwargs["inspection_of"])):
+                self.__complex_tasks.append(name)
 
         return None
     
@@ -135,12 +140,17 @@ class Tasks():
         parsing = {}
 
         for name, data in self:
-            if str == type(data["inspection_of"]):
-                parsing[name] = [data["inspection_of"]]
 
-            elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
-                parsing[name+"_U"] = list(data["inspection_of"])
-                parsing[name+"_D"] = list(data["inspection_of"][::-1])
+            if "inspection_of" in data:
+                if str == type(data["inspection_of"]):
+                    parsing[name] = [data["inspection_of"]]
+
+                elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
+                    parsing[name+"_U"] = list(data["inspection_of"])
+                    parsing[name+"_D"] = list(data["inspection_of"][::-1])
+            
+            else:
+                parsing[name] = [data["custom_task_at"]]
 
         return parsing
         
@@ -162,11 +172,14 @@ class Tasks():
         for name, data in self:
             if not id in data["incompatible_IDs"]:
 
-                if str == type(data["inspection_of"]):
-                    compatible.append(name)
+                if "inspection_of" in data:
+                    if str == type(data["inspection_of"]):
+                        compatible.append(name)
+                    else:
+                        compatible.append(name+"_U")
+                        compatible.append(name+"_D")
                 else:
-                    compatible.append(name+"_U")
-                    compatible.append(name+"_D")
+                    compatible.append(name)
 
 
         return compatible
