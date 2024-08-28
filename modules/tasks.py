@@ -94,10 +94,12 @@ class Tasks():
         self.__list = {} # name, data.
         self.__complex_tasks = [] # List of name of tasks with more that one approach
         self.__ordering = {} # uav_id: list of order pairs
+        self.__precedence = []
         
         # data is a dict with:
             # inspection_of: either a str with the tower name or a tuple for two names
             # incompatiblity: a list of incompatible UAV IDs
+            # custom_data: Custom costs.
 
     def add_Task(self, name: str, **kwargs):
         """
@@ -129,8 +131,14 @@ class Tasks():
     def set_Order(self, order_dict: dict):
         self.__ordering = order_dict
 
+    def set_Precedence(self, precedence_list: list):
+        self.__precedence = precedence_list
+
     def get_Order(self) -> dict:
         return self.__ordering
+    
+    def get_Precedence(self) -> dict:
+        return self.__precedence
     
     def get_Complex_Tasks(self) -> list:
         return self.__complex_tasks
@@ -158,9 +166,15 @@ class Tasks():
 
         print("----------------------------Task List-----------------------------")
         for name, data in self:
-            print(" - Name: ", name, " Inspection of: ", data["inspection_of"], " Incompatible with IDs: ", data["incompatible_IDs"])
+            if "inspection_of" in data:
+                print(" - Name: ", name, " Inspection of: ", data["inspection_of"], " Incompatible with IDs: ", data["incompatible_IDs"])
+            else:
+                print(" - Name: ", name, " Custom_Data: ", data)
         print("---- Ordering ----------------------------------------------------")
         print(self.__ordering)
+        print("------------------------------------------------------------------")
+        print("---- Precedence --------------------------------------------------")
+        print(self.__precedence)
         print("------------------------------------------------------------------")
 
 

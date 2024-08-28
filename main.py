@@ -57,6 +57,8 @@ towers = problem.get_Towers()
 tasks = problem.get_Tasks()
 uav_team = problem.get_UAVs()
 
+tasks.print()
+
 # --------------------------------------------------------------------------
 
 routes = problem.solve(dynamic = False, auto_uav_disabling = False, cost_function = "mtm")

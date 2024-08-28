@@ -71,7 +71,10 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
         
 
     if "Tasks_Order" in mission:
-        tasks.set_Order(mission["Tasks_Order"]) 
+        tasks.set_Order(mission["Tasks_Order"])
+
+    if "Tasks_Precedence" in mission:
+        tasks.set_Precedence(mission["Tasks_Precedence"]) 
 
     if "Wind" in mission:
         return SO.Problem(bases, towers, tasks, uavs, wind_vector = np.array(mission["Wind"]))
