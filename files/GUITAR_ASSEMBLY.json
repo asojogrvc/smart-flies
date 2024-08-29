@@ -21,10 +21,10 @@
         }
     },
     "Tasks": {
-        "tT1":{"custom_task_at": "WB1", "cost":{"0": 3600, "1":7200}},
-        "tT2":{"custom_task_at": "WB1", "cost":{"0": 3600, "1":7200}},
-        "tT3":{"custom_task_at": "WB2", "cost":{"0": 3600, "1":7200}},
-        "tT4":{"custom_task_at": "WB2", "cost":{"0": 3600, "1":7200}},
+        "tT1":{"custom_task_at": "WB1", "cost":{"0": 3600, "1":7200}, "incompatible_IDs": []},
+        "tT2":{"custom_task_at": "WB1", "cost":{"0": 3600, "1":7200}, "incompatible_IDs": []},
+        "tT3":{"custom_task_at": "WB2", "cost":{"0": 7200, "1":7200}, "incompatible_IDs": ["0"]},
+        "tT4":{"custom_task_at": "WB2", "cost":{"0": 7200, "1":7200}, "incompatible_IDs": ["0"]},
         "tT5":{"custom_task_at": "WB3", "cost":{"0": 1800, "1":3600}},
         "tT6":{"custom_task_at": "WB3", "cost":{"0": 3600, "1":7200}}
     },

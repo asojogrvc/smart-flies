@@ -64,10 +64,17 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
                     )
 
         if "custom_task_at" in mission["Tasks"][name]:
-            tasks.add_Task(
-                name,
-                custom_data = mission["Tasks"][name]
-            )
+            try:
+                tasks.add_Task(
+                    name,
+                    custom_data = mission["Tasks"][name],
+                    incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                )
+            except:
+                tasks.add_Task(
+                    name,
+                    custom_data = mission["Tasks"][name]
+                )
         
 
     if "Tasks_Order" in mission:
