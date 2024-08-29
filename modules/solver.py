@@ -942,9 +942,10 @@ def solver(problem: Problem, **kwargs) -> dict:
         try:
             print(key, sol[Tf[key]]-V_costs[key] * sol[Y[key]], sol[Tf[key]])
         except: None
+    
+    for key in Ot:
+        print("Ot", key, sol[Ot[key]])
 
-    print(Wt)
-    print(V_costs)
 
     return order_Routes(routes, uavs)
 
