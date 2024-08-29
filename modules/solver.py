@@ -196,7 +196,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
     Z = {}
     Y = {}
     Wt = {} # Time Weights
-    Wtb = {} # Backwards Time Weights
+    V_costs = {}
     pairs = list(combinations(graph.nodes, 2))
 
     orbit_radius = 10
@@ -229,7 +229,8 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
 
         # Task Completion
         if edge[1] in custom_costs:
-            if edge[2] in custom_costs[edge[1]]: 
+            if edge[2] in custom_costs[edge[1]]:
+                V_costs[edge[1]+"|"+edge[2]] = custom_costs[edge[1]][edge[2]]
                 Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + custom_costs[edge[1]][edge[2]]
         
         else:
@@ -237,29 +238,15 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
             d = np.linalg.norm(move_vector)
             if 0 == d:
                 if "B" != edge[1][-1]:
-                    Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 2 * np.pi * orbit_radius / ispeeds[edge[2]]
+                    V_costs[edge[1]+"|"+edge[2]] = 2 * np.pi * orbit_radius / ispeeds[edge[2]]
+                    Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + V_costs[edge[1]+"|"+edge[2]]
                 else: None
             else:
                 effective_speed = ispeeds[edge[2]] - np.dot(wind_vector, move_vector) / d
-                Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
+                V_costs[edge[1]+"|"+edge[2]] = d / effective_speed
+                Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + V_costs[edge[1]+"|"+edge[2]]
 
             if 0 > Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]]: print("Warning: Negative TIME COST. Wind speed might be too high!")
-
-        # Backwards costs
-        if edge[0] in custom_costs:
-            if edge[2] in custom_costs[edge[0]]: 
-                Wtb[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + custom_costs[edge[0]][edge[2]]
-        
-        else:
-            move_vector = end_positions[edge[0]] - start_positions[edge[0]]
-            d = np.linalg.norm(move_vector)
-            if 0 == d:
-                if "B" != edge[0][-1]:
-                    Wtb[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + 2 * np.pi * orbit_radius / ispeeds[edge[2]]
-                else: None
-            else:
-                effective_speed = ispeeds[edge[2]] - np.dot(wind_vector, move_vector) / d
-                Wtb[edge[2]+"Z"+edge[0]+"-"+edge[1]] = Wt[edge[2]+"Z"+edge[0]+"-"+edge[1]] + d / effective_speed
 
 
 
@@ -421,7 +408,7 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 2 * Y[name+"|"+uav.get_ID()]
             )
 
-    return scip_model, Z, Wt, Wtb, Y
+    return scip_model, Z, Wt, V_costs, Y
 
 def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z: dict, Wt: dict, graph: nx.MultiDiGraph, **kwargs):
 
@@ -554,10 +541,10 @@ def add_DFJ_Subtour_Constraint(Q: list, uav_id: str, Z:dict, model: SCIP.Model):
 
     return None
 
-def add_MTZ_Subtour_Constraints(Wt:dict, Wtb:dict, tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> dict:
+def add_MTZ_Subtour_Constraints(Wt:dict, tasks: TS.Tasks, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> tuple[dict, dict, dict]:
 
     U = {}
-    T = {}
+    Tf = {}
     ms = {}
     for uav in uavs:
 
@@ -569,7 +556,7 @@ def add_MTZ_Subtour_Constraints(Wt:dict, Wtb:dict, tasks: TS.Tasks, uavs: UAVS.U
         for name in vertices:
             
             U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
-            T[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "T"+name+"|"+uav.get_ID())
+            Tf[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'C', obj = 0.0, name = "Tf"+name+"|"+uav.get_ID())
 
             scip_model.addCons(
                 U[name+"|"+uav.get_ID()] <= m * Y[name+"|"+uav.get_ID()]
@@ -580,20 +567,25 @@ def add_MTZ_Subtour_Constraints(Wt:dict, Wtb:dict, tasks: TS.Tasks, uavs: UAVS.U
             )
 
             scip_model.addCons(
-                T[name+"|"+uav.get_ID()] <= 1E6 * Y[name+"|"+uav.get_ID()]
+                Tf[name+"|"+uav.get_ID()] <= 1E6 * Y[name+"|"+uav.get_ID()]
             )
 
             scip_model.addCons(
-                T[name+"|"+uav.get_ID()] >= Wtb[uav.get_ID()+"Z"+uav.get_Base()+"-"+name] * Z[uav.get_ID()+"Z"+uav.get_Base()+"-"+name]
+                Tf[name+"|"+uav.get_ID()] >= Wt[uav.get_ID()+"Z"+uav.get_Base()+"-"+name] * Z[uav.get_ID()+"Z"+uav.get_Base()+"-"+name]
             )
 
             scip_model.addCons(
-                T[name+"|"+uav.get_ID()] 
+                Tf[name+"|"+uav.get_ID()] 
                 <=
                 SCIP.quicksum(
-                    Wtb[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] * Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] +
-                    Wtb[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]] * Z[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]]
+                    Wt[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] * Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] +
+                    Wt[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]] * Z[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]]
                     for edge in edges
+                )
+                -
+                SCIP.quicksum(
+                    Wt[uav.get_ID()+"Z"+v+"-"+uav.get_Base()] * Z[uav.get_ID()+"Z"+v+"-"+uav.get_Base()]
+                    for v in vertices
                 )
             )
 
@@ -607,15 +599,13 @@ def add_MTZ_Subtour_Constraints(Wt:dict, Wtb:dict, tasks: TS.Tasks, uavs: UAVS.U
             )
 
             scip_model.addCons(
-                T[pair[0]+"|"+uav.get_ID()] - T[pair[1]+"|"+uav.get_ID()] + Wtb[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]] <=  1E6 * (1 - Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]])
+                Tf[pair[0]+"|"+uav.get_ID()] - Tf[pair[1]+"|"+uav.get_ID()] + Wt[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]] <=  1E6 * (1 - Z[uav.get_ID()+"Z"+pair[0]+"-"+pair[1]])
             )
             scip_model.addCons(
-                T[pair[1]+"|"+uav.get_ID()] - T[pair[0]+"|"+uav.get_ID()] + Wtb[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] <=  1E6 * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
-            )
+                Tf[pair[1]+"|"+uav.get_ID()] - Tf[pair[0]+"|"+uav.get_ID()] + Wt[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]] <=  1E6 * (1 - Z[uav.get_ID()+"Z"+pair[1]+"-"+pair[0]])
+            )   
 
-        
-
-    return U, T, ms
+    return U, Tf, ms
 
 def add_Order_Constraint(uav_id: str, tasks_order: list[str], m: int, U:dict, Y:dict, scip_model:SCIP.Model):
 
@@ -626,21 +616,19 @@ def add_Order_Constraint(uav_id: str, tasks_order: list[str], m: int, U:dict, Y:
 
     return None
 
-def add_Precedence_Constraint(uavs: UAVS.UAV_Team, tasks_p: list[str], T:dict, Y:dict, scip_model:SCIP.Model):
+def add_Precedence_Constraint(uavs: UAVS.UAV_Team, tasks_p: list[str], V_costs: dict, Tf:dict, Y:dict, scip_model:SCIP.Model):
 
-    m = 1e6
-    for uav in uavs:
-        scip_model.addCons(
-            SCIP.quicksum(
-                    T[tasks_p[0]+"|"+uav.get_ID()]
-                for uav in uavs
-            )
-                <=
-            SCIP.quicksum(
-                    T[tasks_p[1]+"|"+uav.get_ID()]
-                for uav in uavs
-            )
+    scip_model.addCons(
+        SCIP.quicksum(
+                Tf[tasks_p[0]+"|"+uav.get_ID()]# End time
+            for uav in uavs
         )
+            <=
+        SCIP.quicksum(
+                Tf[tasks_p[1]+"|"+uav.get_ID()] - V_costs[tasks_p[1]+"|"+uav.get_ID()] * Y[tasks_p[1]+"|"+uav.get_ID()]  # Start time
+            for uav in uavs
+        )
+    )
 
     return None
 
@@ -868,14 +856,16 @@ def solver(problem: Problem, **kwargs) -> dict:
     
     abstract_G = construct_Abstract_Graph(abstract_G, bases, towers, tasks, uavs)
 
-    scip_model, Z, Wt, Wtb, Y = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
+    scip_model, Z, Wt, V_costs, Y = construct_SCIP_Model(abstract_G, tasks, uavs, wind_vector = problem.get_Wind(),
                                                         auto_uav_disabling = auto_uav_disablingQ)
+    
+    print(V_costs)
   
     # --------------------------------------------------------------------------------------------------
     #                                     Subtour Elimination
     # --------------------------------------------------------------------------------------------------
 
-    U, T, ms = add_MTZ_Subtour_Constraints(Wt, Wtb, tasks, uavs, Z, Y, scip_model)
+    U, Tf, ms = add_MTZ_Subtour_Constraints(Wt, tasks, uavs, Z, Y, scip_model)
 
     # --------------------------------------------------------------------------------------------------
     #                                      Order Constraints
@@ -891,8 +881,8 @@ def solver(problem: Problem, **kwargs) -> dict:
     # --------------------------------------------------------------------------------------------------
     if task_precedence: print("Adding precedence constraints to model")
     for pair in task_precedence:
-        print(pair)
-        add_Precedence_Constraint(uavs, pair, T, Y, scip_model)
+        #print(pair)
+        add_Precedence_Constraint(uavs, pair, V_costs, Tf, Y, scip_model)
 
 
     if "cost_function" in kwargs:
@@ -915,10 +905,11 @@ def solver(problem: Problem, **kwargs) -> dict:
 
     print("(ID, MAX. Plan Time): ", plan_Time(routes, Wt))
 
-    for key in T:
-        print(key, sol[T[key]])
+    for key in Tf:
+       print(key, sol[Tf[key]]-V_costs[key] * sol[Y[key]], sol[Tf[key]], )
 
-    #print(Wt)
+    print(Wt)
+    print(V_costs)
 
     return order_Routes(routes, uavs)
 
