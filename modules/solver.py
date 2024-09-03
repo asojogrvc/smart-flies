@@ -859,7 +859,7 @@ def plan_Time(routes: dict, Wt: dict):
         for edge in routes[uav_id]:
             time += Wt[uav_id+"Z"+edge[0]+"-"+edge[1]]
         
-        print("(id, time): ", uav_id, time)
+        print("(id, time without waiting time): ", uav_id, time)
         
         if time > current_max_time: 
             current_max_id = uav_id
