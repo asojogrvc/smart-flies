@@ -259,145 +259,474 @@
     },
     "Tasks": {
         "tP2": {
-            "inspection_of": "P2"
+            "custom_task_at": "P2",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP3": {
-            "inspection_of": "P3"
+            "custom_task_at": "P3",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP4": {
-            "inspection_of": "P4"
+            "custom_task_at": "P4",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP5": {
-            "inspection_of": "P5"
+            "custom_task_at": "P5",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP6": {
-            "inspection_of": "P6"
+            "custom_task_at": "P6",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP7": {
-            "inspection_of": "P7"
+            "custom_task_at": "P7",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP8": {
-            "inspection_of": "P8"
+            "custom_task_at": "P8",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP9": {
-            "inspection_of": "P9"
+            "custom_task_at": "P9",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP10": {
-            "inspection_of": "P10"
+            "custom_task_at": "P10",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP11": {
-            "inspection_of": "P11"
+            "custom_task_at": "P11",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP12": {
-            "inspection_of": "P12"
+            "custom_task_at": "P12",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP13": {
-            "inspection_of": "P13"
+            "custom_task_at": "P13",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP14": {
-            "inspection_of": "P14"
+            "custom_task_at": "P14",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP15": {
-            "inspection_of": "P15"
+            "custom_task_at": "P15",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP16": {
-            "inspection_of": "P16"
+            "custom_task_at": "P16",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP17": {
-            "inspection_of": "P17"
+            "custom_task_at": "P17",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP18": {
-            "inspection_of": "P18"
+            "custom_task_at": "P18",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP19": {
-            "inspection_of": "P19"
+            "custom_task_at": "P19",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP20": {
-            "inspection_of": "P20"
+            "custom_task_at": "P20",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP21": {
-            "inspection_of": "P21"
+            "custom_task_at": "P21",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP22": {
-            "inspection_of": "P22"
+            "custom_task_at": "P22",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP23": {
-            "inspection_of": "P23"
+            "custom_task_at": "P23",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP24": {
-            "inspection_of": "P24"
+            "custom_task_at": "P24",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP25": {
-            "inspection_of": "P25"
+            "custom_task_at": "P25",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP26": {
-            "inspection_of": "P26"
+            "custom_task_at": "P26",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP27": {
-            "inspection_of": "P27"
+            "custom_task_at": "P27",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP28": {
-            "inspection_of": "P28"
+            "custom_task_at": "P28",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP29": {
-            "inspection_of": "P29"
+            "custom_task_at": "P29",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP30": {
-            "inspection_of": "P30"
+            "custom_task_at": "P30",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP31": {
-            "inspection_of": "P31"
+            "custom_task_at": "P31",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP32": {
-            "inspection_of": "P32"
+            "custom_task_at": "P32",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP33": {
-            "inspection_of": "P33"
+            "custom_task_at": "P33",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP34": {
-            "inspection_of": "P34"
+            "custom_task_at": "P34",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP35": {
-            "inspection_of": "P35"
+            "custom_task_at": "P35",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP36": {
-            "inspection_of": "P36"
+            "custom_task_at": "P36",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP37": {
-            "inspection_of": "P37"
+            "custom_task_at": "P37",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP38": {
-            "inspection_of": "P38"
+            "custom_task_at": "P38",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP39": {
-            "inspection_of": "P39"
+            "custom_task_at": "P39",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP40": {
-            "inspection_of": "P40"
+            "custom_task_at": "P40",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP41": {
-            "inspection_of": "P41"
+            "custom_task_at": "P41",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP42": {
-            "inspection_of": "P42"
+            "custom_task_at": "P42",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP43": {
-            "inspection_of": "P43"
+            "custom_task_at": "P43",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP44": {
-            "inspection_of": "P44"
+            "custom_task_at": "P44",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP45": {
-            "inspection_of": "P45"
+            "custom_task_at": "P45",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP46": {
-            "inspection_of": "P46"
+            "custom_task_at": "P46",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP47": {
-            "inspection_of": "P47"
+            "custom_task_at": "P47",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         },
         "tP48": {
-            "inspection_of": "P48"
+            "custom_task_at": "P48",
+            "cost": {
+                "0": 0,
+                "1": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0
+            }
         }
     }
 }
