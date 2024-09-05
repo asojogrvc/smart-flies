@@ -595,6 +595,10 @@ def add_MTZ_Subtour_Constraints(nodelist: list, Wt:dict, tasks: TS.Tasks, uavs: 
     Ot = {}
     ms = {}
 
+    for uav in uavs:
+            for node in nodelist:
+                U[node+"|"+uav.get_ID()] = 0.0
+
     if tasks.get_Precedence() and len(uavs.get_List()) != 1:
         # Wait time variable
         for uav in uavs:
