@@ -176,8 +176,7 @@ def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
     tlist = {}
     tasks = {}
 
-    order0 = []
-    order1 = []
+    pc = []
 
     firstQ = True
     for line in contents[7:]:
@@ -195,10 +194,6 @@ def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
                     "0": {
                         "Model": "A",
                         "Base": "B"
-                    },
-                    "1": {
-                        "Model": "A",
-                        "Base": "B"
                     }
                 },
                 "Wind": [0, 0, 0]
@@ -211,21 +206,14 @@ def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
         tasks["t"+"P"+parsed_line[0]] = {"custom_task_at": "P"+parsed_line[0],
                                          "cost":{"0": 0, "1": 0, "3": 0, "4": 0, "5": 0}}
         
-        if int(parsed_line[0]) % 2 == 0: 
-            tasks["t"+"P"+parsed_line[0]]["incompatible_IDs"] = "0"
-            try: order1.append(["t"+"P"+parsed_line[0], "t"+"P"+str(int(parsed_line[0])+2)])
-            except: None
-
-        if (int(parsed_line[0]) + 1) % 2 == 0: 
-            tasks["t"+"P"+parsed_line[0]]["incompatible_IDs"] = "1"
-            try: order0.append(["t"+"P"+parsed_line[0], "t"+"P"+str(int(parsed_line[0])+2)])
-            except: None
+        
+        pc.append(["t"+"P"+parsed_line[0], "t"+"P"+str(int(parsed_line[0])+1)])
 
     #del tasks["P"+parsed_line[0]]
 
     
-
-    data["Tasks_Order"] = {"0": order0, "1": order1}
+    del pc[-1]
+    data["Tasks_Order"] = {"0" : pc}
 
 
 
