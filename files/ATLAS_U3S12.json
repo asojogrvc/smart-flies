@@ -29,11 +29,11 @@
             "Base": "B0"
         },
         "1": {
-            "Model": "B",
+            "Model": "A",
             "Base": "B1"
         },
         "2": {
-            "Model": "C",
+            "Model": "A",
             "Base": "B1"
         }
     },
