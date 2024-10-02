@@ -1,13 +1,3 @@
-### See status
-GET http://localhost:8004/status
-
-### Get output
-GET http://localhost:8004/get_plan?IDs=17877706
-
-### Send input data as JSON
-POST http://localhost:8004//mission_request
-Content-Type: application/json
-
 {
     "id": 99530244,
     "case": 0,

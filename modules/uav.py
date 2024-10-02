@@ -753,7 +753,10 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float, utmZone: tuple):
     if "px4" != uav.get_Name():
         print("px4_compute_Waypoints: This UAV is not a valid px4 or DeltaQuad. Ignoring")
         return None
-
+    
+    if not uav.routeAbstract:
+        return None
+    
     g_max = np.arcsin(9 / 180 * np.pi)
     steps = 65                          # 50 by default
 

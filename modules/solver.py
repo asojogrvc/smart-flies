@@ -685,16 +685,16 @@ def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     for edge in route:
         
         if edge[0][0] == 'B' and edge[1][0] == 'T':
-                UTM1 = bases.get_Base(edge[0]).get_Coordinates()
-                UTM2 = towers.get_Tower_Coordinates(edge[1])
+            UTM1 = bases.get_Base(edge[0]).get_Coordinates()
+            UTM2 = towers.get_Tower_Coordinates(edge[1])
         
         elif edge[0][0] == 'T' and edge[1][0] == 'B':
-                UTM1 = towers.get_Tower_Coordinates(edge[0])
-                UTM2 = bases.get_Base(edge[1]).get_Coordinates()
+            UTM1 = towers.get_Tower_Coordinates(edge[0])
+            UTM2 = bases.get_Base(edge[1]).get_Coordinates()
 
         elif edge[0][0] == 'B' and edge[1][0] == 'B':
-                UTM1 = bases.get_Base(edge[0]).get_Coordinates()
-                UTM2 = bases.get_Base(edge[1]).get_Coordinates()
+            UTM1 = bases.get_Base(edge[0]).get_Coordinates()
+            UTM2 = bases.get_Base(edge[1]).get_Coordinates()
         
         else:
             UTM1 = towers.get_Tower_Coordinates(edge[0])
