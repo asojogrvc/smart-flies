@@ -223,7 +223,7 @@ def planner(mission_json):
     except:
 
         app.set_Status("inactive")
-        iYAML.save_Dict_to_File({str(id): "JSON Format not valid or the planner failed"}, file_path)
+        iYAML.save_Dict_to_File({"error": "JSON Format not valid or the planner failed"}, file_path)
 
     return None
 
@@ -249,7 +249,7 @@ def json_output():
         output["status"] = [app.get_Status(), "ID ERROR"]
         output["description"] = "No IDs syntax"
 
-    json = []
+    json = {}
     failedQ = False
     for id in ids:
 
@@ -262,7 +262,7 @@ def json_output():
         try:
             f = open(file_path, 'r')
             mission_data = yaml.safe_load(f)
-            json.append(mission_data)
+            json[str(id)] = mission_data
         except:
             failedQ = True
             continue

@@ -279,6 +279,8 @@ def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, u
 
     n_points = int(np.floor(np.linalg.norm(point2_UTM-point1_UTM) / distance) + 2) # Intermediate points + start and ending
 
+    if n_points > 100: n_points = 100
+
     p1 = utm2latlon(point1_UTM, utmZone)
     p2 = utm2latlon(point2_UTM, utmZone)
 
