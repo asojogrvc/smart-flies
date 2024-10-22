@@ -202,7 +202,6 @@ typing_extensions==4.10.0
 untokenize==0.1.1
 urllib3==2.1.0
 utils==1.0.2
-utm==0.7.0
 virtualenv==20.25.1
 webencodings==0.5.1
 Werkzeug==3.0.1

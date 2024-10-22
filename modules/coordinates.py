@@ -35,8 +35,6 @@ def latlon2epsg3035(latlon: np.ndarray) -> tuple[np.ndarray, tuple]:
     latitud-longitud to LAEA coordinates conversion. 
     Works with Nx2 or Nx3 arrays. If height is included, it is left unchanged.
 
-    It is assumed that all points are within the same UTM Zone
-
     Inputs:
         - "lalton" contains the point or points of numerical positions with latlon coordinates
         
@@ -806,12 +804,12 @@ def plot_Satellital_Map(axes: plt.Axes, image: np.ndarray, latlon1: np.ndarray, 
     latlon_e1 = np.asarray([latlon1[0], latlon1[1]])
     latlon_e2 = np.asarray([latlon2[0]-255*deg_p_px_Y, latlon2[1]+255*deg_p_px_X])
 
-    # to UTM. Assuming everything is within the same UTM Zone
-    utm1, _ = latlon2epsg3035(latlon_e1)
-    utm2, _ = latlon2epsg3035(latlon_e2)
 
-    # Plot image projected into the UTM coordinates
-    axes.imshow(image, extent = [utm1[0], utm2[0], utm2[1], utm1[1]], alpha = 0.7)
+    p1, _ = latlon2epsg3035(latlon_e1)
+    p2, _ = latlon2epsg3035(latlon_e2)
+
+    # Plot image projected into the EPSG3035 coordinates
+    axes.imshow(image, extent = [p1[0], p2[0], p2[1], p1[1]], alpha = 0.7)
 
     return None
 

@@ -216,7 +216,7 @@ def solve_Lidar_Case(problem: Problem) -> bool:
     print("routeAbstract", uav.routeAbstract)
     print("routeModes", uav.routeModes)
 
-    uav.routeCoords = route_to_UTM(uav.route, towers, problem.get_Bases())
+    uav.routeCoords = route_to_EPSG3035(uav.route, towers, problem.get_Bases())
     
     print("routeCoords", uav.routeCoords)
     
@@ -304,7 +304,7 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
         uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
         print('OF = ', uav.route)
         
-        uav.routeCoords = route_to_UTM(uav.route, ptowers, pbases)
+        uav.routeCoords = route_to_EPSG3035(uav.route, ptowers, pbases)
         
         print(uav.routeModes)
 
@@ -530,7 +530,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
         print('OF = ', uav.route)
 
-        uav.routeCoords = route_to_UTM(uav.route, ptowers, pbases)
+        uav.routeCoords = route_to_EPSG3035(uav.route, ptowers, pbases)
         
         print(uav.routeModes)
 
@@ -676,31 +676,31 @@ def find_common_node(route1: list, route2: list) -> tuple[bool, str, int, int]:
     
     return False, "",  float('NaN'), float('NaN')
 
-def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
+def route_to_EPSG3035(route: list, towers: TW.Towers, bases:BA.Bases):
     """
-    Transforms each node on each edge of the route tu UTM coordinates.
-    Return a list with a 2-tuple (UTM1, UTM2) per original edge
+    Transforms each node on each edge of the route tu EPSG3035 coordinates.
+    Return a list with a 2-tuple (p1, p2) per original edge
     """
     routeCoords = []
     for edge in route:
         
         if edge[0][0] == 'B' and edge[1][0] == 'T':
-            UTM1 = bases.get_Base(edge[0]).get_Coordinates()
-            UTM2 = towers.get_Tower_Coordinates(edge[1])
+            p1 = bases.get_Base(edge[0]).get_Coordinates()
+            p2 = towers.get_Tower_Coordinates(edge[1])
         
         elif edge[0][0] == 'T' and edge[1][0] == 'B':
-            UTM1 = towers.get_Tower_Coordinates(edge[0])
-            UTM2 = bases.get_Base(edge[1]).get_Coordinates()
+            p1 = towers.get_Tower_Coordinates(edge[0])
+            p2 = bases.get_Base(edge[1]).get_Coordinates()
 
         elif edge[0][0] == 'B' and edge[1][0] == 'B':
-            UTM1 = bases.get_Base(edge[0]).get_Coordinates()
-            UTM2 = bases.get_Base(edge[1]).get_Coordinates()
+            p1 = bases.get_Base(edge[0]).get_Coordinates()
+            p2 = bases.get_Base(edge[1]).get_Coordinates()
         
         else:
-            UTM1 = towers.get_Tower_Coordinates(edge[0])
-            UTM2 = towers.get_Tower_Coordinates(edge[1])
+            p1 = towers.get_Tower_Coordinates(edge[0])
+            p2 = towers.get_Tower_Coordinates(edge[1])
         
-        routeCoords.append((UTM1, UTM2))
+        routeCoords.append((p1, p2))
 
     return routeCoords
 
@@ -732,7 +732,7 @@ def construct_Abstract_Graph(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.U
                 )
     
             # Prefetch all tower coordinates
-            coords = nx.get_node_attributes(ptowers.get_Graph(), 'UTM')
+            coords = nx.get_node_attributes(ptowers.get_Graph(), 'Coords')
 
             # Add connection between S with itself
             # Iterate over all possible pairs of different line power segments
@@ -948,7 +948,7 @@ def construct_Abstract_Graph(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.U
         case 1:
             
             # Prefetch all tower coordinates
-            coords = nx.get_node_attributes(ptowers.get_Graph(), 'UTM')
+            coords = nx.get_node_attributes(ptowers.get_Graph(), 'Coords')
             
             edges = list(itertools.combinations(coords.keys(), 2))
 
@@ -988,7 +988,7 @@ def construct_Abstract_Graph(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.U
 
                 pgraph.add_node(
                     base.get_Name(),
-                    UTM = base.get_Coordinates()
+                    Coords = base.get_Coordinates()
                 )
 
                 for tower in ptowers.get_Graph().nodes():
@@ -1192,7 +1192,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     distance_threshold = 1000 # in meters
     # This detects if UAVs are too far to any of the groups of towers and allows deactivating them.
     SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
-    distant_subgraphsQ = any([np.linalg.norm(list(dict(subset.nodes(data="UTM")).values())[0] - base.get_Coordinates()) > distance_threshold
+    distant_subgraphsQ = any([np.linalg.norm(list(dict(subset.nodes(data="Coords")).values())[0] - base.get_Coordinates()) > distance_threshold
                                   for subset in SC for base in pbases])
     
     # distant_subgraphsQ = False   # This is a patch. I need to fix some other things

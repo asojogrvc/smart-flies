@@ -16,7 +16,7 @@ class Base():
 
         self.__name = name
 
-        # As a 3D vector, UTM Coordinates + Z
+        # As a 3D vector, EPSG3035 Coordinates + Z
         self.__coordinates = coordinates
 
         return None
@@ -149,7 +149,7 @@ class Bases():
             if onlineQ:
                 CO.update_Height_Online(pointlatlon)
 
-            # We need to change from latlon to UTM coords
+            # We need to change from latlon to EPSG3035 coords
             pointn = CO.latlon2epsg3035(pointlatlon)
 
             # Create the base instance and adds it to the list

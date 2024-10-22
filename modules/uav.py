@@ -317,8 +317,8 @@ class UAV():
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
                 # -----
-                ipoints = CO.get_Path_Online_Elevations(self.routeCoords[0][0], np.append(
-                    preMoves[0][0], 0), towers.get_UTM_Zone(), 200)[1:]  # Delete the first point as it is already in
+                 # Delete the first point as it is already in
+                ipoints = CO.get_Path_Online_Elevations(self.routeCoords[0][0], np.append(preMoves[0][0], 0), 200)[1:]
                 CO.update_Height(ipoints, tH + iH + dH - bH)
 
                 if len(ipoints) > 1:
@@ -399,8 +399,8 @@ class UAV():
                     self.waypoints.add_Waypoint(point1, actions1, mode1)
                     # -----
                     if "Navigation" == mode1:
-                        ipoints = CO.get_Path_Online_Elevations(point1, point2, towers.get_UTM_Zone(), 200)[
-                            1:]  # Delete the first point as it is already in
+                        ipoints = CO.get_Path_Online_Elevations(point1, point2, 200)[1:] 
+                        # Delete the first point as it is already in
                         CO.update_Height(ipoints, tH + dH + iH - bH)
 
                         if len(ipoints) > 1:
@@ -428,8 +428,7 @@ class UAV():
 
                 # -----
                 # Delete the first point as it is already in
-                ipoints = CO.get_Path_Online_Elevations(
-                    point2, self.routeCoords[-1][1], towers.get_UTM_Zone(), 200)[1:]
+                ipoints = CO.get_Path_Online_Elevations(point2, self.routeCoords[-1][1], 200)[1:]
                 CO.update_Height(ipoints, tH + dH + iH - bH)
 
                 if len(ipoints) > 1:
@@ -492,8 +491,7 @@ class UAV():
                     orbit, n_dir, v_dirs = CO.compute_Orbital_Trajectory(move[0], move[1], self.routeCoords[0:][m+1][1],
                                                                          self.missionSettings["Insp. horizontal offset"], n_points)
 
-                    ipoints = CO.get_Path_Online_Elevations(last_point, np.append(
-                        orbit[0], 0), towers.get_UTM_Zone(), 200)[1:]  # Delete the first point as it is already in
+                    ipoints = CO.get_Path_Online_Elevations(last_point, np.append(orbit[0], 0), 200)[1:]  # Delete the first point as it is already in
                     CO.update_Height(ipoints, tH + iH + dH - bH)
                     actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                     last_point = np.append(orbit[-1], 0)
@@ -546,8 +544,9 @@ class UAV():
 
                     m += 1
 
-                ipoints = CO.get_Path_Online_Elevations(np.append(orbit[-1], 0),
-                                                        self.routeCoords[0][0], towers.get_UTM_Zone(), 200)[1:]  # Delete the first point as it is already in
+                ipoints = CO.get_Path_Online_Elevations(np.append(orbit[-1], 0), self.routeCoords[0][0], 200)[1:]
+                
+                # Delete the first point as it is already in
                 CO.update_Height(ipoints, tH + +iH + dH - bH)
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 if len(ipoints) > 1:

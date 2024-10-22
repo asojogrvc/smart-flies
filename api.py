@@ -217,7 +217,7 @@ def planner(mission_json):
                                                          weather.get_Wind_Direction())
         base0 = problem.get_Bases().get_Base("B0")
         
-        iYAML.save_Mission(file_path, str(id), problem.get_UAV_Team(), base0.get_UTM_Zone())
+        iYAML.save_Mission(file_path, str(id), problem.get_UAV_Team())
         app.set_Status("inactive")
 
     except:

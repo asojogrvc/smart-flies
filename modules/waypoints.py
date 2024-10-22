@@ -59,7 +59,7 @@ class Waypoints():
 
     def get_Points_List(self) -> list:
         """
-        Returns a list with the UTM Coordinates of the each waypoint.
+        Returns a list with the EPSG3035 Coordinates of the each waypoint.
         """
         return self.__points_List
     
@@ -108,7 +108,7 @@ class Waypoints():
 
     def print(self):
         """
-        Prints the UTM coordinates and actions of each waypoint.
+        Prints the EPSG3035 coordinates and actions of each waypoint.
         """
 
         k = 0

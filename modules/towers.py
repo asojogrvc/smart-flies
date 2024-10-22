@@ -14,9 +14,8 @@ import matplotlib.pyplot as plt
 class Towers():
     """
     Towers are represented as a networkx graph.
-        - Each node represents a single tower and contains its name, UTM coordinates (3D)
+        - Each node represents a single tower and contains its name, EPSG3035 (E, N) coordinates (3D)
         - Each edge represents wire connections between towers
-    It is assumed that all towers are within the same UTM Zone so we only need the local coordinates
     """
 
     def __init__(self):
@@ -78,7 +77,7 @@ class Towers():
             if onlineQ:
                 CO.update_Height_Online(path_latlon)
 
-            # Conversion to UTM. All towers and bases are assumed to be within the same zone
+            # Conversion to EPSG3035. All towers and bases are assumed to be within the same zone
             path_epsg3035 = CO.latlon2epsg3035(path_latlon)
 
             # Add each of the towers of the branch in the actual graph 
@@ -141,7 +140,6 @@ class Towers():
         Reset the towers list to its empty default status
         """
         self.__graph = nx.empty_graph(0)
-        self.__UTM_Zone = (0, "A")
 
         return None
 
@@ -199,7 +197,7 @@ class Towers():
 
     def plot(self, axes: plt.Axes):
         """
-        Plots the towers using their UTM Coordinates into an existing Matplotlib axes
+        Plots the towers using their EPSG3035 Coordinates into an existing Matplotlib axes
         """
         pos3D = self.get_DictCoordinates()
 

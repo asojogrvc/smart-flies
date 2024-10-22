@@ -91,7 +91,7 @@ def compute_Edge_Weights(node1:tuple, node2:tuple, uavs: UAVS.UAV_Team, weather:
     type can be computed from the two nodes attributes
     """
 
-    travel_vector = node2[1]['UTM']-node1[1]['UTM']
+    travel_vector = node2[1]['Coords']-node1[1]['Coords']
     d = np.linalg.norm(travel_vector)
 
     W_t = {}
@@ -134,12 +134,12 @@ def compute_Abstract_Edge_Weights(node1: tuple, node2: tuple, uavs: UAVS.UAV_Tea
     Arguments depend on case
 
     Mode 0:
-     - Base to Tower: node1 is a tuple ('Name', UTM); node2 is a list (tower1, tower2) with toweri = ('Name', UTM)
-     - Tower to Base: node2 is a tuple ('Name', UTM); node1 is a list (tower1, tower2) with toweri = ('Name', UTM)
-     - Tower to Tower: node1 and node2 are lists (tower1, tower2) with toweri = ('Name', UTM)
+     - Base to Tower: node1 is a tuple ('Name', Coords); node2 is a list (tower1, tower2) with toweri = ('Name', Coords)
+     - Tower to Base: node2 is a tuple ('Name', Coords); node1 is a list (tower1, tower2) with toweri = ('Name', Coords)
+     - Tower to Tower: node1 and node2 are lists (tower1, tower2) with toweri = ('Name', Coords)
 
     Mode 1:
-     - node1 and node2 are tuples ('Name', UTM)
+     - node1 and node2 are tuples ('Name', Coords)
     """
 
     match mode:

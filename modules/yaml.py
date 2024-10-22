@@ -247,7 +247,7 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
 
         coords = np.array([mission_init["bases"][k]["latitude"], mission_init["bases"][k]["longitude"], 0])
         CO.update_Height_Online(coords)
-        coords = CO.latlon2utm(coords)
+        coords = CO.latlon2epsg3035(coords)
 
         bases.add_Base(BA.Base(
             "B"+str(k),
@@ -258,7 +258,7 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
         k += 1
     
     base0 = bases.get_Base("B0")
-    weather.update_Online(CO.utm2latlon(base0.get_Coordinates(), base0.get_UTM_Zone()))
+    weather.update_Online(CO.epsg30352latlon(base0.get_Coordinates()))
 
 
     paths = []
