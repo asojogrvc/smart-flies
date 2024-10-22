@@ -8,10 +8,12 @@
 /.VSCodeCounter
 /.venv
 /target
+.vscode
 mission.yaml
 PLI_NOGUI.spec
 PLI.spec
 kml_Tower_Testing.ipynb
+api.http
 graphs_test.py
 xml_test.py
 solver_testing.py

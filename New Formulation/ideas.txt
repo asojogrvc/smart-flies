@@ -1,4 +1,0 @@
- - Delete Sigma somehow. Add the optimization directly to the cost function. This adds less variables
-    without adding too much computational cost for the cost function evaluation.
- - Think about nodes as a list of tasks, eg, mote to T1 and start inspection or Cut a log, take it to box1 and get to base.
- -
