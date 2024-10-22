@@ -3,6 +3,7 @@
 import numpy as np
 import requests
 import utm
+from pyproj import Transformer
 from urllib.request import urlopen
 from io import BytesIO
 from PIL import Image
@@ -10,6 +11,9 @@ import matplotlib.pyplot as plt
 import time
 import copy
 from modules import dubins as DB
+
+trans_latlongto3035 = Transformer.from_crs(4326, 3035)
+trans_3035tolatlong = Transformer.from_crs(3035, 4326)
 
 wait_time = 1  # Wait time in between API Request. This is too much brute force
 
@@ -97,6 +101,68 @@ def utm2latlon(utmcoord: np.ndarray, UTM_Zone: tuple) -> np.ndarray:
         
         else: # several points without heights
             return np.transpose(np.vstack((lat, lon)))
+
+def latlon2epsg3035(latlon: np.ndarray) -> tuple[np.ndarray, tuple]:
+    """
+    latitud-longitud to LAEA coordinates conversion. 
+    Works with Nx2 or Nx3 arrays. If height is included, it is left unchanged.
+
+    It is assumed that all points are within the same UTM Zone
+
+    Inputs:
+        - "lalton" contains the point or points of numerical positions with latlon coordinates
+        
+    Outputs:
+        - An array with the same format as the input containing the EPSG:3035 coordinates (E, N)
+
+    """
+    
+    singleQ = 1 == len(latlon.shape)
+    if singleQ:
+        latlon_p = latlon.reshape((-1, latlon.shape[0]))
+    else:
+        latlon_p = latlon
+
+    E, N = trans_latlongto3035.transform(latlon_p[:, 0], latlon_p[:, 1], radians=False)
+
+    if 3 == latlon_p.shape[1]:
+
+        if singleQ: return np.array([E, N, latlon_p[:, 2]]).T[0]
+
+        return np.vstack([E, N, latlon_p[:, 2]]).T
+    
+    if singleQ: return np.array([E, N]).T[0]
+    return np.vstack([E, N]).T
+
+def epsg30352latlon(epsg3035coord: np.ndarray) -> np.ndarray:
+    """
+    EPSG:3035 to latitud-longitud coordinates conversion.
+    Works with Nx2 or Nx3 arrays. If height is included, it is left unchanged.
+
+    Inputs:
+        - "epsg3035coord" contains the point or points of numerical positions in EPSG3035. (E, N)
+
+    Outputs:
+        - An array with the same format as the input containing the latitude-longitud conversion.
+    """
+    singleQ = 1 == len(epsg3035coord.shape)
+    if singleQ:
+        epsg3035coord_p = epsg3035coord.reshape((-1, epsg3035coord.shape[0]))
+    else:
+        epsg3035coord_p = epsg3035coord
+
+    lat, long = trans_3035tolatlong.transform(epsg3035coord_p[:, 0], epsg3035coord_p[:, 1], radians=False)
+
+    if 3 == epsg3035coord_p.shape[1]:
+
+        if singleQ: return np.array([lat, long, epsg3035coord_p[:, 2]]).T[0]
+
+        return np.vstack([lat, long, epsg3035coord_p[:, 2]]).T
+    
+    if singleQ: return np.array([lat, long]).T[0]
+    return np.vstack([lat, long]).T
+    
+    
 
 def latlon2mercator(lat_deg: float, lon_deg:float, zoom:int) -> np.ndarray:
   """

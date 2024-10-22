@@ -149,6 +149,7 @@ Pygments==2.17.2
 pykml==0.2.0
 pylint==2.17.7
 pyparsing==3.1.1
+pyproj==3.7.0
 pyproject-api==1.6.1
 PyQt6==6.6.1
 PyQt6-Qt6==6.6.1
@@ -170,6 +171,7 @@ rpds-py==0.18.0
 ruamel.yaml==0.18.5
 ruamel.yaml.clib==0.2.8
 scipy==1.11.4
+setuptools==75.2.0
 six==1.16.0
 sniffio==1.3.1
 snowballstemmer==2.2.0
