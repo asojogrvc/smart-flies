@@ -58,14 +58,14 @@ def print_Description(file, text: str):
 
     return None
 
-def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
+def print_Route(file, uav: UAVS.UAV):
     """
     Writes the route of one UAV to a file
     """
 
     if "px4" == uav.get_Name():
         with open('./mission_px4.plan', 'w') as f:
-            json.dump(px4_route_to_Plan(uav, utmZone), f, cls=NumpyArrayEncoder, indent=4)
+            json.dump(px4_route_to_Plan(uav), f, cls=NumpyArrayEncoder, indent=4)
         # return None
 
     file.write("  - name: \"Inspection_"+uav.get_ID()+"_"+uav.missionSettings["Base"]+"\"\n")
@@ -75,7 +75,7 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
     for wp in uav.waypoints:
         print(wp[0])
 
-        latlon = CO.utm2latlon(wp[0], utmZone)
+        latlon = CO.epsg30352latlon(wp[0])
         #latlon[0], latlon[1] = latlon[1], latlon[0] 
 
         point_str = np.array2string(latlon, separator=", ")
@@ -94,7 +94,7 @@ def print_Route(file, uav: UAVS.UAV, utmZone: tuple):
 
     return None
 
-def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
+def print_Routes(file, uavs: UAVS.UAV_Team):
     """
     Writes each of the UAV Team routes to a file
     """
@@ -105,7 +105,7 @@ def print_Routes(file, uavs: UAVS.UAV_Team, utmZone: tuple):
         if not uav.waypoints.get_Points_List(): 
             continue
 
-        print_Route(file, uav, utmZone)
+        print_Route(file, uav)
         file.write("\n\n")
 
     return None
@@ -121,7 +121,7 @@ def save_Dict_to_File(data: dict, file_path: str):
 
     return None
 
-def save_Mission(file_path, mission_id: str, uavs: UAVS.UAV_Team, utmZone: tuple):
+def save_Mission(file_path, mission_id: str, uavs: UAVS.UAV_Team):
     """
     Save the mission to a YAML file in the specified file path
     """
@@ -133,7 +133,7 @@ def save_Mission(file_path, mission_id: str, uavs: UAVS.UAV_Team, utmZone: tuple
 
         print_Header(f, mission_id)
         print_Description(f, "")
-        print_Routes(f, uavs, utmZone)
+        print_Routes(f, uavs)
 
     f.close()
 
@@ -361,18 +361,19 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 
         coords = np.array([uav_dict["settings"]["base"][0], uav_dict["settings"]["base"][1], 0])
         CO.update_Height_Online(coords)
-        coords = CO.latlon2utm(coords)
+        print(coords)
+        coords = CO.latlon2epsg3035(coords)
+        print(coords)
 
         bases.add_Base(BA.Base(
             "B"+str(k),
-            coords[0],
-            coords[1]
+            coords
         ))
 
         k += 1
     
     base0 = bases.get_Base("B0")
-    weather.update_Online(CO.utm2latlon(base0.get_Coordinates(), base0.get_UTM_Zone()))
+    weather.update_Online(CO.epsg30352latlon(base0.get_Coordinates()))
 
     paths = []
 
@@ -400,7 +401,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 # This still uses the generic waypoint system to allow the implementation of YAMLs 
 # for px4 in the future
 
-def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
+def px4_route_to_Plan(uav: UAVS.UAV) -> dict:
     """
     Transform a regular px4 route into a .plan-compatible format.
 
@@ -428,7 +429,7 @@ def px4_route_to_Plan(uav: UAVS.UAV, utmZone: tuple) -> dict:
         },
     }
 
-    base_latlon = CO.utm2latlon(uav.routeUTM[0][0], utmZone)
+    base_latlon = CO.epsg30352latlon(uav.routeCoords[0][0])
 
     # Fixed data within the mission item of the .plan
     mission = {

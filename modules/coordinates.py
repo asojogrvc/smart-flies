@@ -2,7 +2,6 @@
 
 import numpy as np
 import requests
-import utm
 from pyproj import Transformer
 from urllib.request import urlopen
 from io import BytesIO
@@ -30,77 +29,6 @@ def angle_to_x(v:np.ndarray):
     return alpha
 
 # ------------------------- Coordinates transformations ---------------------------------------
-
-def latlon2utm(latlon: np.ndarray) -> tuple[np.ndarray, tuple]:
-    """
-    latitud-longitud to UTM coordinates conversion. It is based on the 'utm' module and it only
-    manages shape details.
-    Works with Nx2 or Nx3 arrays. If height is included, it is left unchanged.
-
-    It is assumed that all points are within the same UTM Zone
-
-    Inputs:
-        - "lalton" contains the point or points of numerical positions with latlon coordinates
-        
-    Outputs:
-        - An array with the same format as the input containing the UTM coordinates within the corresponding Zone
-        - "UTM_Zone" is a tuple (Zone_Number: int, Zone_Letter: str)
-
-    """
-
-    # Check latlon shape to determine if it is a single point or more
-    if latlon.shape == (2,):  # 1 point without height
-                                                       # lat, lon
-        E, N, Z_number, Z_letter = utm.from_latlon(latlon[0], latlon[1])
-        return np.array([E, N]), (Z_number, Z_letter)
-    
-    elif latlon.shape == (3,): # 1 point with height
-        E, N, Z_number, Z_letter = utm.from_latlon(latlon[0], latlon[1])
-        return np.array([E, N, latlon[2]]), (Z_number, Z_letter)
-    
-    # Several points
-    else: 
-        E, N, Z_number, Z_letter = utm.from_latlon(latlon[:,0], latlon[:,1])
-        if len(latlon[0]) > 2: # several points with heights
-            return np.transpose(np.vstack((E, N, latlon[:,2]))), (Z_number, Z_letter)
-        
-        else: # several points without heights
-            return np.transpose(np.vstack((E, N))), (Z_number, Z_letter)
-
-def utm2latlon(utmcoord: np.ndarray, UTM_Zone: tuple) -> np.ndarray:
-    """
-    UTM to latitud-longitud coordinates conversion. It is based on the 'utm' module.
-    Works with Nx2 or Nx3 arrays. If height is included, it is left unchanged.
-
-    Inputs:
-        - "utmcoord" contains the point or points of numerical positions within a UTM Zone
-        - "UTM_Zone" is a tuple (Zone_Number: int, Zone_Letter: str)
-
-    Outputs:
-        - An array with the same format as the input containing the latitude-longitud conversion.
-    """
-
-    # Sanity checks?
-
-    zone_number = UTM_Zone[0]
-    zone_letter = UTM_Zone[1]
-
-    # Check shape to determine if it is a single point or more
-    if utmcoord.shape == (2,): # 1 point without height
-        lat, lon = utm.to_latlon(utmcoord[0], utmcoord[1], zone_number, zone_letter)
-        return np.array([lat, lon])
-    elif utmcoord.shape == (3,): # 1 point with height
-        lat, lon = utm.to_latlon(utmcoord[0], utmcoord[1], zone_number, zone_letter)
-        return np.array([lat, lon, utmcoord[2]])
-    
-    # Several points
-    else:
-        lat, lon = utm.to_latlon(utmcoord[:,0], utmcoord[:,1], zone_number, zone_letter)
-        if len(utmcoord[0]) > 2:  # several points with heights
-            return np.transpose(np.vstack((lat, lon, utmcoord[:,2])))
-        
-        else: # several points without heights
-            return np.transpose(np.vstack((lat, lon)))
 
 def latlon2epsg3035(latlon: np.ndarray) -> tuple[np.ndarray, tuple]:
     """
@@ -161,9 +89,7 @@ def epsg30352latlon(epsg3035coord: np.ndarray) -> np.ndarray:
     
     if singleQ: return np.array([lat, long]).T[0]
     return np.vstack([lat, long]).T
-    
-    
-
+ 
 def latlon2mercator(lat_deg: float, lon_deg:float, zoom:int) -> np.ndarray:
   """
   Transformation a single point from latitude-longitud (degrees) to Web mercator with an specific zoom level
@@ -266,75 +192,7 @@ def update_Height_Online(coords: np.ndarray):
 
     return None
 
-def update_UTM_Height_Online(coords: np.ndarray, utmZone: tuple):
-    """
-    Function to update a point's or list of points height using the online opentopodata.org API
-    It takes an Nx3 array and updates the third component of each row.
-    It assumes that the points are given in UTM Coordinates.
-
-    It does not output the array, it updates it inplace.
-    """
-    time.sleep(wait_time)
-
-    url = 'https://api.opentopodata.org/v1/eudem25m?locations='
-
-    coordslatlot = utm2latlon(coords, utmZone)
-
-    # Check shape to determine if it is a single point or more
-    # If it 2D, leave it as it is
-    if coords.shape == (3,):
-        # If it is a point 3D, then update the height
-
-        # request url
-        request = url + f"{coordslatlot[0]}"+','+f"{coordslatlot[1]}"+'|'
-        # get response from the api
-        #print(request)
-        try:
-            response = requests.get(request, timeout=10.0)
-        except:
-            print("API Timeout or wrong request!")
-            return None
-        
-        # if the response is positive, update, if not, don't
-        if 200 == response.status_code and "error" not in response.json():
-            coords[2] = response.json()["results"][0]["elevation"]
-
-        else: print("Height Online Update failed!")
-
-    # Several points
-    else:
-
-        # If they are 2D, leave them as they are
-        if coords.shape[1] == 3:
-            
-            # Sends the entire array points in one single request to speed things up
-            towers_string = ""
-            for col in coordslatlot:
-                towers_string = towers_string+f"{col[0]}"+','+f"{col[1]}"+'|'
-
-            # request url
-            request = url + towers_string
-            #print(request)
-            try:
-                response = requests.get(request, timeout=10.0)
-            except:
-                print("API Timeout or wrong request!")
-                return None
-
-            # if the response is positive, store heights in "elevation"
-            elevations = np.zeros(len(coords))
-            if 200 == response.status_code and "error" not in response.json():
-                for k in range(len(coords)):
-                    elevations[k] = response.json()["results"][k]["elevation"]
-            else: print("Height Online Update failed!")
-
-            # and update the original array
-            coords[:,2] = elevations
-            
-    print(response.json())
-    return None
-
-def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, utmZone: tuple, distance: float) -> list:
+def get_Path_Online_Elevations(point1_3035: np.ndarray, point2_3035: np.ndarray, distance: float) -> list:
     """
     It uses the opentopodata API to sample the heights of a path given by point1 and point2. distance is the maximum distance
     between to sampling points.
@@ -343,12 +201,12 @@ def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, u
 
     url = 'https://api.opentopodata.org/v1/eudem25m?locations='
 
-    n_points = int(np.floor(np.linalg.norm(point2_UTM-point1_UTM) / distance) + 2) # Intermediate points + start and ending
+    n_points = int(np.floor(np.linalg.norm(point2_3035-point1_3035) / distance) + 2) # Intermediate points + start and ending
 
     if n_points > 100: n_points = 100
 
-    p1 = utm2latlon(point1_UTM, utmZone)
-    p2 = utm2latlon(point2_UTM, utmZone)
+    p1 = epsg30352latlon(point1_3035)
+    p2 = epsg30352latlon(point2_3035)
 
     # request url
     request = url + f"{p1[0]}"+','+f"{p1[1]}"+'|'+f"{p2[0]}"+','+f"{p2[1]}"+f"&samples={n_points}"
@@ -366,12 +224,13 @@ def get_Path_Online_Elevations(point1_UTM: np.ndarray, point2_UTM: np.ndarray, u
     if 200 == response.status_code and "error" not in response.json():
         for point in response.json()["results"]:
             latlonz = np.array([point["location"]["lat"], point["location"]["lng"], point["elevation"]])
-            path.append(latlon2utm(latlonz)[0])
+            path.append(latlon2epsg3035(latlonz))
 
             print("API Response: ", response)
 
     else: print("Height Online Update failed!")
     return path
+
 
 def update_Height(coords: np.ndarray, height: float):
     for point in coords:
@@ -646,20 +505,6 @@ def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray,
     
     #clkwiseQ = check_CLKWISE_or_CCLKWISE(p, c, t)
     return path, sign == 1, list_all
-
-def check_CLKWISE_or_CCLKWISE(starting_point: np.ndarray, circle_center: np.ndarray, tangent_point:np.ndarray) -> bool:
-    """
-    (BROKEN)
-    Uses the vectorial product to check whether the next circular turn needs to be done clockwise or counterclockwise
-    """
-    r = tangent_point - circle_center
-    app_dir = tangent_point - starting_point
-
-    # third component of the vectorial product
-    z = r[0] * app_dir[1] - r[1] * app_dir[0]
-
-    if z > 0 : return False
-    else : return True
 
 def find_Tangents_to_2Circles(p1:np.ndarray, r1: float, p2:np.ndarray, r2:float) -> list:
     """
@@ -946,7 +791,7 @@ def get_Image_Cluster(lat_deg:float, lon_deg:float, delta_lat:float, delta_long:
     # Return tile cluster as an image and the latlon coord of the two bounding tiles
     return Cluster, mercator2latlon(xmin, ymin, zoom), mercator2latlon(xmax, ymax, zoom)
 
-def plot_Satellital_Map(axes: plt.Axes, image: np.ndarray, latlon1: np.ndarray, latlon2: np.ndarray, zoom:int):
+def plot_Satellital_Map(axes: plt.Axes, image: np.ndarray, latlon1: np.ndarray, latlon2: np.ndarray):
     """
     Auxiliary function that projects a satellital image to its coordinates on a already existing matplotlib canvas
     It takes into account the discrete nature of the web mercator/image tiles that the image represents
@@ -962,8 +807,8 @@ def plot_Satellital_Map(axes: plt.Axes, image: np.ndarray, latlon1: np.ndarray, 
     latlon_e2 = np.asarray([latlon2[0]-255*deg_p_px_Y, latlon2[1]+255*deg_p_px_X])
 
     # to UTM. Assuming everything is within the same UTM Zone
-    utm1, _ = latlon2utm(latlon_e1)
-    utm2, _ = latlon2utm(latlon_e2)
+    utm1, _ = latlon2epsg3035(latlon_e1)
+    utm2, _ = latlon2epsg3035(latlon_e2)
 
     # Plot image projected into the UTM coordinates
     axes.imshow(image, extent = [utm1[0], utm2[0], utm2[1], utm1[1]], alpha = 0.7)

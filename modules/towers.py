@@ -21,30 +21,22 @@ class Towers():
 
     def __init__(self):
         self.__graph = nx.empty_graph(0)
-        self.__UTM_Zone = (0, "A")
 
     # ---------------------------------- Parameter settings -------------------------------------
     
-    def add_Tower(self, name: str, utm_Coordinates: np.ndarray, connections: list):
+    def add_Tower(self, name: str, epsg3035_Coordinates: np.ndarray, connections: list):
         """
-        Add tower (or node) to the towers graph based on its coordinates and a list
+        Add tower (or node) to the towers graph based on its EPSG3035 coordinates and a list
         of connections
         """
         
-        self.__graph.add_node(name, UTM = utm_Coordinates)
+        self.__graph.add_node(name, Coords = epsg3035_Coordinates)
         self.__graph.add_edges_from(connections)  # As it is, it will allow you to change 
                                                 # interal connections that do not concern 
                                                 # the added tower
         
         return None
         
-    def set_UTM_Zone(self, zone: tuple):
-        """
-        Sets the UTM Zone of the towers. It is assumed that all towers are within the same zone.
-        "zone" is a tuple (Z_number, Z_ letter)
-        """
-        self.__UTM_Zone = zone
-        return None
 
     def load_File(self, file: str, onlineQ: bool):
         """
@@ -87,14 +79,14 @@ class Towers():
                 CO.update_Height_Online(path_latlon)
 
             # Conversion to UTM. All towers and bases are assumed to be within the same zone
-            path_utm, self.__UTM_Zone = CO.latlon2utm(path_latlon)
+            path_epsg3035 = CO.latlon2epsg3035(path_latlon)
 
             # Add each of the towers of the branch in the actual graph 
             # and connect it to the previously added tower.
-            Tg.add_node(f'T{tower_number}', UTM=path_utm[0,:])
+            Tg.add_node(f'T{tower_number}', Coords = path_epsg3035[0,:])
             tower_number += 1
             for k in range(1, n_t):
-                Tg.add_node(f'T{tower_number}', UTM = path_utm[k,:])
+                Tg.add_node(f'T{tower_number}', Coords = path_epsg3035[k,:])
                 Tg.add_edge(f'T{tower_number-1}', f'T{tower_number}')
                 tower_number += 1
 
@@ -127,15 +119,15 @@ class Towers():
             if onlineQ:
                 CO.update_Height_Online(path_latlon)
 
-            # Conversion to UTM. All towers and bases are assumed to be within the same zone
-            path_utm, self.__UTM_Zone = CO.latlon2utm(path_latlon)
+            # Conversion to EPSG3035. All towers and bases are assumed to be within the same zone
+            path_epsg3035 = CO.latlon2epsg3035(path_latlon)
 
             # Add each of the towers of the branch in the actual graph 
             # and connect it to the previously added tower.
-            Tg.add_node(f'T{tower_number}', UTM=path_utm[0,:])
+            Tg.add_node(f'T{tower_number}', Coords = path_epsg3035[0,:])
             tower_number += 1
             for k in range(1, n_t):
-                Tg.add_node(f'T{tower_number}', UTM = path_utm[k,:])
+                Tg.add_node(f'T{tower_number}', Coords = path_epsg3035[k,:])
                 Tg.add_edge(f'T{tower_number-1}', f'T{tower_number}')
                 tower_number += 1
 
@@ -157,19 +149,17 @@ class Towers():
 
     def get_ArrayCoordinates(self) -> np.ndarray:
         """
-        Get an array that contains all the UTM coordinates of the present towers
-        and its UTM zone as a tuple (Z_Number, Z_Letter)
+        Get an array that contains all the EPSG3035 coordinates of the present towers
         """
 
-        return np.array(list(nx.get_node_attributes(self.__graph,'UTM').values()))
+        return np.array(list(nx.get_node_attributes(self.__graph, 'Coords').values()))
     
     def get_DictCoordinates(self) -> dict:
         """
-        Gets a dict that contains all the UTM coordinates of the present towers
-        and its UTM zone as a tuple (Z_Number, Z_Letter)
+        Gets a dict that contains all the EPSG3035 coordinates of the present towers
         """
 
-        return nx.get_node_attributes(self.__graph,'UTM')
+        return nx.get_node_attributes(self.__graph, 'Coords')
     
     def get_Towers(self) -> dict:
         """
@@ -179,15 +169,9 @@ class Towers():
 
     def get_Tower_Coordinates(self, which: str) -> np.ndarray:
         """
-        Gets the UTM coordinates of an specific tower
+        Gets the EPSG3035 coordinates of an specific tower
         """
-        return self.__graph.nodes[which]["UTM"]
-    
-    def get_UTM_Zone(self) -> tuple:
-        """
-        Gets the assigned UTM zone as a tuple (Z_Number, Z_Letter)
-        """
-        return self.__UTM_Zone
+        return self.__graph.nodes[which]["Coords"]
     
     def get_Graph(self) -> nx.MultiDiGraph:
         """
@@ -200,16 +184,13 @@ class Towers():
         Prints the towers data
         """
         coords = self.get_DictCoordinates()
-        utm_zone = self.get_UTM_Zone()
 
         print("----------------------------Towers------------------------------")
         for tower in coords:
 
             print("  ", end = "")
-            print(tower+" with UTM: "+str(coords[tower]))
+            print(tower+" with EPSG:3035 (E, N): "+str(coords[tower]))
 
-        print("")
-        print("                                                     at "+str(utm_zone[0])+utm_zone[1])
         print("----------------------------------------------------------------")
 
         return None
@@ -244,7 +225,7 @@ def check_Common_Towers(T1: nx.Graph, T2: nx.Graph, threshold: float) -> list:
 
     # Check for every possible pair of towers of each branch if the distance is short enough
     for pair in list(itertools.product(T1.nodes, T2.nodes)):
-        if (np.linalg.norm(T1.nodes[pair[0]]['UTM'][0:2]-T2.nodes[pair[1]]['UTM'][0:2]) < threshold):
+        if (np.linalg.norm(T1.nodes[pair[0]]['Coords'][0:2]-T2.nodes[pair[1]]['Coords'][0:2]) < threshold):
             # If it is, add the pair to the common towers list
             common.append((pair[0], pair[1]))
 
@@ -287,7 +268,7 @@ def delete_Common_Towers(paths: list) -> nx.Graph:
     # Rename Towers based distance to origin.
     k = 1
     mapping = {}
-    nodes_sorted = sorted(T.nodes(), key=lambda n: np.linalg.norm(T.nodes[n]['UTM']))
+    nodes_sorted = sorted(T.nodes(), key=lambda n: np.linalg.norm(T.nodes[n]['Coords']))
     for node in nodes_sorted:
         mapping[node] = f'T{k}'
         k += 1

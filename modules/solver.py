@@ -216,9 +216,9 @@ def solve_Lidar_Case(problem: Problem) -> bool:
     print("routeAbstract", uav.routeAbstract)
     print("routeModes", uav.routeModes)
 
-    uav.routeUTM = route_to_UTM(uav.route, towers, problem.get_Bases())
+    uav.routeCoords = route_to_UTM(uav.route, towers, problem.get_Bases())
     
-    print("routeUTM", uav.routeUTM)
+    print("routeCoords", uav.routeCoords)
     
 
     return True
@@ -304,7 +304,7 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
         uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
         print('OF = ', uav.route)
         
-        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
+        uav.routeCoords = route_to_UTM(uav.route, ptowers, pbases)
         
         print(uav.routeModes)
 
@@ -530,7 +530,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
         uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
         print('OF = ', uav.route)
 
-        uav.routeUTM = route_to_UTM(uav.route, ptowers, pbases)
+        uav.routeCoords = route_to_UTM(uav.route, ptowers, pbases)
         
         print(uav.routeModes)
 
@@ -681,7 +681,7 @@ def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
     Transforms each node on each edge of the route tu UTM coordinates.
     Return a list with a 2-tuple (UTM1, UTM2) per original edge
     """
-    routeUTM = []
+    routeCoords = []
     for edge in route:
         
         if edge[0][0] == 'B' and edge[1][0] == 'T':
@@ -700,9 +700,9 @@ def route_to_UTM(route: list, towers: TW.Towers, bases:BA.Bases):
             UTM1 = towers.get_Tower_Coordinates(edge[0])
             UTM2 = towers.get_Tower_Coordinates(edge[1])
         
-        routeUTM.append((UTM1, UTM2))
+        routeCoords.append((UTM1, UTM2))
 
-    return routeUTM
+    return routeCoords
 
 def construct_Abstract_Graph(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.UAV_Team,
                              pweather: WT.Weather, pgraph: nx.MultiDiGraph, mode:int):

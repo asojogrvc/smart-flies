@@ -9,29 +9,25 @@ import modules.coordinates as CO
 
 class Base():
 
-    def __init__(self, name:str = 'B0', coordinatesUTM: np.ndarray = np.array([0.0, 0.0, 0.0]),
-                 utmZone: tuple = (0, "A")):
+    def __init__(self, name:str = 'B0', coordinates: np.ndarray = np.array([0.0, 0.0, 0.0])):
         """
-        Base class definition to represent UAV bases. A base is described by its name and UTM coordinates (with altitud and zone).
-        UTM Zone is given as a tuple (Z_Number, Z_letter)
+        Base class definition to represent UAV bases. A base is described by its name and EPSG3035 coordinates (E, N) (with altitud).
         """
 
         self.__name = name
 
         # As a 3D vector, UTM Coordinates + Z
-        self.__coordinatesUTM = coordinatesUTM
-        self.__UTMZone = utmZone
+        self.__coordinates = coordinates
 
         return None
 
     # ------------------------ Setting parameter functions ---------------------------
 
-    def set_Coordinates(self, coordinatesUTM: np.ndarray):
+    def set_Coordinates(self, coordinates: np.ndarray):
         """
-        Set the UTM coordinates within the corresponding UTM Zone of the base as a 2D or 3D vector.
-        The UTM Zone needs to be set with set_UTM_Zone()
+        Set the EPSG3035 coordinates as a 2D or 3D vector (E, N).
         """
-        self.__coordinatesUTM = coordinatesUTM
+        self.__coordinates = coordinates
         return None
     
     def set_Name(self, name: str):
@@ -41,23 +37,14 @@ class Base():
         self.__name = name
         return None
 
-    def set_UTM_Zone(self, zone: tuple):
-        """
-        Set the UTM Zone for the base. zone must be a tuple (Z_Number, Z_letter)
-        """
-
-        # Sanity checks?
-
-        self.__UTMZone = zone
-        return None
 
     # ----------------------------- Getting parameter functions -------------------------------
 
     def get_Coordinates(self) -> np.ndarray:
         """
-        Outputs the 2D or 3D vector with the UTM coordinates within the corresponding UTM Zone of the base.
+        Outputs the 2D or 3D vector with the EPSG3035 of the base (E, N).
         """
-        return self.__coordinatesUTM
+        return self.__coordinates
     
     def get_Name(self) -> str:
         """
@@ -65,20 +52,12 @@ class Base():
         """
         return self.__name  
     
-    def get_UTM_Zone(self) -> tuple:
-        """
-        Outputs the UTM zone of the base as a tuple (Z_Number, Z_letter)
-        """
-
-        # Sanity checks?
-
-        return self.__UTMZone
     
     def print(self):
         """
         Prints the base data
         """
-        print(self.__name+" with UTM: "+str(self.get_Coordinates())+" at "+str(self.get_UTM_Zone()[0])+self.get_UTM_Zone()[1])
+        print(self.__name+" with EPSG:3035 (E, N): "+str(self.get_Coordinates()))
 
         return None
     
@@ -89,8 +68,8 @@ class Base():
         Auxiliary method that connects with an already existing matplotlib figure via axes to plot
         the tower as point with its name at its physical location
         """
-        axes.plot(self.__coordinatesUTM[0], self.__coordinatesUTM[1], 'ro')
-        axes.text(self.__coordinatesUTM[0], self.__coordinatesUTM[1], self.__name, fontsize = 14)
+        axes.plot(self.__coordinates[0], self.__coordinates[1], 'ro')
+        axes.text(self.__coordinates[0], self.__coordinates[1], self.__name, fontsize = 14)
 
         return None
 
@@ -171,10 +150,10 @@ class Bases():
                 CO.update_Height_Online(pointlatlon)
 
             # We need to change from latlon to UTM coords
-            pointn, UTMZone = CO.latlon2utm(pointlatlon)
+            pointn = CO.latlon2epsg3035(pointlatlon)
 
             # Create the base instance and adds it to the list
-            base = Base(f"B{base_number}", pointn, UTMZone)
+            base = Base(f"B{base_number}", pointn)
             self.add_Base(base)
 
             base_number += 1
@@ -247,7 +226,7 @@ class Bases():
 
     def get_Coordinates(self) -> np.ndarray:
         """
-        Outputs the list of UTM coordinates without Zone
+        Outputs the list of the EPSG3035 coordinates
         """
 
         return self.__coordinates
