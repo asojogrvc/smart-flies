@@ -1,2 +1,9 @@
 /modules/__pycache__/
+__pycache__
+.vscode
+server/dynamic
+mission_px4.plan
+scip_model_DFJ.cip
+solver_testing.py
 scip_model.cip
+.venv

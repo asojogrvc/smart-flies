@@ -36,33 +36,52 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
     tasks = TS.Tasks()
     for name in mission["Tasks"]:
 
-        if list == type(mission["Tasks"][name]["inspection_of"]) and 2 == len(mission["Tasks"][name]["inspection_of"]):
-            try:
-                tasks.add_Task(
-                    name,
-                    inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1]),
-                    incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
-                )
-            except:
-                tasks.add_Task(
-                    name,
-                    inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1])
-                )
+        if "inspection_of" in mission["Tasks"][name]:
+            if list == type(mission["Tasks"][name]["inspection_of"]) and 2 == len(mission["Tasks"][name]["inspection_of"]):
+                try:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1]),
+                        incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                    )
+                except:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = (mission["Tasks"][name]["inspection_of"][0], mission["Tasks"][name]["inspection_of"][1])
+                    )
 
-        else:
+            else:
+                try:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = mission["Tasks"][name]["inspection_of"],
+                        incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
+                    )
+                except:
+                    tasks.add_Task(
+                        name,
+                        inspection_of = mission["Tasks"][name]["inspection_of"]
+                    )
+
+        if "custom_task_at" in mission["Tasks"][name]:
             try:
                 tasks.add_Task(
                     name,
-                    inspection_of = mission["Tasks"][name]["inspection_of"],
+                    custom_data = mission["Tasks"][name],
                     incompatible_IDs = mission["Tasks"][name]["incompatible_IDs"]
                 )
             except:
                 tasks.add_Task(
                     name,
-                    inspection_of = mission["Tasks"][name]["inspection_of"]
+                    custom_data = mission["Tasks"][name]
                 )
+        
+
     if "Tasks_Order" in mission:
-        tasks.set_Order(mission["Tasks_Order"]) 
+        tasks.set_Order(mission["Tasks_Order"])
+
+    if "Tasks_Precedence" in mission:
+        tasks.set_Precedence(mission["Tasks_Precedence"]) 
 
     if "Wind" in mission:
         return SO.Problem(bases, towers, tasks, uavs, wind_vector = np.array(mission["Wind"]))
@@ -157,6 +176,8 @@ def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
     tlist = {}
     tasks = {}
 
+    pc = []
+
     firstQ = True
     for line in contents[7:]:
 
@@ -173,7 +194,7 @@ def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
                     "0": {
                         "Model": "A",
                         "Base": "B"
-                    },
+                    }
                 },
                 "Wind": [0, 0, 0]
             }
@@ -181,11 +202,19 @@ def transform_TSPLIB_File(i_file_path: str, o_file_path: str):
             continue
 
         tlist["P"+parsed_line[0]] = [float(parsed_line[1]), float(parsed_line[2]), 0]
-        tasks["t"+"P"+parsed_line[0]] = {"inspection_of": "P"+parsed_line[0]}
+
+        tasks["t"+"P"+parsed_line[0]] = {"custom_task_at": "P"+parsed_line[0],
+                                         "cost":{"0": 0, "1": 0, "3": 0, "4": 0, "5": 0}}
+        
+        
+        pc.append(["t"+"P"+parsed_line[0], "t"+"P"+str(int(parsed_line[0])+1)])
 
     #del tasks["P"+parsed_line[0]]
 
     
+    del pc[-1]
+    data["Tasks_Order"] = {"0" : pc}
+
 
 
     data["Towers"] = {"List": tlist, "Lines": {}}

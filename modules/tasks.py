@@ -94,12 +94,14 @@ class Tasks():
         self.__list = {} # name, data.
         self.__complex_tasks = [] # List of name of tasks with more that one approach
         self.__ordering = {} # uav_id: list of order pairs
+        self.__precedence = []
         
         # data is a dict with:
             # inspection_of: either a str with the tower name or a tuple for two names
             # incompatiblity: a list of incompatible UAV IDs
+            # custom_data: Custom costs.
 
-    def add_Task(self, name: str, inspection_of: str | tuple, **kwargs):
+    def add_Task(self, name: str, **kwargs):
         """
         For punctual inspection: inspection_of is a str with the name of the tower
         For lineal inspection: it is a tuple with the name of the two defining towers.
@@ -113,19 +115,30 @@ class Tasks():
         else:
             incompatible_IDs = []
 
+        if "custom_data" in kwargs:
+            self.__list[name] = kwargs["custom_data"]
+            self.__list[name]["incompatible_IDs"] = incompatible_IDs
 
-        self.__list[name] = {"inspection_of": inspection_of, "incompatible_IDs": incompatible_IDs}
 
-        if len(inspection_of) > 1 and not(str == type(inspection_of)):
-            self.__complex_tasks.append(name)
+        if "inspection_of" in kwargs:
+            self.__list[name] = {"inspection_of": kwargs["inspection_of"], "incompatible_IDs": incompatible_IDs}
+
+            if len(kwargs["inspection_of"]) > 1 and not(str == type(kwargs["inspection_of"])):
+                self.__complex_tasks.append(name)
 
         return None
     
     def set_Order(self, order_dict: dict):
         self.__ordering = order_dict
 
+    def set_Precedence(self, precedence_list: list):
+        self.__precedence = precedence_list
+
     def get_Order(self) -> dict:
         return self.__ordering
+    
+    def get_Precedence(self) -> dict:
+        return self.__precedence
     
     def get_Complex_Tasks(self) -> list:
         return self.__complex_tasks
@@ -135,12 +148,17 @@ class Tasks():
         parsing = {}
 
         for name, data in self:
-            if str == type(data["inspection_of"]):
-                parsing[name] = [data["inspection_of"]]
 
-            elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
-                parsing[name+"_U"] = list(data["inspection_of"])
-                parsing[name+"_D"] = list(data["inspection_of"][::-1])
+            if "inspection_of" in data:
+                if str == type(data["inspection_of"]):
+                    parsing[name] = [data["inspection_of"]]
+
+                elif tuple == type(data["inspection_of"]) and 2 == len(data["inspection_of"]):
+                    parsing[name+"_U"] = list(data["inspection_of"])
+                    parsing[name+"_D"] = list(data["inspection_of"][::-1])
+            
+            else:
+                parsing[name] = [data["custom_task_at"]]
 
         return parsing
         
@@ -148,9 +166,15 @@ class Tasks():
 
         print("----------------------------Task List-----------------------------")
         for name, data in self:
-            print(" - Name: ", name, " Inspection of: ", data["inspection_of"], " Incompatible with IDs: ", data["incompatible_IDs"])
+            if "inspection_of" in data:
+                print(" - Name: ", name, " Inspection of: ", data["inspection_of"], " Incompatible with IDs: ", data["incompatible_IDs"])
+            else:
+                print(" - Name: ", name, " Custom_Data: ", data)
         print("---- Ordering ----------------------------------------------------")
         print(self.__ordering)
+        print("------------------------------------------------------------------")
+        print("---- Precedence --------------------------------------------------")
+        print(self.__precedence)
         print("------------------------------------------------------------------")
 
 
@@ -162,11 +186,14 @@ class Tasks():
         for name, data in self:
             if not id in data["incompatible_IDs"]:
 
-                if str == type(data["inspection_of"]):
-                    compatible.append(name)
+                if "inspection_of" in data:
+                    if str == type(data["inspection_of"]):
+                        compatible.append(name)
+                    else:
+                        compatible.append(name+"_U")
+                        compatible.append(name+"_D")
                 else:
-                    compatible.append(name+"_U")
-                    compatible.append(name+"_D")
+                    compatible.append(name)
 
 
         return compatible

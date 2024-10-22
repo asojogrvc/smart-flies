@@ -1,16 +1,12 @@
 {
     "Bases":{
-        "B": [0, -1,  0        ]
+        "B": [0, 0, 40.8]
     },
     "Towers": {
         "List": {
-            "T1": [-2, 0,   0        ],
-            "T2": [-2, 1,   0        ],
-            "T3": [2, 0,   0        ],
-            "T4": [2, 1,   0        ],
-            "T5A": [-1, 2,   0        ],
-            "T5B": [1, 2,   0        ],
-            "T6": [0, 3,   0        ]
+            "WB1": [-25, -14.4, 0],
+            "WB2": [25, -14.4, 0],
+            "WB3": [0, 28.9, 0]
         },
         "Lines": []
     },
@@ -18,8 +14,20 @@
         "0": {
             "Model": "A",
             "Base": "B"
+        },
+        "1": {
+            "Model": "A",
+            "Base": "B"
         }
     },
-    "Tasks": {},
+    "Tasks": {
+        "tT1":{"custom_task_at": "WB1", "cost":{"0": 3600, "1":7200}, "incompatible_IDs": ["1"]},
+        "tT2":{"custom_task_at": "WB1", "cost":{"0": 3600, "1":7200}, "incompatible_IDs": ["1"]},
+        "tT3":{"custom_task_at": "WB2", "cost":{"0": 7200, "1":7200}, "incompatible_IDs": ["0"]},
+        "tT4":{"custom_task_at": "WB2", "cost":{"0": 7200, "1":7200}, "incompatible_IDs": ["0"]},
+        "tT5":{"custom_task_at": "WB3", "cost":{"0": 1800, "1":3600}},
+        "tT6":{"custom_task_at": "WB3", "cost":{"0": 3600, "1":7200}}
+    },
+    "Tasks_Precedence": [["tT1", "tT2"], ["tT3", "tT4"], ["tT2", "tT5"], ["tT4", "tT5"], ["tT5", "tT6"]],
     "Wind": [0, 0, 0]
 }

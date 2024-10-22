@@ -10,6 +10,18 @@
         "0": {
             "Model": "A",
             "Base": "B"
+        },
+        "1": {
+            "Model": "A",
+            "Base": "B"
+        },
+        "3": {
+            "Model": "A",
+            "Base": "B"
+        },
+        "4": {
+            "Model": "A",
+            "Base": "B"
         }
     },
     "Wind": [
@@ -191,7 +203,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "0"
         },
         "tP3": {
             "custom_task_at": "P3",
@@ -201,7 +214,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "0"
         },
         "tP4": {
             "custom_task_at": "P4",
@@ -211,7 +225,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "0"
         },
         "tP5": {
             "custom_task_at": "P5",
@@ -221,7 +236,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "0"
         },
         "tP6": {
             "custom_task_at": "P6",
@@ -231,7 +247,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "0"
         },
         "tP7": {
             "custom_task_at": "P7",
@@ -241,7 +258,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "0"
         },
         "tP8": {
             "custom_task_at": "P8",
@@ -261,7 +279,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP10": {
             "custom_task_at": "P10",
@@ -271,7 +290,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP11": {
             "custom_task_at": "P11",
@@ -281,7 +301,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP12": {
             "custom_task_at": "P12",
@@ -291,7 +312,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP13": {
             "custom_task_at": "P13",
@@ -301,7 +323,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP14": {
             "custom_task_at": "P14",
@@ -311,7 +334,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP15": {
             "custom_task_at": "P15",
@@ -321,7 +345,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "1"
         },
         "tP16": {
             "custom_task_at": "P16",
@@ -341,7 +366,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP18": {
             "custom_task_at": "P18",
@@ -351,7 +377,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP19": {
             "custom_task_at": "P19",
@@ -361,7 +388,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP20": {
             "custom_task_at": "P20",
@@ -371,7 +399,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP21": {
             "custom_task_at": "P21",
@@ -381,7 +410,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP22": {
             "custom_task_at": "P22",
@@ -391,7 +421,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP23": {
             "custom_task_at": "P23",
@@ -401,7 +432,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "2"
         },
         "tP24": {
             "custom_task_at": "P24",
@@ -421,7 +453,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP26": {
             "custom_task_at": "P26",
@@ -431,7 +464,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP27": {
             "custom_task_at": "P27",
@@ -441,7 +475,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP28": {
             "custom_task_at": "P28",
@@ -451,7 +486,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP29": {
             "custom_task_at": "P29",
@@ -461,7 +497,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP30": {
             "custom_task_at": "P30",
@@ -471,7 +508,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP31": {
             "custom_task_at": "P31",
@@ -481,7 +519,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP32": {
             "custom_task_at": "P32",
@@ -491,7 +530,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         },
         "tP33": {
             "custom_task_at": "P33",
@@ -501,7 +541,8 @@
                 "3": 0,
                 "4": 0,
                 "5": 0
-            }
+            },
+            "incompatible_IDs": "3"
         }
     }
 }

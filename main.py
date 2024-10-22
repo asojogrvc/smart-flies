@@ -50,16 +50,18 @@ def plot_Routes(real_routes: dict, coordinates_dict: dict, axes: plt.Axes):
 
 # --------------------------------------------------------------------------
 
-problem = F.load_Problem_from_File("./files/GUITAR_ASSEMBLY.json")
+problem = F.load_Problem_from_File("./files/ATLAS_TOOMANY.json")
 
 bases = problem.get_Bases()
 towers = problem.get_Towers()
 tasks = problem.get_Tasks()
 uav_team = problem.get_UAVs()
 
+tasks.print()
+
 # --------------------------------------------------------------------------
 
-routes = problem.solve(dynamic = True, auto_uav_disabling = False, cost_function = "mtm")
+routes = problem.solve(dynamic = False, auto_uav_disabling = True, cost_function = "mtm")
 
 print("Routes", routes)
 
