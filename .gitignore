@@ -8,6 +8,7 @@
 /.VSCodeCounter
 /.venv
 /target
+mission.yaml
 PLI_NOGUI.spec
 PLI.spec
 kml_Tower_Testing.ipynb
