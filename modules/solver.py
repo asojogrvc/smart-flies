@@ -255,7 +255,7 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
     
     vertices = list(set(list(pgraph.nodes())) - set(bases_list))
     print(vertices)
-    add_MTZ_Subtour_Constraints(vertices, puavs, Z, Y, pmodel)
+    U = add_MTZ_Subtour_Constraints(vertices, puavs, Z, Y, pmodel)
 
     # --------------------- Subroute DFJ Solution ----------------------------
     
@@ -290,7 +290,13 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
     if "infeasible" == pmodel.getStatus():
         return False
     
+    
+
     sol = pmodel.getBestSol()
+
+    for key in U:
+        try: print(key, sol[U[key]])
+        except: None
 
     print("Problem Status is:", pmodel.getStatus())
 
@@ -563,7 +569,7 @@ def GRASP_Solver():
 
 # -------------------------------------- Auxiliary Functions ---------------------------------------------
 
-def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model):
+def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> dict:
 
     U = {}
     ms = {}
@@ -613,7 +619,7 @@ def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:d
 
                 print("Edge might not exists")
 
-    return None
+    return U
 
 def get_First_and_Last_Towers(towers: TW.Towers) -> tuple[str, str]:
     """
