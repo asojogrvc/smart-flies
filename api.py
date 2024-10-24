@@ -203,7 +203,7 @@ def planner(mission_json):
 
         problem = SO.Problem(str(id), towers, bases, uavs, weather, mode, Parameters = parameters)
 
-        status = problem.solve("")
+        status = problem.solve("", True)
 
         file_path = os.path.join("server", "dynamic", "mission_"+str(id)+".yaml")
 

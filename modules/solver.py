@@ -109,7 +109,7 @@ class Problem():
     def progress_Bar_LinkedQ(self) -> bool:
         return self.__progressBar != None
     
-    def solve(self, which_solver:str) -> bool:
+    def solve(self, which_solver:str, fastQ: bool) -> bool:
         """
         Solves an existing problem with any of the implement formulations / methods. As of now:
             - "abstract_DFJ": This formulation creates a abstraction layer that assigns a graph to the problem which nodes
@@ -129,16 +129,16 @@ class Problem():
         match which_solver:
 
             case "abstract_DFJ":
-                status = abstract_DFJ_Solver(self)
+                status = abstract_DFJ_Solver(self, fastQ)
             case "abstract_dynamic_DFJ":
-                status = abstract_Dynamic_DFJ_Solver(self)
+                status = abstract_Dynamic_DFJ_Solver(self, fastQ)
 
             # case "GRASP":    # Aerial-Core heuristic GRASP Method. NOT YET IMPLETED
             #    GRASP_Solver()
 
             # Default case
             case "":
-                status = abstract_Dynamic_DFJ_Solver(self)
+                status = abstract_Dynamic_DFJ_Solver(self, fastQ)
 
             # In case that the given solver name is not found.
             case _:
@@ -223,7 +223,7 @@ def solve_Lidar_Case(problem: Problem) -> bool:
 
     return True
 
-def abstract_DFJ_Solver(problem: Problem) -> bool:
+def abstract_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
     """
     It is the same as the abstract solver excepts that it implements the DFJ Subtour elimination constrains.
     """
@@ -245,7 +245,7 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
  
-    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode(), fastQ)
 
     # --------------------- Subroute DFJ Solution ----------------------------
     
@@ -268,7 +268,19 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
 
-    pmodel.setObjective(SCIP.quicksum(t[key]*Z[key] for key in Z.keys()) 
+    if fastQ:
+        M = pmodel.addVar(vtype = 'C', obj = 1.0, name = "M")
+
+        for uav in problem.get_UAV_Team():
+            pmodel.addCons(
+                    SCIP.quicksum(t[key]*Z[key] for key in Z.keys())
+                        <= 
+                    M
+                )
+        
+
+    else:
+        pmodel.setObjective(SCIP.quicksum(t[key]*Z[key] for key in Z.keys()) 
                                      + 
                                 f_k * SCIP.quicksum(sigmas[key] for key in sigmas.keys()))
 
@@ -310,7 +322,7 @@ def abstract_DFJ_Solver(problem: Problem) -> bool:
 
     return True
 
-def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
+def abstract_Dynamic_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
     """
     It is the same as the abstract solver excepts that it implements a dynamic DFJ Subtour elimination constraint.
     """
@@ -332,7 +344,7 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
     # ------------------------------ SCIP ------------------------------------
     # Let's define the SCIP problem, compute the solution and update the UAVs routes
 
-    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode())
+    Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode(), fastQ)
 
     tgraph = ptowers.get_Graph()
     
@@ -390,7 +402,19 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem) -> bool:
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
 
-    pmodel.setObjective(SCIP.quicksum(t[key]*Z[key] for key in Z.keys()) 
+    if fastQ:
+        M = pmodel.addVar(vtype = 'C', obj = 1.0, name = "M")
+
+        for uav in problem.get_UAV_Team():
+            pmodel.addCons(
+                    SCIP.quicksum(t[key]*Z[key] for key in Z.keys())
+                        <= 
+                    M
+                )
+        
+
+    else:
+        pmodel.setObjective(SCIP.quicksum(t[key]*Z[key] for key in Z.keys()) 
                                      + 
                                 f_k * SCIP.quicksum(sigmas[key] for key in sigmas.keys()))
 
@@ -1171,7 +1195,7 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team, mode: int):
                     puavs.select_UAV(temp[1]).routeModes.append('Navigation')
 
 def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: UAVS.UAV_Team,
-                                   pgraph: nx.MultiDiGraph, pmodel: SCIP.Model, mode: int) -> tuple[dict, dict, dict, dict, dict]:
+                                   pgraph: nx.MultiDiGraph, pmodel: SCIP.Model, mode: int, fastQ: bool) -> tuple[dict, dict, dict, dict, dict]:
     
     # Dictionaries to store SCIP variables
     Z = {}
@@ -1374,8 +1398,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
             # The N(N-1)/2 UAVs pairs. No repetitions and no order.
             uav_pairs = list(itertools.combinations(puavs, 2))
 
-            # Create the sigma variables on SCIP. Also add the sigma definition constrains
-            for pair in uav_pairs:
+            if not fastQ:
+                # Create the sigma variables on SCIP. Also add the sigma definition constrains
+                for pair in uav_pairs:
                     pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
                     sigmas[pair_tag] = pmodel.addVar(vtype = 'C', name = "Sigma"+pair[0].get_ID()+pair[1].get_ID())
 
@@ -1553,8 +1578,9 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
             # The N(N-1)/2 UAVs pairs. No repetitions and no order.
             uav_pairs = list(itertools.combinations(puavs, 2))
 
+            if not fastQ:
             # Create the sigma variables on SCIP. Also add the sigma definition constrains
-            for pair in uav_pairs:
+                for pair in uav_pairs:
                     pair_tag = pair[0].get_ID()+','+pair[1].get_ID()
                     sigmas[pair_tag] = pmodel.addVar(vtype = 'C', name = "Sigma"+pair[0].get_ID()+pair[1].get_ID())
 
