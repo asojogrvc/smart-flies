@@ -4,7 +4,7 @@ import json, matplotlib.pyplot as plt
 jsonQ = True
 
 if jsonQ:
-    f = open("./files/case1_test.json")
+    f = open("./files/mission.json")
     mission = json.load(f)
     f.close()
     bases, towers, uavs, weather, mode, id, parameters =  YAML.load_data_from_JSON(mission)
@@ -26,7 +26,15 @@ else:
 
 problem = SO.Problem(id, towers, bases, uavs, weather, mode, Parameters = parameters)
 
-solvedQ = problem.solve("")
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+bases.plot(ax)
+towers.plot(ax)
+
+plt.show()
+
+solvedQ = problem.solve("", True)
 
 if False == solvedQ:
     print("Problem is infeasible")
