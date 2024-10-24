@@ -1,7 +1,7 @@
 {
   "id": 1234,
   "name": "no mission",
-  "case": 0,
+  "case": 1,
   "meteo": [],
   "devices": [
     {
