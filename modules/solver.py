@@ -128,8 +128,8 @@ class Problem():
         # Depending on the selection, exec one of the solvers
         match which_solver:
 
-            case "abstract_DFJ":
-                status = abstract_DFJ_Solver(self, fastQ)
+            case "abstract_MTZ":
+                status = abstract_MTZ_Solver(self, fastQ)
             case "abstract_dynamic_DFJ":
                 status = abstract_Dynamic_DFJ_Solver(self, fastQ)
 
@@ -223,7 +223,7 @@ def solve_Lidar_Case(problem: Problem) -> bool:
 
     return True
 
-def abstract_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
+def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
     """
     It is the same as the abstract solver excepts that it implements the DFJ Subtour elimination constrains.
     """
@@ -235,6 +235,10 @@ def abstract_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
     pweather = problem.get_Weather()
     pgraph = problem.get_Graph()
     pmodel =  problem.get_SCIP_Model() 
+
+    bases_list = []
+    for base in pbases:
+        bases_list.append(base.get_Name())
 
     #--------------------------------- Graph ---------------------------------------------------------
 
@@ -249,19 +253,9 @@ def abstract_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
 
     # --------------------- Subroute DFJ Solution ----------------------------
     
-    pnodes_B = list(pgraph.nodes)
-
-    for uav in puavs:
-        pnodes = [node for node in pnodes_B if (uav.missionSettings["Base"] != node)]
-
-        #print("Subtour Nodes:", pnodes)
-
-        Qlist = itertools.chain.from_iterable(list(itertools.combinations(pnodes, r)) for r in range(2, len(pnodes)+1))
-
-        # For each Q subset, a constrain is added:
-        for Q in Qlist:
-            #print("Adding constraint Q: ", Q)
-            add_DFJ_Subtour_Constraint(Q, Z, uav, pmodel, problem.get_Mission_Mode())
+    vertices = list(set(list(pgraph.nodes())) - set(bases_list))
+    print(vertices)
+    add_MTZ_Subtour_Constraints(vertices, puavs, Z, Y, pmodel)
 
     # --------------------- Subroute DFJ Solution ----------------------------
     
@@ -568,6 +562,58 @@ def GRASP_Solver():
     return None
 
 # -------------------------------------- Auxiliary Functions ---------------------------------------------
+
+def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model):
+
+    U = {}
+    ms = {}
+
+    for uav in uavs:
+
+        U[uav.missionSettings['Base']+"|"+uav.get_ID()] = 0.0
+
+        for node in vertices:
+            U[node+"|"+uav.get_ID()] = 0.0
+
+    for uav in uavs:
+
+        m = 1E6
+        ms[uav.get_ID()] = m
+
+        for name in vertices:
+            
+            U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
+            
+            scip_model.addCons(
+                U[name+"|"+uav.get_ID()] <= m * Y[name+"|"+uav.get_ID()]
+            )
+
+            scip_model.addCons(
+                U[name+"|"+uav.get_ID()] >= Z[uav.missionSettings['Base']+"->"+name+'|'+uav.get_ID()]
+            )
+
+            # Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+            # Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
+
+
+        nodes = list(itertools.combinations(vertices, 2))
+        for pair in nodes:
+
+            try:
+
+                scip_model.addCons(
+                    U[pair[0]+"|"+uav.get_ID()] - U[pair[1]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[pair[0]+"->"+pair[1]+"|"+uav.get_ID()])
+                )
+            
+                scip_model.addCons(
+                    U[pair[1]+"|"+uav.get_ID()] - U[pair[0]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[pair[1]+"->"+pair[0]+"|"+uav.get_ID()])
+                )
+
+            except:
+
+                print("Edge might not exists")
+
+    return None
 
 def get_First_and_Last_Towers(towers: TW.Towers) -> tuple[str, str]:
     """

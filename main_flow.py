@@ -34,7 +34,8 @@ towers.plot(ax)
 
 plt.show()
 
-solvedQ = problem.solve("", True)
+fastQ = True
+solvedQ = problem.solve("abstract_MTZ", fastQ)
 
 if False == solvedQ:
     print("Problem is infeasible")
