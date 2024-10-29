@@ -462,13 +462,8 @@ class UAV():
                 # the camera to the next point. Always at Z = fH
 
                 point = np.append(self.routeCoords[0][0][:2], fH)
-
-                n_dir = self.routeCoords[0][1][:2]-self.routeCoords[0][0][:2]
-                n_dir = n_dir / np.linalg.norm(n_dir)
-
-                yaw = np.rad2deg(np.arccos(n_dir[1]))
-                if n_dir[0] < 0:
-                    yaw = -yaw
+                
+                yaw = CO.compute_direction_epsg3035(self.routeCoords[0][0], self.routeCoords[0][1])
 
                 actions = {"video_start": 0,
                            "gimbal": gimbal, "yaw": yaw, "mode": 0}
@@ -506,9 +501,6 @@ class UAV():
                     btH = move[1][2] - bH
                     print("bth: ", btH)
                     point = np.append(orbit[0], tH + dH + iH + btH)
-                    yaw = np.rad2deg(np.arccos(n_dir[1]))
-                    if n_dir[0] < 0:
-                        yaw = -yaw
                     actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                     self.waypoints.add_Waypoint(point, actions, "Navigation")
 
@@ -518,11 +510,7 @@ class UAV():
 
                         point = np.append(porbit, btH + tH + iH)
 
-                        n_dir = v_dirs[k]
-
-                        yaw = np.rad2deg(np.arccos(n_dir[1]))
-                        if n_dir[0] < 0:
-                            yaw = -yaw
+                        yaw = v_dirs[k]
                         actions = {"gimbal": gimbal, "yaw": yaw,
                                    "photo": True, "mode": 1}
 
@@ -533,12 +521,7 @@ class UAV():
                     # Above the last orbital point
                     point = np.append(orbit[-1], tH + dH + iH + btH)
 
-                    n_dir = self.routeCoords[m+1][1][:2]-orbit[-1]
-                    n_dir = n_dir / np.linalg.norm(n_dir)
-
-                    yaw = np.rad2deg(np.arccos(n_dir[1]))
-                    if n_dir[0] < 0:
-                        yaw = -yaw
+                    yaw = CO.compute_direction_epsg3035(orbit[-1], self.routeCoords[m+1][1][:2])
                     actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                     self.waypoints.add_Waypoint(point, actions, "Navigation")
 
@@ -547,21 +530,16 @@ class UAV():
                 ipoints = CO.get_Path_Online_Elevations(np.append(orbit[-1], 0), self.routeCoords[0][0], 200)[1:]
                 
                 # Delete the first point as it is already in
-                CO.update_Height(ipoints, tH + +iH + dH - bH)
+                CO.update_Height(ipoints, tH + iH + dH - bH)
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 if len(ipoints) > 1:
                     for ipoint in ipoints[:-1]:
                         self.waypoints.add_Waypoint(
                             ipoint, actions, "Navigation")
 
-                n_dir = self.routeCoords[0][0][:2]-orbit[-1]
-                n_dir = n_dir / np.linalg.norm(n_dir)
-
                 point = np.append(self.routeCoords[0][0][:2], tH + dH + iH)
 
-                yaw = np.rad2deg(np.arccos(n_dir[1]))
-                if n_dir[0] < 0:
-                    yaw = -yaw
+                yaw = CO.compute_direction_epsg3035(orbit[-1], self.routeCoords[0][0][:2])
 
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
@@ -1100,6 +1078,7 @@ class UAV_Team():
         Modes:
             - "0": Photo and video of segments
             - "1": Photo and video of points
+            - "2": Photo and video of single linear structure
 
         """
 

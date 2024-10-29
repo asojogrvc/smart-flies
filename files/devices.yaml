@@ -78,6 +78,35 @@ dji_M300:
   speed_mission: 7
   speed_navegation: 15
 
+dji_M600:
+  mass: 7.2 #kg
+  number_of_rotors: 4
+  rotor_blades: 2
+  rotor_radius: 0.226 #m
+  blade_chord: 0.0247 #x=0.7R
+  lift_coefficient: 1.01
+  draft_coefficient: 0.01
+  induced_power_factor: 1.15
+  energy_efficiency: 0.72
+  P0_numerical_constant: 4.65
+  equivalent_flat_plate_area: 0.32 #m2
+  obstacle_sensor: #m[min max]
+    down: [0 15]
+    front: [0 30]
+    left: [0 12]
+    back: [0 12]
+    right: [0 12]
+    up: [0 20]
+
+  battery:
+    number: 2
+    capacity: 80000 #mAh
+    number_of_cells: 4
+    voltage_per_cell: 3.9 # v/cell
+
+  speed_mission: 7
+  speed_navegation: 15
+
 px4:
   mass: 7.2 #kg
   number_of_rotors: 4

@@ -2,7 +2,7 @@
 
 import numpy as np
 import requests
-from pyproj import Transformer
+from pyproj import Transformer, Geod
 from urllib.request import urlopen
 from io import BytesIO
 from PIL import Image
@@ -13,6 +13,7 @@ from modules import dubins as DB
 
 trans_latlongto3035 = Transformer.from_crs(4326, 3035)
 trans_3035tolatlong = Transformer.from_crs(3035, 4326)
+geodesic = Geod(ellps='WGS84')
 
 wait_time = 1  # Wait time in between API Request. This is too much brute force
 
@@ -112,6 +113,35 @@ def mercator2latlon(xtile: int, ytile:int, zoom:int) -> np.ndarray:
   return np.array([lat_deg, lon_deg])
 
 # ------------------------- General auxiliary functions ---------------------------------------
+
+def compute_direction_epsg3035(p1: np.ndarray, p2: np.ndarray) -> float:
+    """
+    Given two points in epsg3035 coordinates, it computes the direction with respect to the north
+    of the line used to travel between p1 and p2 in a 'straight' line.
+    """
+
+    ll1 = epsg30352latlon(p1)
+    ll2 = epsg30352latlon(p2)
+
+    fwd_azimuth1, fwd_azimuth2,  _ = geodesic.inv(ll1[1], ll1[0], ll2[1], ll2[0], return_back_azimuth=False)
+
+    if fwd_azimuth2 <= 180 : direction = fwd_azimuth1
+    else: direction = fwd_azimuth1-180
+
+    return direction
+
+def compute_direction_latlong(p1: np.ndarray, p2: np.ndarray) -> float:
+    """
+    Given two points in latlong coordinates, it computes the direction with respect to the north
+    of the line used to travel between p1 and p2 in a 'straight' line.
+    """
+
+    fwd_azimuth1, fwd_azimuth2,  _ = geodesic.inv(p1[1], p1[0], p2[1], p2[0], return_back_azimuth=False)
+
+    if fwd_azimuth2 <= 180 : direction = fwd_azimuth1
+    else: direction = fwd_azimuth1-180
+
+    return direction
 
 def getBoundingBox(coordinates: np.ndarray) -> tuple[float, float, float, float]:
     """
@@ -282,7 +312,7 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
     Outputs:
         - List of the n_points waypoints as 2D vectors.
         - n_dir: Normalized vector in the direction of the output trajectory.
-        - n_dir: Normalized vector in the direction of the tower.
+        - v_dir: Direction from the current line to the tower.
     """
 
     # Get heights out
@@ -312,12 +342,8 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
     else: sign = -1
 
     orbit = [p2 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), sign * np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
-    v_dirs = [p2 - orbit[i]  for i in range(n_points)]
-
-    k = 0
-    for vec in v_dirs:
-        v_dirs[k] = vec / np.linalg.norm(vec)
-        k += 1
+    v_dirs = [compute_direction_epsg3035((orbit[i]+orbit[i+1])/2, p2)  for i in range(n_points-1)]
+    v_dirs.append(compute_direction_epsg3035((orbit[0]+orbit[-1])/2, p2))
 
     return orbit, n_dir, v_dirs
 

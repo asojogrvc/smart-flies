@@ -1,0 +1,93 @@
+{
+    "id": 31801616,
+    "case": 1,
+    "meteo": [],
+    "locations": [
+        {
+            "name": "Elements",
+            "items": [
+                {
+                    "latitude": 37.1902109849165,
+                    "longitude": -6.697038132129983
+                }
+            ]
+        }
+    ],
+    "devices": [
+        {
+            "settings": {
+                "base": [
+                    37.1938071382897,
+                    -6.702911873416099,
+                    "base"
+                ],
+                "inspection_speed": 7,
+                "navigation_speed": 15,
+                "vertical_offset": 15,
+                "horizontal_offset": 10,
+                "tower_height": 12,
+                "security_height": 10,
+                "orbital_points": 5,
+                "landing_mode": 2
+            },
+            "id": "uav_14",
+            "category": "dji_M300"
+        },
+        {
+            "settings": {
+                "base": [
+                    37.04392450222122,
+                    -6.568677029462045,
+                    "base"
+                ],
+                "inspection_speed": 7,
+                "navigation_speed": 15,
+                "vertical_offset": 15,
+                "horizontal_offset": 10,
+                "tower_height": 12,
+                "security_height": 10,
+                "orbital_points": 5,
+                "landing_mode": 2
+            },
+            "id": "uav_3",
+            "category": "px4"
+        },
+        {
+            "settings": {
+                "base": [
+                    37.1340964847625,
+                    -6.472237657544976,
+                    "base"
+                ],
+                "inspection_speed": 7,
+                "navigation_speed": 15,
+                "vertical_offset": 15,
+                "horizontal_offset": 10,
+                "tower_height": 12,
+                "security_height": 10,
+                "orbital_points": 5,
+                "landing_mode": 2
+            },
+            "id": "uav_15",
+            "category": "dji_M300"
+        },
+        {
+            "settings": {
+                "base": [
+                    37.134972445278365,
+                    -6.472774411805773
+                ],
+                "inspection_speed": 7,
+                "navigation_speed": 15,
+                "vertical_offset": 15,
+                "horizontal_offset": 10,
+                "tower_height": 12,
+                "security_height": 10,
+                "orbital_points": 5,
+                "landing_mode": 2
+            },
+            "id": "uav_17",
+            "category": "dji_M600"
+        }
+    ]
+}
