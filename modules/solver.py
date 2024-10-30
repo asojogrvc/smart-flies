@@ -251,13 +251,13 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
  
     Z, Y, sigmas, t, e = construct_Abstract_SCIP_Model(pbases, ptowers, puavs, pgraph, pmodel, problem.get_Mission_Mode(), fastQ)
 
-    # --------------------- Subroute DFJ Solution ----------------------------
+    # --------------------- Subroute MTZ ----------------------------
     
     vertices = list(set(list(pgraph.nodes())) - set(bases_list))
     print(vertices)
     U = add_MTZ_Subtour_Constraints(vertices, puavs, Z, Y, pmodel)
 
-    # --------------------- Subroute DFJ Solution ----------------------------
+    # ---------------------------------------------------------------
     
 
     f_k = 1.0 #0.5 # This parameter requieres finetunning. It is useful not to fix it at 1.0
@@ -590,22 +590,20 @@ def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:d
             
             U[name+"|"+uav.get_ID()] = scip_model.addVar(vtype = 'I', obj = 0.0, name = "U"+name+"|"+uav.get_ID())
             
+            
             scip_model.addCons(
                 U[name+"|"+uav.get_ID()] <= m * Y[name+"|"+uav.get_ID()]
             )
-
             scip_model.addCons(
                 U[name+"|"+uav.get_ID()] >= Z[uav.missionSettings['Base']+"->"+name+'|'+uav.get_ID()]
             )
-
+            
             # Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
             # Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
 
 
         nodes = list(itertools.combinations(vertices, 2))
         for pair in nodes:
-
-            try:
 
                 scip_model.addCons(
                     U[pair[0]+"|"+uav.get_ID()] - U[pair[1]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[pair[0]+"->"+pair[1]+"|"+uav.get_ID()])
@@ -614,10 +612,6 @@ def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:d
                 scip_model.addCons(
                     U[pair[1]+"|"+uav.get_ID()] - U[pair[0]+"|"+uav.get_ID()] + 1 <=  m * (1 - Z[pair[1]+"->"+pair[0]+"|"+uav.get_ID()])
                 )
-
-            except:
-
-                print("Edge might not exists")
 
     return U
 

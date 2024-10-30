@@ -32,7 +32,7 @@ ax = fig.add_subplot(111)
 bases.plot(ax)
 towers.plot(ax)
 
-plt.show()
+#plt.show()
 
 fastQ = True
 solvedQ = problem.solve("", fastQ)
