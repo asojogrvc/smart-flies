@@ -533,14 +533,12 @@ class UAV():
 
                 gimbal = - float(self.missionSettings["Cam. angle"])
 
+                if not self.routeCoords: return None
+
                 points, n_dir, n_perp = CO.compute_Parallel_Trajectory(
                     self.routeCoords[0][0][:2], self.routeCoords[1], self.missionSettings["Insp. horizontal offset"])
 
-                n = points[0] - self.routeCoords[0][0][:2]
-                n = n / np.linalg.norm(n)
-                yaw = np.rad2deg(np.arccos(n[1]))
-                if n[0] < 0:
-                    yaw = -yaw
+                yaw = CO.compute_direction_epsg3035(self.routeCoords[0][0][:2], points[0])
 
                 # Takeoff at base
                 actions = {"video_start": True,
@@ -575,10 +573,7 @@ class UAV():
 
                 # Get down to inspection height
 
-                n = (n_dir + n_perp) / np.sqrt(2)
-                yaw = np.rad2deg(np.arccos(n[1]))
-                if n[0] < 0:
-                    yaw = -yaw
+                yaw = (n_dir + n_perp) / 2
 
                 actions = {"gimbal": gimbal, "yaw": yaw,
                            "photo": True, "mode": 1}
@@ -603,10 +598,7 @@ class UAV():
                     points, n_dir, n_perp = CO.compute_Parallel_Trajectory(
                         points[1], move, self.missionSettings["Insp. horizontal offset"])
 
-                    n = (n_dir + n_perp) / np.sqrt(2)
-                    yaw = np.rad2deg(np.arccos(n[1]))
-                    if n[0] < 0:
-                        yaw = -yaw
+                    yaw = (n_dir + n_perp) / 2
 
                     btH = coords_dict[self.route[2:half][i][0]][2] - bH
                     actions = {"gimbal": gimbal, "yaw": yaw,
@@ -622,10 +614,7 @@ class UAV():
 
                 # Get to security height and get to the other side
 
-                n = n_perp
-                yaw = np.rad2deg(np.arccos(n[1]))
-                if n[0] < 0:
-                    yaw = -yaw
+                yaw = n_perp
 
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(
@@ -649,10 +638,7 @@ class UAV():
                     points, n_dir, n_perp = CO.compute_Parallel_Trajectory(
                         points[1], move, self.missionSettings["Insp. horizontal offset"])
 
-                    n = (n_dir + n_perp) / np.sqrt(2)
-                    yaw = np.rad2deg(np.arccos(n[1]))
-                    if n[0] < 0:
-                        yaw = -yaw
+                    yaw = (n_dir + n_perp) / 2
 
                     btH = coords_dict[self.route[half:-1][i][0]][2] - bH
                     actions = {"gimbal": gimbal, "yaw": yaw,
@@ -666,11 +652,7 @@ class UAV():
                     self.waypoints.add_Waypoint(
                         np.append(points[1], tH + iH + btH), actions, "Inspection")
 
-                n = self.routeCoords[0][0][:2] - points[1]
-                n = n / np.linalg.norm(n)
-                yaw = np.rad2deg(np.arccos(n[1]))
-                if n[0] < 0:
-                    yaw = -yaw
+                yaw = CO.compute_direction_epsg3035(points[1], self.routeCoords[0][0][:2])
 
                 # Get to security height where it last was and get back to base
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
