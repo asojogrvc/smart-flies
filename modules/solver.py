@@ -597,7 +597,16 @@ def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:d
             scip_model.addCons(
                 U[name+"|"+uav.get_ID()] >= Z[uav.missionSettings['Base']+"->"+name+'|'+uav.get_ID()]
             )
-            
+
+            scip_model.addCons(
+                U[name+"|"+uav.get_ID()] 
+                    <=
+                SCIP.quicksum(
+                    Y[name+"|"+uav.get_ID()]
+                    for name in vertices
+                )
+            )
+
             # Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
             # Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
 
@@ -1099,7 +1108,12 @@ def parse_Abstract_Routes(sol:dict, Z:dict, puavs: UAVS.UAV_Team, mode: int):
     
     for edge in Z:
 
-        if np.abs(sol[Z[edge]] - 1.0) < 1e-6: # To avoid floating point errors
+        try:
+            z_val = sol[Z[edge]]
+        except:
+            z_val = 0
+
+        if np.abs(z_val - 1.0) < 1e-6: # To avoid floating point errors
             
             
             temp = edge.split('|')
@@ -1245,6 +1259,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     
     # Dictionaries to store SCIP variables
     Z = {}
+
     sigmas = {}
     Y = {}
 
@@ -1255,6 +1270,13 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
     Wt = nx.get_edge_attributes(pgraph, 'Wt')
     We = nx.get_edge_attributes(pgraph, 'We')
 
+    for uav in puavs:
+        for node1 in pgraph:
+            for node2 in pgraph:
+                edge_uav = node1+'->'+node2+'|'+uav.get_ID()
+                t[edge_uav] = 0.0
+                e[edge_uav] = 0.0
+                Z[edge_uav] = 0.0
     
 
     tgraph = ptowers.get_Graph()
