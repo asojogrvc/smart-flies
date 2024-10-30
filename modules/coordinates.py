@@ -342,8 +342,7 @@ def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_
     else: sign = -1
 
     orbit = [p2 + distance * np.array([np.cos(i / n_points * 2 * np.pi + phi), sign * np.sin(i / n_points * 2 * np.pi + phi)]) for i in range(n_points)]
-    v_dirs = [compute_direction_epsg3035((orbit[i]+orbit[i+1])/2, p2)  for i in range(n_points-1)]
-    v_dirs.append(compute_direction_epsg3035((orbit[0]+orbit[-1])/2, p2))
+    v_dirs = [compute_direction_epsg3035(orbit[i], p2)  for i in range(n_points)]
 
     return orbit, n_dir, v_dirs
 

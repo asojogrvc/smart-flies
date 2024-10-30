@@ -300,12 +300,7 @@ class UAV():
 
                 point = np.append(self.routeCoords[0][0][:2], fH)
 
-                n_dir = preMoves[0][0]-self.routeCoords[0][0][:2]
-                n_dir = n_dir / np.linalg.norm(n_dir)
-
-                yaw = np.rad2deg(np.arccos(n_dir[1]))
-                if n_dir[0] < 0:
-                    yaw = -yaw
+                yaw = CO.compute_direction_epsg3035
 
                 actions = {"video_start": 0,
                            "gimbal": gimbal, "yaw": yaw, "mode": 0}
