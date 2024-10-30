@@ -3,6 +3,7 @@
 from flask import Flask, request, jsonify, send_from_directory, flash, redirect, render_template, url_for
 from flask_cors import CORS
 import os, glob, json, yaml, threading, numpy as np
+from pprint import pprint
 
 
 # Projects internal modules imports
@@ -196,14 +197,14 @@ def planner(mission_json):
     
     app.set_Status("occupied")
 
-    print(mission_json)
+    pprint(mission_json)
 
     try: 
         bases, towers, uavs, weather, mode, id, parameters = iYAML.load_data_from_JSON(mission_json)
 
         problem = SO.Problem(str(id), towers, bases, uavs, weather, mode, Parameters = parameters)
 
-        status = problem.solve("", True)
+        status = problem.solve("abstract_MTZ", True)
 
         file_path = os.path.join("server", "dynamic", "mission_"+str(id)+".yaml")
 
@@ -215,7 +216,7 @@ def planner(mission_json):
                                                        problem.get_Towers(),
                                                          problem.get_Bases(),
                                                          weather.get_Wind_Direction())
-        base0 = problem.get_Bases().get_Base("B0")
+        #base0 = problem.get_Bases().get_Base("B0")
         
         iYAML.save_Mission(file_path, str(id), problem.get_UAV_Team())
         app.set_Status("inactive")
@@ -276,6 +277,6 @@ def json_output():
         output["status"] = [app.get_Status(), "OK"]
         output["description"] = "Everything went OK"
 
-    print(output)
+    pprint(output)
 
     return output

@@ -245,8 +245,8 @@ def get_Path_Online_Elevations(point1_3035: np.ndarray, point2_3035: np.ndarray,
     except:
         print("API Timeout or wrong request!")
         return None
-    print(request)
-    print(response.json())
+    #print(request)
+    #print(response.json())
     path = []
     # if the response is positive, update, if not, don't
     if 200 == response.status_code and "error" not in response.json():
@@ -254,7 +254,7 @@ def get_Path_Online_Elevations(point1_3035: np.ndarray, point2_3035: np.ndarray,
             latlonz = np.array([point["location"]["lat"], point["location"]["lng"], point["elevation"]])
             path.append(latlon2epsg3035(latlonz))
 
-            print("API Response: ", response)
+            #print("API Response: ", response)
 
     else: print("Height Online Update failed!")
     return path
@@ -288,6 +288,8 @@ def compute_Parallel_Trajectory(current_pos: np.ndarray, segment: tuple, offset:
     n_dir = s2 - s1
     n_dir = n_dir / np.linalg.norm(n_dir)
 
+    n_bear = compute_direction_epsg3035(s1, s2)
+
     # and one of the two perpendicular vectors
     n_perp = np.array([n_dir[1], -n_dir[0]])
 
@@ -299,10 +301,19 @@ def compute_Parallel_Trajectory(current_pos: np.ndarray, segment: tuple, offset:
     if np.linalg.norm(p1-current_pos) <= np.linalg.norm(p2-current_pos):
         p3 = s2 + offset * n_perp
         # n_perp goes from the tower to the previuos point
-        return (p1, p3), n_dir, - n_perp
+
+        v_bear = n_bear+90
+        if v_bear > 180: return (p2, p3), n_bear, v_bear - 360
+        return (p1, p3), n_bear, v_bear
+    
     else: 
         p3 = s2 - offset * n_perp
-        return (p2, p3), n_dir, n_perp
+
+        v_bear = n_bear-90
+        if v_bear < -180: return (p2, p3), n_bear, 360 + v_bear
+        return (p2, p3), n_bear, v_bear
+
+        
     
 def compute_Orbital_Trajectory(current_pos: np.ndarray, point: np.ndarray, next_point: np.ndarray, distance: float, n_points: int) -> tuple[list, np.ndarray, list]:
     """
@@ -492,7 +503,7 @@ def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray,
         alpha1 = angle_to_x(- sign * np.array([n[1], -n[0]]))
         alpha2 = angle_to_x(pair[0] - c)
 
-        print("p", pair[0], "a1", alpha1, "a2", alpha2)
+        #print("p", pair[0], "a1", alpha1, "a2", alpha2)
 
         dalpha = alpha2 - alpha1
 
@@ -509,13 +520,13 @@ def get_Safe_Loiter_Alignment(p: np.ndarray, n: np.ndarray, p_loiter:np.ndarray,
 
         alphas.append(phi)
 
-    print(sign)
-    print(alphas)
+    #print(sign)
+    #print(alphas)
 
     index_min = min(range(len(alphas)), key=alphas.__getitem__)
     alpha = alphas[index_min]
 
-    print(alpha)
+    #print(alpha)
 
 
     path = []

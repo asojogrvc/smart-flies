@@ -254,7 +254,7 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
     # --------------------- Subroute MTZ ----------------------------
     
     vertices = list(set(list(pgraph.nodes())) - set(bases_list))
-    print(vertices)
+    #print(vertices)
     U = add_MTZ_Subtour_Constraints(vertices, puavs, Z, Y, pmodel)
 
     # ---------------------------------------------------------------
@@ -294,9 +294,11 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
 
     sol = pmodel.getBestSol()
 
+    '''
     for key in U:
         try: print(key, sol[U[key]])
         except: None
+    '''
 
     print("Problem Status is:", pmodel.getStatus())
 
@@ -306,19 +308,21 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
 
     parse_Abstract_Routes(sol, Z, puavs, problem.get_Mission_Mode())
 
-    for uav_pair in sigmas:
-        print('sigma_', uav_pair, ' = ' ,sol[sigmas[uav_pair]])
+    #for uav_pair in sigmas:
+        #print('sigma_', uav_pair, ' = ' ,sol[sigmas[uav_pair]])
 
     for uav in puavs:
-        print('NO = ', uav.route)
+        #print(uav.routeModes)
+        #print('NO = ', uav.route)
         uav.route, uav.routeModes = order_Route(uav.missionSettings['Base'], uav.route, uav.routeModes)
-        print('O = ', uav.route)
+        #print(uav.routeModes)
+        #print('O = ', uav.route)
         uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
-        print('OF = ', uav.route)
+        #print('OF = ', uav.route)
         
         uav.routeCoords = route_to_EPSG3035(uav.route, ptowers, pbases)
         
-        print(uav.routeModes)
+        #print(uav.routeModes)
 
     return True
 

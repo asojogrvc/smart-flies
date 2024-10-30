@@ -181,7 +181,7 @@ def waypoint_to_YAML(uavs: UAVS.UAV_Team) -> dict:
 
     wps["route"] = route_list
 
-    print(wps)
+    #print(wps)
 
     return wps
 
@@ -274,7 +274,7 @@ def load_data_from_YAML(file_path: str) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_T
 
         paths.append(path)
 
-    print(paths)
+    #print(paths)
 
     towers.load_from_Arrays(paths, True)
 

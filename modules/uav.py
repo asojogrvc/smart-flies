@@ -290,7 +290,7 @@ class UAV():
 
                 # print(" moves : ", preMoves)
                 # print(" Ndirs : ", preNdirs) # preNdirs seems to be fine
-                print(" Vdirs : ", preVdirs)  # preNdirs seems to be fine
+                # print(" Vdirs : ", preVdirs)  # preNdirs seems to be fine
 
                 # Gimbal is fixed beforehand
                 gimbal = - float(self.missionSettings["Cam. angle"])
@@ -300,7 +300,7 @@ class UAV():
 
                 point = np.append(self.routeCoords[0][0][:2], fH)
 
-                yaw = CO.compute_direction_epsg3035
+                yaw = CO.compute_direction_epsg3035(self.routeCoords[0][0][:2], self.routeCoords[0][1][:2])
 
                 actions = {"video_start": 0,
                            "gimbal": gimbal, "yaw": yaw, "mode": 0}
@@ -334,7 +334,7 @@ class UAV():
                 k = 0
                 for pmove in preMoves:
 
-                    print("k:", k)
+                    #print("k:", k)
 
                     # base of tower 1 with respect to the uav base
                     btH1 = coords_dict[self.route[1:-1][k][0]][2] - bH
@@ -348,18 +348,12 @@ class UAV():
                         point2 = np.append(pmove[1], btH2 + tH + iH + dH)
 
                         # Point towards movement
-                        yaw = np.rad2deg(np.arccos(preNdirs[k][1]))
-                        if preNdirs[k][0] < 0:
-                            yaw = -yaw
+                        yaw = preNdirs[k]
                         actions1 = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
 
                         # Point towards movement, which is a point in the next pmove
 
-                        n_dir = preMoves[k][0]-pmove[1]
-                        n_dir = n_dir / np.linalg.norm(n_dir)
-                        yaw = np.rad2deg(np.arccos(n_dir[1]))
-                        if n_dir[0] < 0:
-                            yaw = -yaw
+                        yaw = CO.compute_direction_epsg3035(pmove[1], preMoves[k][0])
 
                         mode1 = "Navigation"
                         # actions2 = {"gimbal": gimbal, "yaw": yaw}
@@ -376,16 +370,11 @@ class UAV():
 
                         if 90 == self.missionSettings["Cam. angle"]:
 
-                            yaw = np.rad2deg(np.arccos(preNdirs[k][1]))
-                            if preNdirs[k][0] < 0:
-                                yaw = -yaw
+                            yaw = preNdirs[k]
 
                         else:  # If not point towards the tower/power line
 
-                            n_dir = preVdirs[k]
-                            yaw = np.rad2deg(np.arccos(n_dir[1]))
-                            if n_dir[0] < 0:
-                                yaw = -yaw
+                            yaw = preVdirs[k]
 
                         actions1 = {"gimbal": gimbal,
                                     "yaw": yaw, "photo": True, "mode": 1}
@@ -410,12 +399,7 @@ class UAV():
                 # The penultimun move should be inspection as it will be redudant otherwise
                 # At the last point get to safety height
 
-                n_dir = self.routeCoords[0][0][:2] - preMoves[-1][1]
-                n_dir = n_dir / np.linalg.norm(n_dir)
-
-                yaw = np.rad2deg(np.arccos(n_dir[1]))
-                if n_dir[0] < 0:
-                    yaw = -yaw
+                yaw = CO.compute_direction_epsg3035(preMoves[-1][1], self.routeCoords[0][0][:2])
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
 
                 point2 = np.append(pmove[1], btH2 + tH + iH + dH)
@@ -442,8 +426,8 @@ class UAV():
                            "gimbal": gimbal, "yaw": yaw, "mode": 0}
                 self.waypoints.add_Waypoint(point, actions, "Navigation")
 
-                print(self.__name+":")
-                self.waypoints.print()
+                #print(self.__name+":")
+                #self.waypoints.print()
 
             case 1:
 
@@ -757,7 +741,7 @@ def px4_compute_Waypoints(uav: UAV, wind_dir: float):
     except:
         takeoff_altitude = 60    # Relative to base
 
-    print(uav.extra_parameters)
+    #print(uav.extra_parameters)
 
     try:
         tH = uav.extra_parameters["Tower Height"]
