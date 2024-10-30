@@ -620,9 +620,12 @@ class UAV():
                 self.waypoints.add_Waypoint(
                     np.append(points[1], tH + dH + iH + btH), actions, "Navigation")
 
+                n = - np.array([np.cos(n_perp), np.sin(n_perp)])
+
                 actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
-                self.waypoints.add_Waypoint(
-                    np.append(points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n_perp, tH + dH + iH + btH), actions, "Navigation")
+                #self.waypoints.add_Waypoint(
+                #    np.append(points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n,
+                #               tH + dH + iH + btH), actions, "Navigation")
 
                 # Get back to inspection height and inspect till it finish te towers.
                 # actions = {"gimbal": gimbal, "yaw": yaw, "mode": 0}
@@ -630,13 +633,18 @@ class UAV():
                 #    np.append(points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n_perp, tH + self.missionSettings["Insp. height"] + btH),
                 #    actions, "Navigation")
 
-                points = 2 * \
-                    [points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n_perp]
+                points = 2 * [points[1] + 2 * self.missionSettings["Insp. horizontal offset"] * n]
 
+                firstQ = True
                 for i, move in enumerate(self.routeCoords[half:-1]):
 
                     points, n_dir, n_perp = CO.compute_Parallel_Trajectory(
                         points[1], move, self.missionSettings["Insp. horizontal offset"])
+                    
+                    if firstQ:
+                        firstQ = False 
+                        self.waypoints.add_Waypoint(
+                            np.append(points[0], tH + dH + iH + btH), actions, "Inspection")
 
                     yaw = (n_dir + n_perp) / 2
 
