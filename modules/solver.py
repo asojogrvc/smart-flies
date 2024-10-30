@@ -552,15 +552,17 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
 
         print("Loops List: ", loops)
 
+        #print(uav.routeModes)
         print('NO = ', uav.route)
         uav.route, uav.routeModes = order_Route(uav.missionSettings['Base'], uav.route, uav.routeModes)
         print('O = ', uav.route)
+        #print(uav.routeModes)
         uav.route, uav.routeModes = fix_Route_Valid_Subloops(uav.route, uav.routeModes)
         print('OF = ', uav.route)
 
         uav.routeCoords = route_to_EPSG3035(uav.route, ptowers, pbases)
         
-        print(uav.routeModes)
+        #print(uav.routeModes)
 
     return True
 
