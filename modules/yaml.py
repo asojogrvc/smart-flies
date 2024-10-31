@@ -337,6 +337,11 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
         except:
             None
 
+        try:
+            uav.extra_parameters["Energy Left"] = uav_dict["settings"]["energy_left"]
+        except:
+            uav.extra_parameters["Energy Left"] = 1.0
+
         # PX4 Exclusives
     
         try:

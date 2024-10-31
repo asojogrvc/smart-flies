@@ -1465,7 +1465,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                     SCIP.quicksum(e[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] * Z[edge[0]+'->'+edge[1]+'|'+uav.get_ID()] 
                             for edge in pgraph.edges()) 
                         <= 
-                    1.0
+                    uav.extra_parameters["Energy Left"]
                 )
 
 
