@@ -189,11 +189,11 @@ class UAV():
         print("|--> K_mu: ", self.__K_mu)
         print("|--> Effective flat area: ", self.__flat_Area)
         print("|--> CameraQ: ", self.__camera)
-        print("\--> Battery:")
+        print("|--> Battery:")
         print("        |--> Type: ", self.__battery.type)
         print("        |--> Capacity: ", self.__battery.capacity)
         print("        |--> Number of cells: ", self.__battery.cells)
-        print("        \--> Volts per cell: ", self.__battery.volts_per_cell)
+        print("        |--> Volts per cell: ", self.__battery.volts_per_cell)
 
     # ----------------------------- Plotting functions -------------------------------
 

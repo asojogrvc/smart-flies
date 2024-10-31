@@ -324,6 +324,9 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
         
         #print(uav.routeModes)
 
+    #print(e)
+    print("Energy consumed:", compute_Energy_Cost(puavs, e))
+
     return True
 
 def abstract_Dynamic_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
@@ -564,16 +567,25 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
         
         #print(uav.routeModes)
 
+    
+    print("Energy consumed:", compute_Energy_Cost(puavs, e))
+
     return True
 
-def GRASP_Solver():
-    """
-    Using the abstractSolver, let's implement the GRASP method to find a solution. To be implement
-    """
-    # TBD
-    return None
-
 # -------------------------------------- Auxiliary Functions ---------------------------------------------
+
+def compute_Energy_Cost(uavs: UAVS.UAV_Team, E:dict) -> dict:
+
+    energies = {}
+
+    for uav in uavs:
+        esum = 0
+        for edge in uav.routeAbstract:
+            esum += E[edge[0]+'->'+edge[1]+'|'+uav.get_ID()]
+        
+        energies[uav.get_ID()] = esum
+
+    return energies
 
 def add_MTZ_Subtour_Constraints(vertices: list, uavs: UAVS.UAV_Team, Z:dict, Y:dict, scip_model: SCIP.Model) -> dict:
 
