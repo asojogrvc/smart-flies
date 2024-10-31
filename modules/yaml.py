@@ -338,7 +338,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
             None
 
         try:
-            uav.extra_parameters["Energy Left"] = uav_dict["settings"]["energy_left"]
+            uav.extra_parameters["Energy Left"] = uav_dict["settings"]["battery_level"]
         except:
             uav.extra_parameters["Energy Left"] = 1.0
 
