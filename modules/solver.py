@@ -1299,7 +1299,7 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
     tgraph = ptowers.get_Graph()
 
-    distance_threshold = 1000 # in meters
+    distance_threshold = 10000 # in meters
     # This detects if UAVs are too far to any of the groups of towers and allows deactivating them.
     SC = [tgraph.subgraph(c).copy() for c in nx.connected_components(tgraph)]
     distant_subgraphsQ = any([np.linalg.norm(list(dict(subset.nodes(data="Coords")).values())[0] - base.get_Coordinates()) > distance_threshold
@@ -1359,27 +1359,6 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
 
                 # Continuity. The UAV that inspects must be the one that exits the segment
                 for uav in puavs:
-                    
-                    # Disabled since they do nothing. Subtour elimination and the disabling of the base already do this job
-                    if False: #tooManyUAVSQ or distant_subgraphsQ:
-
-                        Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
-
-                        pmodel.addCons(
-                            SCIP.quicksum(Z[node+'->'+  'SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                                    + Z[node+'->'+'SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()]
-                            for node in nodelist)
-                                <= 
-                            Y[uav.get_ID()]
-                        )
-
-                        pmodel.addCons(
-                            SCIP.quicksum(Z['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                                + Z['SDOWN_{'+line_segment[0]+','+line_segment[1]+'}'+'->'+node+'|'+uav.get_ID()]
-                            for node in nodelist)
-                                <= 
-                            Y[uav.get_ID()]
-                        )
 
                     Y['SUP_{'+line_segment[0]+','+line_segment[1]+'}'+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+line_segment[0]+line_segment[1])
 
@@ -1552,26 +1531,6 @@ def construct_Abstract_SCIP_Model(pbases: BA.Bases, ptowers: TW.Towers, puavs: U
                 )
 
                 for uav in puavs:
-                    
-                    if False: #tooManyUAVSQ or distant_subgraphsQ:
-
-                        Y[uav.get_ID()] = pmodel.addVar(vtype = 'B', obj = 0.0, name = "Y"+uav.get_ID())
-
-                        pmodel.addCons(
-                        SCIP.quicksum(
-                            Z[node+'->'+tower+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            <= 
-                        Y[uav.get_ID()]
-                        )
-
-                        pmodel.addCons(
-                        SCIP.quicksum(
-                            Z[tower+'->'+node+'|'+uav.get_ID()]
-                        for node in nodelist)
-                            <= 
-                        Y[uav.get_ID()]
-                        )
 
                     Y[tower+'|'+uav.get_ID()] = pmodel.addVar(vtype = 'B', name = uav.get_ID()+"Y"+tower)
 

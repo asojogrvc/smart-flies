@@ -190,7 +190,7 @@ def planner(mission_json):
     """
 
     # If the server is already doing some computations,
-    # do not execute the planner again. I don't think this is necessary as it runs single-threaded
+    # do not execute the planner again.
 
     if "occupied" == app.get_Status():
         return {"status": "occupied"}
