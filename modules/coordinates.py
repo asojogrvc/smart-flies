@@ -303,7 +303,7 @@ def compute_Parallel_Trajectory(current_pos: np.ndarray, segment: tuple, offset:
         # n_perp goes from the tower to the previuos point
 
         v_bear = n_bear+90
-        if v_bear > 180: return (p2, p3), n_bear, v_bear - 360
+        if v_bear > 180: return (p1, p3), n_bear, v_bear - 360
         return (p1, p3), n_bear, v_bear
     
     else: 

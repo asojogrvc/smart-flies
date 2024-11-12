@@ -279,14 +279,16 @@ class UAV():
                 preVdirs = []
                 point = self.routeCoords[0][0][:2]  # Base
                 for move in self.routeCoords[1:-1]:
-
+                    
                     pmove, n_dir, v_dir = CO.compute_Parallel_Trajectory(
                         point, move, self.missionSettings["Insp. horizontal offset"])
+
                     preMoves.append(pmove)
                     preNdirs.append(n_dir)
                     preVdirs.append(v_dir)
 
                     point = pmove[1]
+
 
                 # print(" moves : ", preMoves)
                 # print(" Ndirs : ", preNdirs) # preNdirs seems to be fine
@@ -331,8 +333,7 @@ class UAV():
 
                 # It is the same loop as before. Maybe join them
 
-                k = 0
-                for pmove in preMoves:
+                for k, pmove in enumerate(preMoves):
 
                     #print("k:", k)
 
@@ -344,8 +345,8 @@ class UAV():
                     # If the current mode is navigation, go to safety height
                     if "Navigation" == self.routeModes[1:-1][k]:
 
-                        point1 = np.append(pmove[0], btH1 + tH + iH + dH)
-                        point2 = np.append(pmove[1], btH2 + tH + iH + dH)
+                        point1 = np.append(preMoves[k-1][1], btH1 + tH + iH + dH)
+                        point2 = np.append(preMoves[k+1][0], btH2 + tH + iH + dH)
 
                         # Point towards movement
                         yaw = preNdirs[k]
@@ -393,8 +394,6 @@ class UAV():
                                     ipoint, actions1, mode1)
                     # -----
                     self.waypoints.add_Waypoint(point2, actions1, mode1)
-
-                    k += 1
 
                 # The penultimun move should be inspection as it will be redudant otherwise
                 # At the last point get to safety height

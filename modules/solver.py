@@ -322,7 +322,8 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
         
         uav.routeCoords = route_to_EPSG3035(uav.route, ptowers, pbases)
         
-        #print(uav.routeModes)
+        #print("AbstractR", uav.routeAbstract)
+        #print("Modes", uav.routeModes)
 
     #print(e)
     print("Energy consumed:", compute_Energy_Cost(puavs, e))
