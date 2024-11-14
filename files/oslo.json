@@ -1,0 +1,107 @@
+{
+  "id": 1234,
+  "name": "no mission",
+  "case": 1,
+  "meteo": [],
+  "devices": [
+    {
+      "settings": {
+        "base": [59.924579342220206, 10.723143416703705],
+        "inspection_speed": 7,
+        "navigation_speed": 15,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 5,
+        "landing_mode": 2,
+        "battery_level": 100
+      },
+      "id": "day1",
+      "category": "dji_M210_noetic"
+    }
+  ],
+  "locations": [
+    {
+      "name": "Elements",
+      "items": [
+        {
+          "latitude": 59.97223465232325, 
+          "longitude": 10.780500485302777
+        },
+        {
+          "latitude": 59.96678914836248, 
+          "longitude": 10.665612870018776
+        },
+        {
+          "latitude": 59.92403758670911, 
+          "longitude": 10.770818173471948
+        },
+        {
+          "latitude": 59.912965701788686, 
+          "longitude": 10.767823004690364
+        },
+        {
+          "latitude": 59.91455212400789, 
+          "longitude": 10.74621134111873
+        },
+        {
+          "latitude": 59.9032934739395, 
+          "longitude": 10.696196814732168
+        },
+        {
+          "latitude": 59.909946774067016, 
+          "longitude": 10.68680633222694
+        },
+        {
+          "latitude": 59.91342643079873, 
+          "longitude": 10.730696630892695
+        },
+        {
+          "latitude": 59.905954953969285, 
+          "longitude": 10.684356641138615
+        },
+        {
+          "latitude": 59.90534078520308, 
+          "longitude": 10.70007549228868
+        },
+        {
+          "latitude": 59.90830916234075, 
+          "longitude": 10.720081302843301
+        },
+        {
+          "latitude": 59.9091279783006, 
+          "longitude": 10.736208435841416
+        },
+        {
+          "latitude": 59.90738797024799, 
+          "longitude": 10.756214246396041
+        },
+        {
+          "latitude": 59.91158430502079, 
+          "longitude": 10.751723146067452
+        },
+        {
+          "latitude": 59.91444978983905, 
+          "longitude": 10.740699536170006
+        },
+        {
+          "latitude": 59.919054515112094, 
+          "longitude": 10.72906350350048
+        },
+        {
+          "latitude": 59.91485912462145, 
+          "longitude": 10.734983590297256
+        },
+        {
+          "latitude": 59.928466632149316, 
+          "longitude": 10.699258928592572
+        },
+        {
+          "latitude": 59.90984442570054, 
+          "longitude": 10.753152132535638
+        }
+      ]
+    }
+  ]
+}
