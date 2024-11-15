@@ -7,8 +7,8 @@
     {
       "settings": {
         "base": [59.924579342220206, 10.723143416703705],
-        "inspection_speed": 7,
-        "navigation_speed": 15,
+        "inspection_speed": 2,
+        "navigation_speed": 2,
         "vertical_offset": 10,
         "horizontal_offset": 10,
         "tower_height": 10,
@@ -18,6 +18,38 @@
         "battery_level": 100
       },
       "id": "day1",
+      "category": "dji_M210_noetic"
+    },
+    {
+      "settings": {
+        "base": [59.924579342220206, 10.723143416703705],
+        "inspection_speed": 2,
+        "navigation_speed": 2,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 5,
+        "landing_mode": 2,
+        "battery_level": 100
+      },
+      "id": "day2",
+      "category": "dji_M210_noetic"
+    },
+    {
+      "settings": {
+        "base": [59.924579342220206, 10.723143416703705],
+        "inspection_speed": 2,
+        "navigation_speed": 2,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 5,
+        "landing_mode": 2,
+        "battery_level": 100
+      },
+      "id": "day3",
       "category": "dji_M210_noetic"
     }
   ],

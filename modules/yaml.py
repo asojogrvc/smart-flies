@@ -366,7 +366,7 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
 
         coords = np.array([uav_dict["settings"]["base"][0], uav_dict["settings"]["base"][1], 0])
         CO.update_Height_Online(coords)
-        print(coords)
+
         coords = CO.latlon2epsg3035(coords)
         print(coords)
 
@@ -392,8 +392,6 @@ def load_data_from_JSON(json_obj) -> tuple[BA.Bases, TW.Towers, UAVS.UAV_Team, W
             else: path = np.concatenate((path, np.array([[point["latitude"], point["longitude"], 0.0]])))
 
         paths.append(path)
-
-    print(paths)
 
     towers.load_from_Arrays(paths, True)
 

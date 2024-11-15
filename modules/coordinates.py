@@ -9,6 +9,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import time
 import copy
+import math
 from modules import dubins as DB
 
 trans_latlongto3035 = Transformer.from_crs(4326, 3035)
@@ -184,7 +185,14 @@ def update_Height_Online(coords: np.ndarray):
         
         # if the response is positive, update, if not, don't
         if 200 == response.status_code and "error" not in response.json():
-            coords[2] = response.json()["results"][0]["elevation"]
+
+            height_api = response.json()["results"][0]["elevation"]
+
+            if None == height_api:
+                coords[2] = 0
+            else:
+                coords[2] = height_api
+
         else: print("Height Online Update failed!")
 
     # Several points
@@ -211,7 +219,14 @@ def update_Height_Online(coords: np.ndarray):
             elevations = np.zeros(len(coords))
             if 200 == response.status_code and "error" not in response.json():
                 for k in range(len(coords)):
-                    elevations[k] = response.json()["results"][k]["elevation"]
+                    
+                    height_api = response.json()["results"][k]["elevation"]
+
+                    if None == height_api:
+                        elevations[k] = 0
+                    else:
+                        elevations[k] = height_api
+
             else: print("Height Online Update failed!")
 
             # and update the original array
@@ -251,7 +266,12 @@ def get_Path_Online_Elevations(point1_3035: np.ndarray, point2_3035: np.ndarray,
     # if the response is positive, update, if not, don't
     if 200 == response.status_code and "error" not in response.json():
         for point in response.json()["results"]:
-            latlonz = np.array([point["location"]["lat"], point["location"]["lng"], point["elevation"]])
+            z = point["elevation"]
+
+            if None == z:
+                z = 0
+
+            latlonz = np.array([point["location"]["lat"], point["location"]["lng"], z])
             path.append(latlon2epsg3035(latlonz))
 
             #print("API Response: ", response)

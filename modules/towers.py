@@ -121,6 +121,8 @@ class Towers():
             # Conversion to EPSG3035. All towers and bases are assumed to be within the same zone
             path_epsg3035 = CO.latlon2epsg3035(path_latlon)
 
+            print(path_epsg3035)
+
             # Add each of the towers of the branch in the actual graph 
             # and connect it to the previously added tower.
             Tg.add_node(f'T{tower_number}', Coords = path_epsg3035[0,:])
