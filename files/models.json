@@ -14,5 +14,9 @@
     "D": {
         "Speed": 15,
         "iSpeed": 15 
+    },
+    "Human": {
+        "Speed": 2,
+        "iSpeed": 2 
     }
 }
