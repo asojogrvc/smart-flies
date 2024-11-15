@@ -29,9 +29,16 @@ def load_Problem_from_File(file_path: str) -> SO.Problem:
 
     uavs = UAVS.UAV_Team()
     for id_ in mission["UAVs"]:
-        uavs.add_UAV(UAVS.UAV(
-            id = id_, model = mission["UAVs"][id_]["Model"], base = mission["UAVs"][id_]["Base"]
-        ))
+        try:
+            uavs.add_UAV(UAVS.UAV(
+                id = id_, model = mission["UAVs"][id_]["Model"], base = mission["UAVs"][id_]["Base"],
+                max_cost = mission["UAVs"][id_]["Max Cost"]
+            ))
+        except:
+            uavs.add_UAV(UAVS.UAV(
+                id = id_, model = mission["UAVs"][id_]["Model"], base = mission["UAVs"][id_]["Base"]
+            ))
+            
 
     tasks = TS.Tasks()
     for name in mission["Tasks"]:

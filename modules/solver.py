@@ -415,6 +415,20 @@ def construct_SCIP_Model(graph: nx.MultiDiGraph, tasks: TS.Tasks, uavs: UAVS.UAV
                 2 * Y[name+"|"+uav.get_ID()]
             )
 
+        if None != uav.get_max_cost():
+
+            edges = combinations(list(graph), 2)
+
+            scip_model.addCons(
+                SCIP.quicksum(
+                    Wt[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]] * Z[uav.get_ID()+"Z"+edge[0]+"-"+edge[1]]+
+                    Wt[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]] * Z[uav.get_ID()+"Z"+edge[1]+"-"+edge[0]]
+                    for edge in edges
+                )
+                <= 
+                uav.get_max_cost()
+            )
+
     return scip_model, Z, Wt, V_costs, Y
 
 def add_Cost_Function(scip_model: SCIP.Model, which: str, uavs: UAVS.UAV_Team, Z: dict, Wt: dict, graph: nx.MultiDiGraph, **kwargs):

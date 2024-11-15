@@ -18,6 +18,11 @@ class UAV():
         else:
             self.__id = "UAV_0"
 
+        if "max_cost" in kwargs:
+            self.__max_cost = float(kwargs["max_cost"])
+        else:
+            self.__max_cost = None          
+
         if "model" in kwargs:
             if kwargs["model"] in models:
                 self.__model = kwargs["model"]
@@ -37,6 +42,10 @@ class UAV():
 
     def set_ID(self, id:str):
         self.__id = str(id)
+        return None
+    
+    def set_max_cost(self, cost:float):
+        self.__max_cost = cost
         return None
         
     def set_Model(self, model:str):
@@ -60,6 +69,10 @@ class UAV():
     
     def get_Base(self) -> str:
         return self.__base
+    
+    def get_max_cost(self):
+        return self.__max_cost
+        
         
     
 class UAV_Team():
@@ -111,7 +124,7 @@ class UAV_Team():
 
         print("----------------------------UAV Team------------------------------")
         for uav in self:
-            print(" - ID: ", uav.get_ID(), " Model: ", uav.get_Model(), " Base: ", uav.get_Base())
+            print(" - ID: ", uav.get_ID(), " Model: ", uav.get_Model(),  " Max. Cost: ", uav.get_max_cost(), " Base: ", uav.get_Base())
         print("------------------------------------------------------------------")
 
         return None
