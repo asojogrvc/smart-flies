@@ -4,6 +4,8 @@ import numpy as np, os, yaml, copy, json
 
 from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, coordinates as CO
 
+np.set_printoptions(suppress=True)
+
 class NumpyArrayEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.ndarray):
