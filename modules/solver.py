@@ -9,7 +9,6 @@ import networkx as nx, copy
 import numpy as np
 import itertools
 import pyscipopt as SCIP # Model, quicksum, SCIP_PARAMSETTING
-from PyQt6.QtWidgets import QProgressBar
 
 from modules import bases as BA, towers as TW, uav as UAVS, weather as WT, weights as WE
 
@@ -145,15 +144,6 @@ class Problem():
                 raise Exception("No such solver is implemented")
         
         return status
-
-    def link_Progress_Bar(self, ui_progressbar: QProgressBar):
-        """
-        Connects a PyQt progress bar to the problem. This allows us to update any UI progress within the class
-        """
-        self.__progressBar = ui_progressbar
-
-        return None
-
 # -------------------------------------- Solvers --------------------------------------------- 
 
 def solve_Lidar_Case(problem: Problem) -> bool:
