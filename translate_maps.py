@@ -17,7 +17,7 @@ def translate_file(file_path):
 
     old_data["id"] = "33"
     old_data["name"] = name
-    old_data["case"] = 0
+    old_data["case"] = 1
     old_data["meteo"] = []
     old_data["devices"] = [
         {
