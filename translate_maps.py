@@ -36,7 +36,7 @@ def translate_file(file_path):
             "category": "dji_M210_noetic"
         },
     ]
-    old_data["location"] = [
+    old_data["locations"] = [
         {
             "name": "Elements",
             "items":[

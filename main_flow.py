@@ -4,7 +4,7 @@ import json, matplotlib.pyplot as plt
 jsonQ = True
 
 if jsonQ:
-    f = open("./files/oslo.json")
+    f = open("./files/translated/eil22_t.json")
     mission = json.load(f)
     f.close()
     bases, towers, uavs, weather, mode, id, parameters =  YAML.load_data_from_JSON(mission)
