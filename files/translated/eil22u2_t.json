@@ -28,8 +28,8 @@
           40.9815123854387,
           -2.6344639925744864
         ],
-        "inspection_speed": 7,
-        "navigation_speed": 15,
+        "inspection_speed": 14,
+        "navigation_speed": 30,
         "vertical_offset": 10,
         "horizontal_offset": 10,
         "tower_height": 10,

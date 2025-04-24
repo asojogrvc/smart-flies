@@ -257,7 +257,9 @@ def abstract_MTZ_Solver(problem: Problem, fastQ: bool) -> bool:
 
         for uav in problem.get_UAV_Team():
             pmodel.addCons(
-                    SCIP.quicksum(t[key]*Z[key] for key in Z.keys())
+                    SCIP.quicksum(t[node1+'->'+node2+'|'+uav.get_ID()]*Z[node1+'->'+node2+'|'+uav.get_ID()] 
+                                  for node1 in pgraph for node2 in pgraph
+                                )
                         <= 
                     M
                 )
@@ -405,7 +407,9 @@ def abstract_Dynamic_DFJ_Solver(problem: Problem, fastQ: bool) -> bool:
 
         for uav in problem.get_UAV_Team():
             pmodel.addCons(
-                    SCIP.quicksum(t[key]*Z[key] for key in Z.keys())
+                    SCIP.quicksum(t[node1+'->'+node2+'|'+uav.get_ID()]*Z[node1+'->'+node2+'|'+uav.get_ID()] 
+                                  for node1 in pgraph for node2 in pgraph
+                                )
                         <= 
                     M
                 )
