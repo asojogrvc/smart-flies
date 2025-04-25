@@ -4,7 +4,7 @@ import json, matplotlib.pyplot as plt
 jsonQ = True
 
 if jsonQ:
-    f = open("./files/translated/eil22u2_t.json")
+    f = open("./files/translated/eil19u3_t.json")
     mission = json.load(f)
     f.close()
     bases, towers, uavs, weather, mode, id, parameters =  YAML.load_data_from_JSON(mission)
@@ -34,8 +34,8 @@ towers.plot(ax)
 
 #plt.show()
 
-fastQ = True
-solvedQ = problem.solve("abstract_MTZ", fastQ)
+fastQ = False
+solvedQ = problem.solve("abstract_dynamic_DFJ", fastQ)
 
 if False == solvedQ:
     print("Problem is infeasible")

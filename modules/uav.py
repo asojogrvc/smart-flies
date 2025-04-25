@@ -215,7 +215,7 @@ class UAV():
             p1 = edge[1]
 
             self.arrow_refs[k] = axes.arrow(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1], color=colorp,
-                                            head_width=12, head_length=12, length_includes_head=True, zorder=15)
+                                            head_width=2, head_length=2, length_includes_head=True, zorder=15)
 
             k += 1
 
