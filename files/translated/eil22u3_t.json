@@ -17,9 +17,48 @@
         "tower_height": 10,
         "security_height": 10,
         "orbital_points": 6,
-        "landing_mode": 2
+        "landing_mode": 2,
+        "battery_level": 0.05
       },
       "id": "uav_0",
+      "category": "dji_M210_noetic"
+    },
+    {
+      "settings": {
+        "base": [
+          40.9815123854387,
+          -2.6344639925744864
+        ],
+        "inspection_speed": 14,
+        "navigation_speed": 30,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 6,
+        "landing_mode": 2,
+        "battery_level": 0.05
+      },
+      "id": "uav_1",
+      "category": "dji_M210_noetic"
+    },
+    {
+      "settings": {
+        "base": [
+          40.9815123854387,
+          -2.6344639925744864
+        ],
+        "inspection_speed": 5,
+        "navigation_speed": 10,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 6,
+        "landing_mode": 2,
+        "battery_level": 0.05
+      },
+      "id": "uav_2",
       "category": "dji_M210_noetic"
     }
   ],
@@ -60,7 +99,7 @@
           "longitude": -2.6341774537764406
         },
         {
-          "latitude": 40.98170422046589,
+          "latitude": 40.9817042204659,
           "longitude": -2.6342507223697997
         },
         {

@@ -17,7 +17,8 @@
         "tower_height": 10,
         "security_height": 10,
         "orbital_points": 6,
-        "landing_mode": 2
+        "landing_mode": 2,
+        "battery_level": 0.1
       },
       "id": "uav_0",
       "category": "dji_M210_noetic"
@@ -35,7 +36,8 @@
         "tower_height": 10,
         "security_height": 10,
         "orbital_points": 6,
-        "landing_mode": 2
+        "landing_mode": 2,
+        "battery_level": 0.1
       },
       "id": "uav_1",
       "category": "dji_M210_noetic"

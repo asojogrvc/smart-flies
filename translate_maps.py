@@ -53,5 +53,5 @@ def translate_file(file_path):
     with open("./files/translated/"+name+"_t.json", 'w+') as fp:
         json.dump(old_data, fp, indent=2)
 
-file_path = "./files/new_format/eil22.json"
+file_path = "./files/new_format/att48.json"
 translate_file(file_path)

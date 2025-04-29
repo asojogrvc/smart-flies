@@ -1,0 +1,181 @@
+{
+  "id": "33",
+  "name": "eil33",
+  "case": 1,
+  "meteo": [],
+  "devices": [
+    {
+      "settings": {
+        "base": [
+          40.983242234816274,
+          -2.631451446525827
+        ],
+        "inspection_speed": 7,
+        "navigation_speed": 15,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 6,
+        "landing_mode": 2,
+        "battery_level": 0.2
+      },
+      "id": "uav_0",
+      "category": "dji_M210_noetic"
+    },
+    {
+      "settings": {
+        "base": [
+          40.983242234816274,
+          -2.631451446525827
+        ],
+        "inspection_speed": 14,
+        "navigation_speed": 30,
+        "vertical_offset": 10,
+        "horizontal_offset": 10,
+        "tower_height": 10,
+        "security_height": 10,
+        "orbital_points": 6,
+        "landing_mode": 2,
+        "battery_level": 0.2
+      },
+      "id": "uav_1",
+      "category": "dji_M210_noetic"
+    }
+  ],
+  "locations": [
+    {
+      "name": "Elements",
+      "items": [
+        {
+          "latitude": 40.9831933619423,
+          "longitude": -2.6322587896477185
+        },
+        {
+          "latitude": 40.98331836352723,
+          "longitude": -2.632067936331513
+        },
+        {
+          "latitude": 40.98332913927067,
+          "longitude": -2.6318417674053
+        },
+        {
+          "latitude": 40.983603851822714,
+          "longitude": -2.6317655807637657
+        },
+        {
+          "latitude": 40.98340726311707,
+          "longitude": -2.6321581830679244
+        },
+        {
+          "latitude": 40.98341315688847,
+          "longitude": -2.6321834237330677
+        },
+        {
+          "latitude": 40.98342205916482,
+          "longitude": -2.6321852393483423
+        },
+        {
+          "latitude": 40.9834249444113,
+          "longitude": -2.6322339050787367
+        },
+        {
+          "latitude": 40.983433846686395,
+          "longitude": -2.6322357207018228
+        },
+        {
+          "latitude": 40.98341892735944,
+          "longitude": -2.632280755185231
+        },
+        {
+          "latitude": 40.98334783244265,
+          "longitude": -2.632194139475306
+        },
+        {
+          "latitude": 40.98333165535884,
+          "longitude": -2.6321067050610307
+        },
+        {
+          "latitude": 40.9832467756017,
+          "longitude": -2.6322696833485404
+        },
+        {
+          "latitude": 40.983139824964795,
+          "longitude": -2.6323199864339903
+        },
+        {
+          "latitude": 40.983162018976145,
+          "longitude": -2.632360570732599
+        },
+        {
+          "latitude": 40.98279929344507,
+          "longitude": -2.63269524622303
+        },
+        {
+          "latitude": 40.9831588870111,
+          "longitude": -2.6324560861734105
+        },
+        {
+          "latitude": 40.983314615025094,
+          "longitude": -2.632523905337198
+        },
+        {
+          "latitude": 40.9833042084607,
+          "longitude": -2.632533802178946
+        },
+        {
+          "latitude": 40.98334395973412,
+          "longitude": -2.6327221994234122
+        },
+        {
+          "latitude": 40.98335448992452,
+          "longitude": -2.632640211885926
+        },
+        {
+          "latitude": 40.98328615681785,
+          "longitude": -2.632674352141442
+        },
+        {
+          "latitude": 40.9832531853884,
+          "longitude": -2.632859936276498
+        },
+        {
+          "latitude": 40.98317908233278,
+          "longitude": -2.6327967450879415
+        },
+        {
+          "latitude": 40.98312904814069,
+          "longitude": -2.632546154647944
+        },
+        {
+          "latitude": 40.983028238038955,
+          "longitude": -2.632477517070888
+        },
+        {
+          "latitude": 40.98298209890321,
+          "longitude": -2.632552241620412
+        },
+        {
+          "latitude": 40.98291388930484,
+          "longitude": -2.6325142916182473
+        },
+        {
+          "latitude": 40.98287112903335,
+          "longitude": -2.632349320707549
+        },
+        {
+          "latitude": 40.98302446508236,
+          "longitude": -2.6320801124470807
+        },
+        {
+          "latitude": 40.98313267351059,
+          "longitude": -2.63216227743789
+        },
+        {
+          "latitude": 40.98338933530958,
+          "longitude": -2.632226642593444
+        }
+      ]
+    }
+  ]
+}

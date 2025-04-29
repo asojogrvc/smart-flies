@@ -1,10 +1,12 @@
 from modules import bases as BA, towers as TW, uav as UAVS, solver as SO, yaml as YAML, weather as WT
 import json, matplotlib.pyplot as plt
 
+import time
+
 jsonQ = True
 
 if jsonQ:
-    f = open("./files/translated/eil19u3_t.json")
+    f = open("./files/translated/eil33u2_t.json")
     mission = json.load(f)
     f.close()
     bases, towers, uavs, weather, mode, id, parameters =  YAML.load_data_from_JSON(mission)
@@ -34,11 +36,16 @@ towers.plot(ax)
 
 #plt.show()
 
-fastQ = False
-solvedQ = problem.solve("abstract_dynamic_DFJ", fastQ)
+fastQ = True
+time0 = time.time()
+solvedQ = problem.solve("abstract_MTZ", fastQ)
+time0 = time.time() - time0
+
+
 
 if False == solvedQ:
     print("Problem is infeasible")
+    print("Time to solve: ", time0)
 else:
     fig = plt.figure()
     axes = fig.add_subplot(111)
@@ -56,6 +63,8 @@ else:
         print("---- \n")
     
     YAML.save_Mission("./mission.yaml", id, uavs)
+
+    print("Time to solve: ", time0)
 
     plt.show()
 
